@@ -295,11 +295,11 @@ const dataVerificationCtrl = {
 
             formula.rangetosheet = Store.currentSheetIndex;
 
-            if(range[0].sheetIndex != Store.currentSheetIndex){
+            if(range && range[0] && range[0].sheetIndex != Store.currentSheetIndex){
                 sheetmanage.changeSheetExec(range[0].sheetIndex);
             }
 
-            if(range.length > 0){
+            if(range && range.length > 0){
                 for(let s = 0; s < range.length; s++){
                     let r1 = range[s].row[0], r2 = range[s].row[1];
                     let c1 = range[s].column[0], c2 = range[s].column[1];
@@ -342,11 +342,11 @@ const dataVerificationCtrl = {
 
             formula.rangetosheet = Store.currentSheetIndex;
 
-            if(range[0].sheetIndex != Store.currentSheetIndex){
+            if(range && range[0] && range[0].sheetIndex != Store.currentSheetIndex){
                 sheetmanage.changeSheetExec(range[0].sheetIndex);
             }
 
-            if(range.length > 0){
+            if(range && range.length > 0){
                 for(let s = 0; s < range.length; s++){
                     let r1 = range[s].row[0], r2 = range[s].row[1];
                     let c1 = range[s].column[0], c2 = range[s].column[1];
