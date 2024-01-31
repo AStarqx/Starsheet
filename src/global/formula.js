@@ -4217,7 +4217,6 @@ const luckysheetformula = {
                 if (i + 1 < funcstack.length) {
                     s_next = funcstack[i + 1];
                 }
-
                 if (s + s_next in _this.operatorjson) {
                     if (bracket.length == 0) {
                         if ($.trim(str).length > 0) {
@@ -4344,7 +4343,7 @@ const luckysheetformula = {
 
             i++;
         }
-        // console.log(function_str);
+        function_str = function_str || txt
         return function_str;
     },
     insertUpdateDynamicArray: function(dynamicArrayItem) {
@@ -5967,6 +5966,18 @@ const luckysheetformula = {
 
         setluckysheetfile(luckysheetfile);
     },
+    parsePercentage(percentageString) {
+        // 去除百分号
+        const withoutPercentage = percentageString.replace('%', '');
+    
+        // 解析为浮点数
+        const parsedValue = parseFloat(withoutPercentage);
+    
+        // 将百分比转为小数
+        const decimalValue = parsedValue / 100;
+    
+        return decimalValue;
+    },
     execfunction: function(txt, r, c, index, isrefresh, notInsertFunc) {
         let _this = this;
 
@@ -5988,6 +5999,16 @@ const luckysheetformula = {
         Store.calculateSheetIndex = index;
 
         let fp = $.trim(_this.functionParserExe(txt));
+
+        // 处理百分比
+        const regex = /\b\d+(\.\d+)?%(?=\))/g;
+        const numArr = fp.match(regex)
+        if(numArr && numArr.length) {
+            numArr.forEach(num => {
+                const value = this.parsePercentage(num)
+                fp = fp.replace(num, value)
+            })
+        }
 
         fp = fp.replaceAll('FALSE', 'false')
                 .replaceAll('TRUE', 'true')

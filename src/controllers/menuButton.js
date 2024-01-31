@@ -3828,10 +3828,15 @@ const menuButton = {
                     let cell = d[r][c],
                         value = null;
 
-                    if (getObjType(cell) == "object") {
-                        value = d[r][c]["v"];
-                    } else {
-                        value = d[r][c];
+                    if(cell && cell.ct && cell.ct.s) {
+                        value = cell.ct.s.map(s => s.v).join('')
+                    }
+                    else {
+                        if (getObjType(cell) == "object") {
+                            value = d[r][c]["v"];
+                        } else {
+                            value = d[r][c];
+                        }
                     }
 
                     if (foucsStatus != "@" && isRealNum(value)) {

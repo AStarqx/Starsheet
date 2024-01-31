@@ -816,6 +816,9 @@ function luckysheetDrawMain(
 
         let mainCell = Store.flowdata[r][c];
 
+        let rs = (mainCell['mc'] && mainCell['mc'].rs) || 1
+        let cs = (mainCell['mc'] && mainCell['mc'].cs) || 1
+
         if (c == 0) {
             start_c = -scrollWidth;
         } else {
@@ -828,8 +831,8 @@ function luckysheetDrawMain(
             start_r = Store.visibledatarow[r - 1] - scrollHeight - 1;
         }
 
-        end_r = Store.visibledatarow[r + mainCell["mc"].rs - 1] - scrollHeight;
-        end_c = Store.visibledatacolumn[c + mainCell["mc"].cs - 1] - scrollWidth;
+        end_r = Store.visibledatarow[r + rs - 1] - scrollHeight;
+        end_c = Store.visibledatacolumn[c + cs - 1] - scrollWidth;
 
         if (value == null || value.toString().length == 0) {
             nullCellRender(
