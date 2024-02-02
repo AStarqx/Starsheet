@@ -1877,6 +1877,11 @@ const selection = {
         }
 
         let copyData = $.extend(true, [], arr);
+        copyData.forEach(row => {
+            row.forEach(cell => {
+                if(cell && cell.id) delete cell.id
+            })
+        })
 
         //多重选择选择区域 单元格如果有函数 则只取值 不取函数
         if (copyRange["copyRange"].length > 1) {
@@ -2105,7 +2110,8 @@ const selection = {
                 cdformat = $.extend(true, [], a_file["luckysheet_conditionformat_save"]);
 
                 for (let i = 0; i < ruleArr_cf.length; i++) {
-                    let cf_range = ruleArr_cf[i].cellrange;
+                    let ruleArrItem = ruleArr_cf[i]
+                    let cf_range = ruleArrItem.cellrange;
 
                     let emptyRange = [];
 
@@ -2132,8 +2138,16 @@ const selection = {
                     }
 
                     if (emptyRange.length > 0) {
-                        ruleArr_cf[i].cellrange = emptyRange;
-                        cdformat.push(ruleArr_cf[i]);
+                        let cf = $.extend(true, {}, ruleArrItem);
+                        cf.cellrange = emptyRange;
+                        if(ruleArrItem && ruleArrItem.conditionName === 'rangeName') {
+                            if(cdformat.filter(c => c.cellRangeName === cf.cellRangeName).length === 0) {
+                                cdformat.push(cf);
+                            }
+                        }
+                        else {
+                            cdformat.push(cf);
+                        }
                     }
                 }
             }
@@ -2423,7 +2437,8 @@ const selection = {
             );
 
             for (let i = 0; i < ruleArr.length; i++) {
-                let cdformat_cellrange = ruleArr[i].cellrange;
+                let ruleArrItem = ruleArr[i]
+                let cdformat_cellrange = ruleArrItem.cellrange;
                 let emptyRange = [];
 
                 for (let j = 0; j < cdformat_cellrange.length; j++) {
@@ -2440,8 +2455,17 @@ const selection = {
                 }
 
                 if (emptyRange.length > 0) {
-                    ruleArr[i].cellrange = [{ row: [minh, maxh], column: [minc, maxc] }];
-                    cdformat.push(ruleArr[i]);
+                    let cf = $.extend(true, {}, ruleArrItem);
+                    cf.cellrange = [{ row: [minh, maxh], column: [minc, maxc] }];
+
+                    if(ruleArrItem && ruleArrItem.conditionName === 'rangeName') {
+                        if(cdformat.filter(c => c.cellRangeName === cf.cellRangeName).length === 0) {
+                            cdformat.push(cf);
+                        }
+                    }
+                    else {
+                        cdformat.push(cf);
+                    }
                 }
             }
         }

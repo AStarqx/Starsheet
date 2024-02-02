@@ -3497,7 +3497,9 @@ const luckysheetformula = {
             sel.addRange(range);
             el.focus();
         } catch (err) {
-            luckysheetRangeLast(this.rangeResizeTo[0]);
+            if(this.rangeResizeTo && this.rangeResizeTo.length) {
+                luckysheetRangeLast(this.rangeResizeTo[0]);
+            }
         }
     },
     functionRange: function(obj, v, vp) {
@@ -5999,7 +6001,8 @@ const luckysheetformula = {
 
         let fp = $.trim(_this.functionParserExe(txt));
         // 处理百分比
-        const regex = /\b\d+(\.\d+)?%(?=\))/g;
+        // const regex = /\b\d+(\.\d+)?%(?=\))/g;
+        const regex = /\d+(\\.\\d+)?%/g
         const numArr = fp.match(regex)
         if(numArr && numArr.length) {
             numArr.forEach(num => {

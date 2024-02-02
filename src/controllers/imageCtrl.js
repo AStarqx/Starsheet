@@ -646,7 +646,8 @@ const imageCtrl = {
             "height": height,
             "left": left,
             "top": top,
-            "position": position
+            "position": position,
+            "visibility": 'visible'
         });
         $("#" + _this.currentImgId + " img").css({
             "width": imgItem.default.width * zoomRatio,

@@ -339,7 +339,8 @@ function luckysheetextendtable(type, index, value, direction, sheetIndex) {
     let newCFarr = [];
     if (CFarr != null && CFarr.length > 0) {
         for (let i = 0; i < CFarr.length; i++) {
-            let cf_range = CFarr[i].cellrange;
+            let CFarrItem = CFarr[i]
+            let cf_range = CFarrItem.cellrange;
             let cf_new_range = [];
 
             for (let j = 0; j < cf_range.length; j++) {
@@ -389,10 +390,16 @@ function luckysheetextendtable(type, index, value, direction, sheetIndex) {
                 cf_new_range.push({ row: [CFr1, CFr2], column: [CFc1, CFc2] });
             }
 
-            let cf = $.extend(true, {}, CFarr[i]);
+            let cf = $.extend(true, {}, CFarrItem);
             cf.cellrange = cf_new_range;
-
-            newCFarr.push(cf);
+            if(CFarrItem && CFarrItem.conditionName === 'rangeName') {
+                if(newCFarr.filter(c => c.cellRangeName === cf.cellRangeName).length === 0) {
+                    newCFarr.push(cf);
+                }
+            }
+            else {
+                newCFarr.push(cf);
+            }
         }
     }
 
@@ -1350,7 +1357,8 @@ function luckysheetdeletetable(type, st, ed, sheetIndex) {
     let newCFarr = [];
     if (CFarr != null && CFarr.length > 0) {
         for (let i = 0; i < CFarr.length; i++) {
-            let cf_range = CFarr[i].cellrange;
+            let CFarrItem = CFarr[i]
+            let cf_range = CFarrItem.cellrange;
             let cf_new_range = [];
 
             for (let j = 0; j < cf_range.length; j++) {
@@ -1405,10 +1413,16 @@ function luckysheetdeletetable(type, st, ed, sheetIndex) {
             }
 
             if (cf_new_range.length > 0) {
-                let cf = $.extend(true, {}, CFarr[i]);
+                let cf = $.extend(true, {}, CFarrItem);
                 cf.cellrange = cf_new_range;
-
-                newCFarr.push(cf);
+                if(CFarrItem && CFarrItem.conditionName === 'rangeName') {
+                    if(newCFarr.filter(c => c.cellRangeName === cf.cellRangeName).length === 0) {
+                        newCFarr.push(cf);
+                    }
+                }
+                else {
+                    newCFarr.push(cf);
+                }
             }
         }
     }
@@ -2309,7 +2323,8 @@ function luckysheetDeleteCell(type, str, edr, stc, edc, sheetIndex) {
     let newCFarr = [];
     if (CFarr != null && CFarr.length > 0) {
         for (let i = 0; i < CFarr.length; i++) {
-            let cf_range = CFarr[i].cellrange;
+            let CFarrItem = CFarr[i]
+            let cf_range = CFarrItem.cellrange;
             let cf_new_range = [];
 
             for (let j = 0; j < cf_range.length; j++) {
@@ -2324,10 +2339,17 @@ function luckysheetDeleteCell(type, str, edr, stc, edc, sheetIndex) {
             }
 
             if (cf_new_range.length > 0) {
-                let cf = $.extend(true, {}, CFarr[i]);
+                let cf = $.extend(true, {}, CFarrItem);
                 cf.cellrange = cf_new_range;
 
-                newCFarr.push(cf);
+                if(CFarrItem && CFarrItem.conditionName === 'rangeName') {
+                    if(newCFarr.filter(c => c.cellRangeName === cf.cellRangeName).length === 0) {
+                        newCFarr.push(cf);
+                    }
+                }
+                else {
+                    newCFarr.push(cf);
+                }
             }
         }
     }
