@@ -83,12 +83,11 @@ export function getdatabyselectionD(d, range) {
                 value = dynamicArray_compute[r + "_" + c];
             }
             else{
-                let cellValue = d[r][c]
-                if(cellValue && cellValue.ct && cellValue.ct.t && cellValue.ct.t === 'inlineStr') {
-                    let ss = cellValue.ct.s || []
+                let cellValue = $.extend(true, {}, d[r][c])
+                if(cellValue && cellValue.ct && cellValue.ct.s) {
                     let trueCell = cellValue.ct.s[0]
-                    // trueCell.v = ss.map(s => s.v).join('')
-                    cellValue = { ...cellValue, ...trueCell }
+                    trueCell.v = cellValue.ct.s.map(item => item.v).join('')
+                    cellValue = trueCell
                 }
                 value = cellValue;
             }

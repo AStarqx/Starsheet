@@ -816,8 +816,8 @@ function luckysheetDrawMain(
 
         let mainCell = Store.flowdata[r][c];
 
-        let rs = (mainCell['mc'] && mainCell['mc'].rs) || 1
-        let cs = (mainCell['mc'] && mainCell['mc'].cs) || 1
+        let rs = mainCell && mainCell['mc'] && mainCell['mc'].rs ? mainCell['mc'].rs : 1
+        let cs = mainCell && mainCell['mc'] && mainCell['mc'].cs ? mainCell['mc'].cs : 1
 
         if (c == 0) {
             start_c = -scrollWidth;
@@ -1983,7 +1983,6 @@ function getCellOverflowMap(canvas, col_st, col_ed, row_st, row_end) {
             if (Store.config["colhidden"] != null && Store.config["colhidden"][c] != null) {
                 continue;
             }
-
             if (
                 cell != null &&
                 (!isRealNull(cell.v) || isInlineStringCell(cell)) &&

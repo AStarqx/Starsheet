@@ -1392,8 +1392,8 @@ var setStyleAndValue = function (table, worksheet) {
       let value;
  
       var v='';
-      if(cell.ct&&cell.ct.t=='inlineStr'){
-        var s = cell.ct.s;
+      if(cell.ct && cell.ct.s){
+        var s = cell.ct.s || []
         s.forEach(function(val,num){
           v += val.v;
         })

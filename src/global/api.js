@@ -81,7 +81,7 @@ export function getCellValue(row, column, options = {}) {
                 return_v = cellData.m;
             }
             // 修复当单元格内有换行获取不到值的问题
-            else if (cellData.ct.hasOwnProperty("t") && cellData.ct.t === 'inlineStr') {
+            else if (cellData.ct.s) {
                 let inlineStrValueArr = cellData.ct.s;
                 if (inlineStrValueArr) {
                     return_v =  inlineStrValueArr.map(i => i.v).join("")
@@ -279,8 +279,13 @@ export function clearCell(row, column, options = {}) {
         success
     } = {...options}
 
-    let targetSheetData = $.extend(true, [], Store.luckysheetfile[order].data);
-    let cell = targetSheetData[row][column];
+    let file = Store.luckysheetfile[order]
+    let cell = undefined
+    let targetSheetData = []
+    if(file) {
+        targetSheetData = $.extend(true, [], file.data);
+        cell = targetSheetData[row][column];
+    }
 
     if(getObjType(cell) == "object"){
         delete cell["m"];

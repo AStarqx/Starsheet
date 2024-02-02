@@ -7,12 +7,12 @@ export const inlineStyleAffectAttribute = {"bl":1, "it":1 , "ff":1, "cl":1, "un"
 export const inlineStyleAffectCssName = {"font-weight":1, "font-style":1 , "font-family":1, "text-decoration":1, "border-bottom":1,"font-size":1,"color":1};
 
 export function isInlineStringCell(cell){
-    let isIs = cell && cell.ct!=null && cell.ct.t=="inlineStr" && cell.ct.s!=null && cell.ct.s.length>0;
+    let isIs = cell && cell.ct!=null && cell.ct.s!=null && cell.ct.s.length>0;
     return isIs; 
 }
 
 export function isInlineStringCT(ct){
-    let isIs = ct!=null && ct.t=="inlineStr" && ct.s!=null && ct.s.length>0;
+    let isIs = ct!=null && ct.s!=null && ct.s.length>0;
     return isIs; 
 }
 

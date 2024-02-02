@@ -4638,11 +4638,13 @@ const menuButton = {
                 console.warn("Main merge Cell info is null", row_index, col_index);
                 return null;
             }
-            let col_rs = d[row_index][col_index].mc.cs;
-            let row_rs = d[row_index][col_index].mc.rs;
+            let cell = d[row_index][col_index]
 
-            let margeMain = d[row_index][col_index].mc;
+            let col_rs = cell.mc ? cell.mc.cs : 0;
+            let row_rs = cell.mc ? cell.mc.rs : 0;
 
+            let margeMain = cell.mc || { rs: 0, cs: 0 }
+            
             let start_r, end_r, row, row_pre;
             for (let r = row_index; r < margeMain.rs + row_index; r++) {
                 if (r == 0) {

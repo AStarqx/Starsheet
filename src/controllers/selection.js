@@ -424,7 +424,7 @@ const selection = {
                     if (c_value == null) {
                         c_value = getcellvalue(r, c, d);
                     }
-                    if (c_value == null && d[r][c] && d[r][c].ct && d[r][c].ct.t == "inlineStr") {
+                    if (c_value == null && d[r][c] && d[r][c].ct && d[r][c].ct.s) {
                         c_value = d[r][c].ct.s
                             .map((val) => {
                                 const brDom = $('<br style="mso-data-placement:same-cell;">');
@@ -878,7 +878,7 @@ const selection = {
                     if (c_value == null) {
                         c_value = getcellvalue(r, c, d);
                     }
-                    if (c_value == null && d[r][c] && d[r][c].ct && d[r][c].ct.t == "inlineStr") {
+                    if (c_value == null && d[r][c] && d[r][c].ct && d[r][c].ct.s) {
                         c_value = d[r][c].ct.s
                             .map((val) => {
                                 const brDom = $('<br style="mso-data-placement:same-cell;">');
@@ -2364,7 +2364,7 @@ const selection = {
                             }
 
                             x[c] = $.extend(true, x[c], value);
-                            if (x[c].ct && x[c].ct.t === "inlineStr") {
+                            if (x[c].ct && x[c].ct.s) {
                                 x[c].ct.s.forEach((item) => (item = $.extend(true, item, value)));
                             }
 

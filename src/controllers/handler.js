@@ -6064,7 +6064,7 @@ export default function luckysheetHandler() {
                             v = "";
                         }
 
-                        if (v == null && d[r][c] && d[r][c].ct && d[r][c].ct.t == "inlineStr") {
+                        if (v == null && d[r][c] && d[r][c].ct && d[r][c].ct.s) {
                             v = d[r][c].ct.s.map((val) => val.v).join("");
                             isInlineStr = true;
                         }

@@ -1946,7 +1946,6 @@ const luckysheetformula = {
 
             i++;
         }
-
         return function_str;
     },
     isfreezonFuc: function(txt) {
@@ -5999,7 +5998,6 @@ const luckysheetformula = {
         Store.calculateSheetIndex = index;
 
         let fp = $.trim(_this.functionParserExe(txt));
-
         // 处理百分比
         const regex = /\b\d+(\.\d+)?%(?=\))/g;
         const numArr = fp.match(regex)
@@ -6009,7 +6007,6 @@ const luckysheetformula = {
                 fp = fp.replace(num, value)
             })
         }
-
         fp = fp.replaceAll('FALSE', 'false')
                 .replaceAll('TRUE', 'true')
                 .replaceAll('()', '1')
