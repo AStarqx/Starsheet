@@ -372,13 +372,14 @@ const imageCtrl = {
             if(!checkProtectionAuthorityNormal(Store.currentSheetIndex, "editObjects",false)){
                 return;
             }
-            $("#luckysheetChangeImage").show();
             $(this).hide();
             let id = $(this).attr("id");
 
             if(_this.currentImgId != null && _this.currentImgId != id){
                 _this.cancelActiveImgItem();
             }
+            
+            $("#luckysheetChangeImage").show();
 
             _this.currentImgId = id;
 

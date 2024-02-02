@@ -3986,7 +3986,6 @@ const menuButton = {
                 row_ed = Store.luckysheet_select_save[s]["row"][1];
             let col_st = Store.luckysheet_select_save[s]["column"][0],
                 col_ed = Store.luckysheet_select_save[s]["column"][1];
-
             this.updateFormatCell(d, attr, foucsStatus, row_st, row_ed, col_st, col_ed);
 
             if (attr == "tb" || attr == "tr" || attr == "fs") {
@@ -4003,6 +4002,55 @@ const menuButton = {
         }
 
         jfrefreshgrid(d, Store.luckysheet_select_save, allParam, false);
+    },
+    updateFormatV2: function(d, attr, foucsStatus, r, c) {
+        let _this = this;
+
+        if (!checkProtectionFormatCells(Store.currentSheetIndex)) {
+            return;
+        }
+
+        // *如果禁止前台编辑，则中止下一步操作
+        if (!checkIsAllowEdit()) {
+            tooltip.info("", locale().pivotTable.errorNotAllowEdit);
+            return;
+        }
+
+        let canvasElement = document.createElement("canvas");
+        let canvas = canvasElement.getContext("2d");
+
+        if (attr in inlineStyleAffectAttribute) {
+            if (parseInt($("#luckysheet-input-box").css("top")) > 0) {
+                let value = $("#luckysheet-input-box").text();
+                if (value.substr(0, 1) != "=") {
+                    let cell = d[Store.luckysheetCellUpdate[0]][Store.luckysheetCellUpdate[1]];
+                    updateInlineStringFormat(cell, attr, foucsStatus, luckysheetformula.rangeResizeTo);
+                    // return;
+                }
+            }
+        }
+
+        let cfg = $.extend(true, {}, Store.config);
+        if (cfg["rowlen"] == null) {
+            cfg["rowlen"] = {};
+        }
+
+        this.updateFormatCell(d, attr, foucsStatus, r, r, c, c);
+
+        if (attr == "tb" || attr == "tr" || attr == "fs") {
+            cfg = rowlenByRange(d, r, c, cfg);
+        }
+
+        let allParam = {};
+        if (attr == "tb" || attr == "tr" || attr == "fs") {
+            allParam = {
+                cfg: cfg,
+                RowlChange: true,
+            };
+        }
+        let range = [{ row: [r, r], column: [c, c] }]
+
+        jfrefreshgrid(d, range, allParam, false);
     },
     updateFormat_mc: function(d, foucsStatus) {
         // *如果禁止前台编辑，则中止下一步操作
