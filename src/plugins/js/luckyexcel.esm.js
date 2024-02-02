@@ -1721,7 +1721,7 @@ var LuckySheetCelldata = /** @class */ (function (_super) {
                     numf = 'yyyy&quot;年&quot;m&quot;月&quot;;@';
                 }
                 cellFormat.fa = escapeCharacter(numf);
-                cellFormat.t = t || 'd';
+                cellFormat.t = t || 'g';
                 cellValue.ct = cellFormat;
             }
             if (fillId != undefined) {
@@ -2820,44 +2820,52 @@ var LuckySheet = /** @class */ (function (_super) {
         var valueArr = [];
         var _loop_1 = function (key) {
             var item = formulaValueArr[key];
-            var definedName = this_1.definedNames.find(function (d) { return getXmlAttibute(d.attributeList, 'name', null) === item; });
-            if (!definedName)
-                return "continue";
-            var formulaValue = definedName.value;
-            var splitText = formulaValue.split('!');
-            var sheetName = splitText.length === 2 ? splitText[0] : '';
-            var sheet = this_1.getSheetBysheetName(sheetName);
-            var sheetId = sheet.attributeList["r:id"];
-            var cellrange = getcellrange(formulaValue, this_1.sheetList, sheetId);
-            var sheetFile = this_1.getSheetFileBysheetId(sheetId);
-            var rows = this_1.readXml.getElementsByTagName("sheetData/row", sheetFile);
-            var cellData = [];
-            var _loop_2 = function (i) {
-                var row = rows.find(function (r) {
-                    var rowNo = getXmlAttibute(r.attributeList, "r", null);
-                    if (rowNo == null)
-                        return false;
-                    var rowNoNum = parseInt(rowNo) - 1;
-                    return rowNoNum === i;
-                });
-                if (!row)
-                    return "continue";
-                var cells = row.getInnerElements("c");
-                for (var key_1 in cells) {
-                    var cell = cells[key_1];
-                    var attrList = cell.attributeList;
-                    var r = attrList.r;
-                    var range = getcellrange(r);
-                    if (range.column[0] < cellrange.column[0] || range.column[0] > cellrange.column[1])
-                        continue;
-                    var cellValue = this_1.getCellValue(cell, sheetFile);
-                    cellData.push(cellValue);
-                }
-            };
-            for (var i = cellrange.row[0]; i <= cellrange.row[1]; i++) {
-                _loop_2(i);
+            if (item.match(/\((.*?)\)/)) {
+                valueArr[key] = item;
             }
-            valueArr[key] = cellData.map(function (d) { return d.v && d.v.v; }).join(',');
+            else {
+                var names = this_1.definedNames || [];
+                var definedName = names.find(function (d) { return getXmlAttibute(d.attributeList, 'name', null) === item; });
+                if (!definedName)
+                    return "continue";
+                var formulaValue = definedName.value;
+                console.log(definedName, formulaValue);
+                var splitText = formulaValue.split('!');
+                var sheetName = splitText.length === 2 ? splitText[0] : '';
+                var sheet = this_1.getSheetBysheetName(sheetName);
+                var sheetId = sheet.attributeList["r:id"];
+                var cellrange = getcellrange(formulaValue, this_1.sheetList, sheetId);
+                var sheetFile = this_1.getSheetFileBysheetId(sheetId);
+                var rows = this_1.readXml.getElementsByTagName("sheetData/row", sheetFile);
+                var cellData = [];
+                var _loop_2 = function (i) {
+                    var row = rows.find(function (r) {
+                        var rowNo = getXmlAttibute(r.attributeList, "r", null);
+                        if (rowNo == null)
+                            return false;
+                        var rowNoNum = parseInt(rowNo) - 1;
+                        return rowNoNum === i;
+                    });
+                    if (!row)
+                        return "continue";
+                    var cells = row.getInnerElements("c");
+                    for (var key_1 in cells) {
+                        var cell = cells[key_1];
+                        var attrList = cell.attributeList;
+                        var r = attrList.r;
+                        var range = getcellrange(r);
+                        if (range.column[0] < cellrange.column[0] || range.column[0] > cellrange.column[1])
+                            continue;
+                        var cellValue = this_1.getCellValue(cell, sheetFile);
+                        cellData.push(cellValue);
+                    }
+                };
+                for (var i = cellrange.row[0]; i <= cellrange.row[1]; i++) {
+                    _loop_2(i);
+                }
+                valueArr[key] = cellData.map(function (d) { return d.v && d.v.v; }).join(',');
+                console.log(valueArr);
+            }
         };
         var this_1 = this;
         for (var key in formulaValueArr) {

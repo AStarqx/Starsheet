@@ -17603,7 +17603,7 @@ function (_super) {
         }
 
         cellFormat.fa = method_1.escapeCharacter(numf);
-        cellFormat.t = t || 'd';
+        cellFormat.t = t || 'g';
         cellValue.ct = cellFormat;
       }
 
@@ -19697,11 +19697,13 @@ function (_super) {
       if (item.match(/\((.*?)\)/)) {
         valueArr[key] = item;
       } else {
-        var definedName = this_1.definedNames.find(function (d) {
+        var names = this_1.definedNames || [];
+        var definedName = names.find(function (d) {
           return method_1.getXmlAttibute(d.attributeList, 'name', null) === item;
         });
         if (!definedName) return "continue";
         var formulaValue = definedName.value;
+        console.log(definedName, formulaValue);
         var splitText = formulaValue.split('!');
         var sheetName = splitText.length === 2 ? splitText[0] : '';
         var sheet = this_1.getSheetBysheetName(sheetName);
@@ -19739,6 +19741,7 @@ function (_super) {
         valueArr[key] = cellData.map(function (d) {
           return d.v && d.v.v;
         }).join(',');
+        console.log(valueArr);
       }
     };
 
