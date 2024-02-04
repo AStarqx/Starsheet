@@ -6402,7 +6402,7 @@ export function setDataVerification(optionItem, options = {}) {
         checked = false
     } = {...optionItem}
 
-    let typeValues = ["dropdown", "checkbox", "number", "number_integer", "number_decimal", "text_content", "text_length", "date", "validity"];
+    let typeValues = ["autocomplete", "dropdown", "checkbox", "number", "number_integer", "number_decimal", "text_content", "text_length", "date", "validity"];
     let type2Values_1 = ["bw", "nb", "eq", "ne", "gt", "lt", "gte", "lte"];
     let type2Values_2 = ["include", "exclude", "equal"];
     let type2Values_3 = ["bw", "nb", "eq", "ne", "bf", "nbf", "af", "naf"];
@@ -6414,7 +6414,7 @@ export function setDataVerification(optionItem, options = {}) {
 
     let dvText = locale().dataVerification;
 
-    if(type == 'dropdown'){
+    if(type == 'dropdown' || type == 'autocomplete'){
         if(value1.length == 0){
             tooltip.info('<i class="fa fa-exclamation-triangle"></i>', dvText.tooltipInfo1);
             return;

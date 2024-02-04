@@ -7006,6 +7006,7 @@ export default {
         selectCellRange2: "请选择单元格范围",
         verificationCondition: "验证条件",
         allowMultiSelect: "是否允许多选",
+        autocomplete: '下拉补全',
         dropdown: "下拉列表",
         checkbox: "复选框",
         number: "数字",

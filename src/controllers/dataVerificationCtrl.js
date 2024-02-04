@@ -98,6 +98,7 @@ const dataVerificationCtrl = {
                             <div class="box-item">
                                 <div class="box-item-title">${dvText.verificationCondition}</div>
                                 <select id="data-verification-type-select">
+                                    <option value="autocomplete">${dvText.autocomplete}</option>
                                     <option value="dropdown">${dvText.dropdown}</option>
                                     <option value="checkbox">${dvText.checkbox}</option>
                                     <option value="number">${dvText.number}</option>
@@ -437,7 +438,7 @@ const dataVerificationCtrl = {
             let value = this.value;
             let item = _this.curItem;
 
-            if(value == 'dropdown'){
+            if(value == 'dropdown' || value == 'autocomplete'){
                 $("#luckysheet-dataVerification-dialog .show-box .show-box-item-dropdown").show();
 
                 let value1 = "";
@@ -653,7 +654,7 @@ const dataVerificationCtrl = {
             let type = $("#luckysheet-dataVerification-dialog #data-verification-type-select").val();
             let type2 = null, value1 = "", value2 = "";
 
-            if(type == 'dropdown'){
+            if(type == 'dropdown' || type == 'autocomplete'){
                 value1 = $("#luckysheet-dataVerification-dialog .show-box-item-dropdown .data-verification-value1").val().trim();
             
                 if(value1.length == 0){
@@ -871,7 +872,7 @@ const dataVerificationCtrl = {
         $("#luckysheet-dataVerification-dialog #data-verification-type-select").val(item.type);
         $("#luckysheet-dataVerification-dialog .show-box .show-box-item").hide();
 
-        if(item.type == 'dropdown'){
+        if(item.type == 'dropdown' || item.type == 'autocomplete'){
             $("#luckysheet-dataVerification-dialog .show-box .show-box-item-dropdown").show();
             $("#luckysheet-dataVerification-dialog .show-box-item-dropdown .data-verification-value1").val(item.value1);
             $('#luckysheet-dataVerification-dialog #data-verification-multi').prop('checked', item.type2 ? true : false);
@@ -1057,7 +1058,7 @@ const dataVerificationCtrl = {
         }
 
         //单元格数据验证 类型是 下拉列表
-        if(item.type == 'dropdown'){
+        if(item.type == 'dropdown' || item.type == 'autocomplete'){
             $("#luckysheet-dataVerification-dropdown-btn").show().css({
                 'max-width': col - col_pre,
                 'max-height': row - row_pre,
@@ -1507,7 +1508,7 @@ const dataVerificationCtrl = {
         let list = _this.getDropdownList(rowIndex, colIndex, item.value1);
 
         let optionHtml = '';
-        if (item.type === 'dropdown' && item.type2) {
+        if (['dropdown', 'autocomplete'].includes(item.type) && item.type2) {
             // 下拉多选的情况下 将已经选择的标出来
             let cellValue = getcellvalue(rowIndex, colIndex, null);
             let valueArr = isRealNull(cellValue) ? [] : cellValue.split(',');

@@ -9,6 +9,7 @@ import { selectHightlightShow } from "../controllers/select";
 import { luckysheet_searcharray } from "../controllers/sheetSearch";
 import { checkProtectionAuthorityNormal, checkProtectionNotEnable } from "../controllers/protection";
 import { getSheetIndex } from "../methods/get";
+import { getRangeValue } from "./api"
 import Store from "../store";
 import method from "./method";
 
@@ -1872,9 +1873,8 @@ function luckysheetDeleteCell(type, str, edr, stc, edc, sheetIndex) {
     if (!checkProtectionNotEnable(sheetIndex)) {
         return;
     }
-
     // Hook function
-    if (!method.createHookFunction("rangeDeleteBefore", str, stc)) {
+    if (!method.createHookFunction("rangeDeleteBefore", Store.luckysheet_select_save, getRangeValue())) {
         return;
     }
 

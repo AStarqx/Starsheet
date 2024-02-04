@@ -29,6 +29,8 @@ import cleargridelement from '../global/cleargridelement';
 import tooltip from '../global/tooltip';
 import locale from '../locale/locale';
 import {enterKeyControll} from './inlineString';
+import { getRangeValue } from '../global/api'
+import method from "../global/method";
 import Store from '../store';
 
 
@@ -806,7 +808,7 @@ export function keyboardInitial(){
                 else{
                     $("#luckysheet-delete-text").click();
                 }
-
+                method.createHookFunction("rangeDeleteBefore", Store.luckysheet_select_save, getRangeValue())
                 event.preventDefault();
             }
             else if(kcode == 8 && imageCtrl.currentImgId != null){
