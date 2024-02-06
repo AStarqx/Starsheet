@@ -2026,7 +2026,7 @@ const conditionformat = {
                             rangeText = rangeTxtArr[0]
                         }
                         itemHtml =  '<div class="item" data-item="' + i + '">' +
-                                '<div class="format" style="width: 28%" title="'+ ruleArr[i].cellRangeName +'">' + ruleArr[i].cellRangeName + '</div>' +
+                                '<div class="format" style="width: 28%; overflow:hidden;text-overflow: ellipsis;text-wrap: nowrap;" title="'+ ruleArr[i].cellRangeName +'" title="'+ ruleArr[i].cellRangeName +'">' + ruleArr[i].cellRangeName + '</div>' +
                                 '<div class="ruleRange">' +
                                     '<input class="formulaInputFocus" readonly="true" value="' + rangeText + '"/>' +
                                     '<i class="fa fa-table" aria-hidden="true" title="'+ conditionformat_Text.selectRange +'"></i>' +
