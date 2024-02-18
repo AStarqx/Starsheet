@@ -21,6 +21,8 @@ const conditionformat = {
     fileClone: [],
     editorRule: null, //{"sheetIndex": sheetIndex,"itemIndex": itemIndex,"data": luckysheetfile[sheetIndex].luckysheet_conditionformat_save[itemIndex]}
     isRangeNameModel: false,
+    definedFieldType: 'default',
+    definedFieldName: '',
     ruleTypeHtml: function(){
         const conditionformat_Text = locale().conditionformat;
 
@@ -110,6 +112,7 @@ const conditionformat = {
 
         // 管理规则
         $(document).off("change.CFchooseSheet").on("change.CFchooseSheet", "#luckysheet-administerRule-dialog .chooseSheet", function(){
+            $("#searchDefinedName").val("")
             let index = $("#luckysheet-administerRule-dialog .chooseSheet option:selected").val();
             _this.getConditionRuleList(index, _this.isRangeNameModel);
         });
@@ -126,7 +129,29 @@ const conditionformat = {
                 tooltip.info("提示", "请输入字段名称");
                 return;
             }
-            if(rangeNames.filter(item => item.name == rangeName).length == 0){
+            if(rangeNames.filter(item => item.name == rangeName).length != 0) {
+                $("#rangeName").focus();
+                tooltip.info("字段名称已存在,可在字段管理器中查看!", "");
+                return
+            }
+            if(conditionformat.definedFieldType !== 'default') {
+                const range = rangeNames.find(n => n.name === conditionformat.definedFieldName)
+                if(range) {
+                    range.name = rangeName
+                    Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["rangeNames"] = rangeNames;
+                }
+                const formatArr = _this.fileClone[getSheetIndex(Store.currentSheetIndex)]["luckysheet_conditionformat_save"]
+                if(formatArr && formatArr.length) {
+                    const currItem = formatArr.find(f => f.cellRangeName === conditionformat.definedFieldName)
+                    currItem.cellRangeName = rangeName
+                    Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["luckysheet_conditionformat_save"] = formatArr;
+                }
+                $("#luckysheet-definedFields-dialog").hide();
+                conditionformat.definedFieldType = 'default'
+                conditionformat.definedFieldName = ''
+                _this.administerRuleDialog(true);
+            }
+            else {
                 const range = Store.currentImgId ? 'A1:A1' : $("#range").val().trim();
                 let cell = range.split(':');
                 let startColumn = ABCatNum(cell[0].replace(/[^a-zA-z]/g, ''));
@@ -159,12 +184,8 @@ const conditionformat = {
                         $("#luckysheet-definedFields-dialog").hide();
                     }
                 })
+                Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["rangeNames"] = rangeNames;
             }
-            else{
-                $("#rangeName").focus();
-                tooltip.info("字段名称已存在,可在字段管理器中查看!", "");
-            }
-            Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["rangeNames"] = rangeNames;
         });
 
         $(document).off("click.CFadministerRuleConfirm").on("click.CFadministerRuleConfirm", "#luckysheet-administerRule-dialog-confirm", function(){
@@ -696,6 +717,42 @@ const conditionformat = {
             $("#luckysheet-column-count-show").hide();
         });
 
+        // 编辑字段
+        $(document).off("click.CFnewConditionRuleClose").on("click.CFnewConditionRuleClose", "#editorDefinedName", function() {
+            let itemIndex = $("#luckysheet-administerRule-dialog .ruleList .listBox .item.on").attr("data-item")
+            if(!itemIndex) {
+                return
+            }
+
+            conditionformat.definedFieldType = 'edit'
+            conditionformat.definedFieldsDialog()
+            conditionformat.init()
+
+            let sheetIndex = $("#luckysheet-administerRule-dialog .chooseSheet option:selected").val()
+            const item = _this.fileClone[getSheetIndex(sheetIndex)]["luckysheet_conditionformat_save"][itemIndex]
+            $("#rangeName").val(item.cellRangeName)
+            conditionformat.definedFieldName = item.cellRangeName
+        })
+
+        // 搜索字段
+        $("#searchDefinedName").on('input', function(e) {
+            const val = e.target.value
+            let sheetIndex = $("#luckysheet-administerRule-dialog .chooseSheet option:selected").val();
+            let ruleArr = _this.fileClone[getSheetIndex(sheetIndex)]["luckysheet_conditionformat_save"]; //条件格式规则集合
+            if(ruleArr != null && ruleArr.length > 0) {
+                for(let i = 0; i < ruleArr.length; i++){
+                    let cellrangeName = ruleArr[i]["cellRangeName"];  //字段名称
+                    let item = $(`#luckysheet-administerRule-dialog .ruleList .listBox .item[data-item="${i}"]`)
+                    if(cellrangeName.indexOf(val) > -1) {
+                        item.show()
+                    }
+                    else {
+                        item.hide()
+                    }
+                }
+            }
+        })
+
         // 编辑规则
         $(document).off("click.CFeditorConditionRule").on("click.CFeditorConditionRule", "#editorConditionRule", function(){
 
@@ -1118,6 +1175,7 @@ const conditionformat = {
             }
 
             let itemIndex = $("#luckysheet-administerRule-dialog .ruleList .listBox .item.on").attr("data-item");
+            if(!itemIndex) return
             _this.fileClone[getSheetIndex(sheetIndex)]["luckysheet_conditionformat_save"].splice(itemIndex, 1);
             _this.administerRuleDialog(_this.isRangeNameModel);
         });
@@ -1807,7 +1865,7 @@ const conditionformat = {
         //             <input class="formulaInputFocus" spellcheck="false">
         //             <i class="fa fa-table" aria-hidden="true"></i>
         //         </div>
-        const dynamicHtml = Store.currentImgId ? `
+        let dynamicHtml = Store.currentImgId ? `
             <div class="box-item">
                 <span class="item-label">引用图片：</span>
                 <input id="rangeImage" class="item-control" value="${Store.currentImgId}" readonly="true"></input>
@@ -1823,6 +1881,11 @@ const conditionformat = {
                 <span>该位置是否需要引用评估方法</span>
             </div>
         `;
+        
+        // 编辑模式
+        if(conditionformat.definedFieldType !== 'default') {
+            dynamicHtml = ''
+        }
 
         let content =  `
                         <div class="definedFieldsBox">
@@ -1832,10 +1895,12 @@ const conditionformat = {
                             </div>
                             ${dynamicHtml}
                         </div>`;
+
+        const title = conditionformat.definedFieldType === 'default' ? '定义字段' : '编辑字段'
         $("body").append(replaceHtml(modelHTML, {
             "id": "luckysheet-definedFields-dialog",
             "addclass": "luckysheet-definedFields-dialog",
-            "title": "定义字段",
+            "title": title,
             "content": content,
             "botton":  `<button id="luckysheet-definedFields-dialog-confirm" class="btn btn-primary">${conditionformat_Text.confirm}</button>
                         <button class="btn btn-default luckysheet-model-close-btn">${conditionformat_Text.close}</button>`,
@@ -1905,7 +1970,9 @@ const conditionformat = {
                         </div>
                         <div class="ruleBox">
                             <div class="ruleBtn" style="overflow:hidden;">
+                                <input id="searchDefinedName" type="text" clearable />
                                 <button id="deleteConditionRule" style="float:right" class="btn btn-default">删除字段</button>
+                                <button id="editorDefinedName" style="float:right" class="btn btn-default">编辑字段</button>
                             </div>
                             <div class="ruleList">
                                 <div class="listTitle">
@@ -1962,10 +2029,21 @@ const conditionformat = {
         if(ruleArr != null && ruleArr.length > 0){
             const conditionformat_Text = locale().conditionformat;
 
+            let selectIndex = 0
             for(let i = 0; i < ruleArr.length; i++){
                 let type = ruleArr[i]["type"];            //规则类型
                 let format = ruleArr[i]["format"];        //规则样式
                 let cellrange = ruleArr[i]["cellrange"];  //规则应用范围
+
+                if(Store.luckysheet_select_save && Store.luckysheet_select_save.length) {
+                    const r1 = cellrange[0].row
+                    const r2 = Store.luckysheet_select_save[0].row
+                    const c1 = cellrange[0].column
+                    const c2 = Store.luckysheet_select_save[0].column
+                    if(this.isSameArr(r1, r2) && this.isSameArr(c1, c2)) {
+                        selectIndex = ruleArr.length - i - 1
+                    }
+                }
 
                 let ruleName;         //规则名称
                 let formatHtml = '';  //样式dom
@@ -2116,9 +2194,20 @@ const conditionformat = {
                     }
                 }
             })
-
-            $("#luckysheet-administerRule-dialog .ruleList .listBox .item").eq(0).addClass("on");
+            const currItem = $("#luckysheet-administerRule-dialog .ruleList .listBox .item").eq(selectIndex)
+            currItem.addClass("on")
+            $("#luckysheet-administerRule-dialog .ruleList .listBox").scrollTop(selectIndex * currItem.get(0).clientHeight)
         }
+    },
+    isSameArr(arr1, arr2) {
+        if(arr1.length !== arr2.length) return false
+        // 一一比较元素值，有一个不相等就不等
+        for (let i = 0; i < arr1.length; i++) {
+            if (arr1[i] !== arr2[i]) {
+                return false
+            }
+        }
+        return true
     },
     getConditionRuleName: function(conditionName, conditionRange, conditionValue){
         //v 有条件单元格取条件单元格，若无取条件值

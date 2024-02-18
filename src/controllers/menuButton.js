@@ -3211,6 +3211,7 @@ const menuButton = {
                         }
                     }
                     else if (itemvalue == "definedFields"){
+                        conditionformat.definedFieldType = 'default'
                         conditionformat.definedFieldsDialog();
                         conditionformat.init();
                     }
