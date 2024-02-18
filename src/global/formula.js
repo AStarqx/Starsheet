@@ -3972,7 +3972,6 @@ const luckysheetformula = {
             if (c in this.operatorjson) {
                 let s2 = stack.pop();
                 let s1 = stack.pop();
-
                 let str = "luckysheet_compareWith(" + s1 + ",'" + c + "', " + s2 + ")";
 
                 stack.push(str);
@@ -4319,7 +4318,6 @@ const luckysheetformula = {
                         endstr = str;
                     }
                 }
-
                 if (endstr.length > 0) {
                     cal2.unshift(endstr);
                 }
@@ -5999,23 +5997,33 @@ const luckysheetformula = {
 
         Store.calculateSheetIndex = index;
 
-        let fp = $.trim(_this.functionParserExe(txt));
         // 处理百分比
-        // const regex = /\b\d+(\.\d+)?%(?=\))/g;
+        const regex2 = /(?:[0-9]+(?:\.[0-9]+)?%)|(?:[0-9]+(?:\.[0-9]+)?%(?=\*))/g
+        const numArr2 = txt.match(regex2)
+        if(numArr2 && numArr2.length) {
+            numArr2.forEach(num => {
+                const value = this.parsePercentage(num)
+                txt = txt.replace(num, value)
+            })
+        }
         const regex = /\d+(\\.\\d+)?%/g
-        const numArr = fp.match(regex)
+        const numArr = txt.match(regex)
         if(numArr && numArr.length) {
             numArr.forEach(num => {
                 const value = this.parsePercentage(num)
-                fp = fp.replace(num, value)
+                txt = txt.replace(num, value)
             })
         }
+
+        let fp = $.trim(_this.functionParserExe(txt));
+
         fp = fp.replaceAll('FALSE', 'false')
-                .replaceAll('TRUE', 'true')
-                .replaceAll('()', '1')
-                .replaceAll('IF.f(,,', 'IF.f(false,0,')
-                .replaceAll('ROUND.f(,', 'ROUND.f(0,')
-                .replaceAll(',)', ',0)')
+            .replaceAll('TRUE', 'true')
+            .replaceAll('()', '1')
+            .replaceAll('IF.f(,,', 'IF.f(false,0,')
+            .replaceAll('ROUND.f(,', 'ROUND.f(0,')
+            .replaceAll(',)', ',0)')
+        
         if (fp.substr(0, 20) == "luckysheet_function." || fp.substr(0, 22) == "luckysheet_compareWith") {
             _this.functionHTMLIndex = 0;
         }
@@ -6071,7 +6079,7 @@ const luckysheetformula = {
                 //把之前的非打印控制字符DEL替换回一个双引号。
                 result = result.replace(/\x7F/g, '"');
             }
-
+            
             //加入sparklines的参数项目
             if (fp.indexOf("SPLINES") > -1) {
                 sparklines = result;

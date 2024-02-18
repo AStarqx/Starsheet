@@ -17446,7 +17446,12 @@ function (_super) {
 
       if (ref != null || formulaValue != null && formulaValue.length > 0) {
         formulaValue = method_1.escapeCharacter(formulaValue);
-        cellValue.f = "=" + formulaValue;
+
+        if (formulaValue.substr(0, 1) !== '=') {
+          formulaValue = "=" + formulaValue;
+        }
+
+        cellValue.f = formulaValue;
       }
     }
 
