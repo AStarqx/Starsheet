@@ -6,6 +6,7 @@ import tooltip from '../global/tooltip';
 import { isEditMode } from '../global/validate';
 import Store from '../store';
 import locale from '../locale/locale';
+import { getSheetIndex } from '../methods/get';
 
 //更多格式
 const luckysheetMoreFormat = {
@@ -1092,7 +1093,6 @@ const luckysheetMoreFormat = {
             title = locale_format.titleDateTime;
 
             let listHtml = '';
-
             for(let i = 0; i < _this.dateFmtList.length; i++){
                 let name = _this.dateFmtList[i]["name"];
                 let value = _this.dateFmtList[i]["value"];
@@ -1142,7 +1142,32 @@ const luckysheetMoreFormat = {
         let scrollLeft = $(document).scrollLeft(), scrollTop = $(document).scrollTop();
         $("#luckysheet-moreFormat-dialog").css({ "left": (winw + scrollLeft - myw) / 2, "top": (winh + scrollTop - myh) / 3 }).show();
         
-        $("#luckysheet-moreFormat-dialog .listbox .listItem").eq(0).addClass("on");
+        let itemIndex = 0
+        if(Store.luckysheet_select_save && Store.luckysheet_select_save.length) {
+            const row = Store.luckysheet_select_save[0].row[0]
+            const column = Store.luckysheet_select_save[0].column[0]
+            let file = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)] || {}
+            let sheetData = $.extend(true, [], file.data);
+            if(sheetData && sheetData.length) {
+                let cellData = sheetData[row][column]
+
+                if(cellData && cellData.ct && cellData.ct.fa) {
+                    if(type == 'moredatetime') {
+                        itemIndex = _this.dateFmtList.findIndex(f => f.value === cellData.ct.fa)
+                    }
+                    if(type == "morecurrency") {
+                        itemIndex = _this.moneyFmtList.findIndex(f => cellData.ct.fa.indexOf(f.value) > -1)
+                    }
+                    if(type == "moredigit") {
+                        itemIndex = _this.numFmtList.findIndex(f => f.value === cellData.ct.fa)
+                    }
+                    
+                }
+            }
+        }
+        itemIndex = itemIndex < 0 ? 0 : itemIndex || 0
+        $("#luckysheet-moreFormat-dialog .listbox .listItem").eq(itemIndex).addClass("on");
+        $("#luckysheet-moreFormat-dialog .listbox").scrollTop(30 * itemIndex)
     },
     init: function(){
         let _this = this;
