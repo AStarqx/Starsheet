@@ -5997,25 +5997,26 @@ const luckysheetformula = {
 
         Store.calculateSheetIndex = index;
 
+        let newTxt = txt
         // 处理百分比
         const regex2 = /(?:[0-9]+(?:\.[0-9]+)?%)|(?:[0-9]+(?:\.[0-9]+)?%(?=\*))/g
-        const numArr2 = txt.match(regex2)
+        const numArr2 = newTxt.match(regex2)
         if(numArr2 && numArr2.length) {
             numArr2.forEach(num => {
                 const value = this.parsePercentage(num)
-                txt = txt.replace(num, value)
+                newTxt = newTxt.replace(num, value)
             })
         }
         const regex = /\d+(\\.\\d+)?%/g
-        const numArr = txt.match(regex)
+        const numArr = newTxt.match(regex)
         if(numArr && numArr.length) {
             numArr.forEach(num => {
                 const value = this.parsePercentage(num)
-                txt = txt.replace(num, value)
+                newTxt = newTxt.replace(num, value)
             })
         }
 
-        let fp = $.trim(_this.functionParserExe(txt));
+        let fp = $.trim(_this.functionParserExe(newTxt));
 
         fp = fp.replaceAll('FALSE', 'false')
             .replaceAll('TRUE', 'true')
