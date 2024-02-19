@@ -5851,7 +5851,9 @@ export default {
         toolMoreTip        : '更多功能',
         moreOptions        : '更多選項',
         cellFormat         : '設定儲存格格式',
-        print              : '列印'
+        print              : '列印',
+        setPrintArea       : "設置打印區域",
+        resetPrintArea     : "重設打印區域",
     },
     alternatingColors: {
         applyRange        : '應用範圍',
@@ -6542,6 +6544,8 @@ export default {
         deleteCellRule                      : '清除所選儲存格的規則',
         deleteSheetRule                     : '清除整個工作表的規則',
         manageRules                         : '管理規則',
+        definedFields                       : "定義字段",
+        manageRangeNameRules                : '字段管理器',
         showRules                           : '顯示其格式規則',
         highlightCellRules                  : '突出顯示儲存格規則',
         itemSelectionRules                  : '項目選取規則',

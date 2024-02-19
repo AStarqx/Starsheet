@@ -6166,6 +6166,8 @@ export default {
 
         cellFormat: "Cell format config",
         print: "Print",
+        setPrintArea: "SetPrintArea",
+        resetPrintArea: "ResetPrintArea",
     },
     alternatingColors: {
         applyRange: "Apply to range",
@@ -6849,6 +6851,8 @@ export default {
         deleteCellRule: "Delete cell rule",
         deleteSheetRule: "Delete sheet rule",
         manageRules: "Management rules",
+        definedFields: "Defined fields",
+        manageRangeNameRules: 'Manage rangeName rules',
         showRules: "Show its formatting rules",
         highlightCellRules: "Highlight cell rules",
         itemSelectionRules: "Item selection rules",

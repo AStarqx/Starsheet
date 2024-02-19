@@ -18885,6 +18885,10 @@ function (_super) {
         sheetout.hide = sheet.hide;
       }
 
+      if (sheet.rangeNames != null) {
+        sheetout.rangeNames = sheet.rangeNames;
+      }
+
       LuckyOutPutFile.sheets.push(sheetout);
     });
     return JSON.stringify(LuckyOutPutFile);
@@ -19290,7 +19294,11 @@ function (_super) {
 
     _this.dataVerification = _this.generateConfigDataValidations(); // hyperlink config
 
-    _this.hyperlink = _this.generateConfigHyperlinks(); // sheet hide
+    _this.hyperlink = _this.generateConfigHyperlinks(); // rangeNames config
+
+    _this.rangeNames = _this.generateConfigRangeNames(); // conditionFormat config
+
+    _this.luckysheet_conditionformat_save = _this.generateConfigConditionformat(); // sheet hide
 
     _this.hide = _this.hide;
 
@@ -19696,64 +19704,55 @@ function (_super) {
   LuckySheet.prototype.getMulitValue = function (formulaValueArr) {
     var valueArr = [];
 
-    var _loop_1 = function _loop_1(key) {
-      var item = formulaValueArr[key];
-
-      if (item.match(/\((.*?)\)/)) {
-        valueArr[key] = item;
-      } else {
-        var names = this_1.definedNames || [];
-        var definedName = names.find(function (d) {
-          return method_1.getXmlAttibute(d.attributeList, 'name', null) === item;
-        });
-        if (!definedName) return "continue";
-        var formulaValue = definedName.value;
-        console.log(definedName, formulaValue);
-        var splitText = formulaValue.split('!');
-        var sheetName = splitText.length === 2 ? splitText[0] : '';
-        var sheet = this_1.getSheetBysheetName(sheetName);
-        var sheetId = sheet.attributeList["r:id"];
-        var cellrange = method_1.getcellrange(formulaValue, this_1.sheetList, sheetId);
-        var sheetFile = this_1.getSheetFileBysheetId(sheetId);
-        var rows = this_1.readXml.getElementsByTagName("sheetData/row", sheetFile);
-        var cellData = [];
-
-        var _loop_2 = function _loop_2(i) {
-          var row = rows.find(function (r) {
-            var rowNo = method_1.getXmlAttibute(r.attributeList, "r", null);
-            if (rowNo == null) return false;
-            var rowNoNum = parseInt(rowNo) - 1;
-            return rowNoNum === i;
-          });
-          if (!row) return "continue";
-          var cells = row.getInnerElements("c");
-
-          for (var key_1 in cells) {
-            var cell = cells[key_1];
-            var attrList = cell.attributeList;
-            var r = attrList.r;
-            var range = method_1.getcellrange(r);
-            if (range.column[0] < cellrange.column[0] || range.column[0] > cellrange.column[1]) continue;
-            var cellValue = this_1.getCellValue(cell, sheetFile);
-            cellData.push(cellValue);
-          }
-        };
-
-        for (var i = cellrange.row[0]; i <= cellrange.row[1]; i++) {
-          _loop_2(i);
-        }
-
-        valueArr[key] = cellData.map(function (d) {
-          return d.v && d.v.v;
-        }).join(',');
-        console.log(valueArr);
-      }
-    };
-
-    var this_1 = this;
-
     for (var key in formulaValueArr) {
-      _loop_1(key);
+      var item = formulaValueArr[key];
+      var itemArr = item.split(',') || []; // item.match(/\((.*?)\)/) || 
+
+      if (itemArr.length > 1) {
+        valueArr[key] = item;
+        continue;
+      }
+
+      var txt = item;
+
+      if (item.substr(0, 1) !== '=') {
+        txt = '=' + txt;
+      }
+
+      valueArr[key] = txt; // else {
+      // const names = this.definedNames || []
+      // const definedName = names.find((d: { attributeList: IattributeList; }) => getXmlAttibute(d.attributeList, 'name', null) === item)
+      // if(!definedName) continue
+      // const formulaValue = definedName.value;
+      // const splitText = formulaValue.split('!')
+      // const sheetName = splitText.length === 2 ? splitText[0] : ''
+      // const sheet = this.getSheetBysheetName(sheetName)
+      // const sheetId = sheet.attributeList["r:id"];
+      // const cellrange = getcellrange(formulaValue, this.sheetList, sheetId)
+      // const sheetFile = this.getSheetFileBysheetId(sheetId)
+      // let rows = this.readXml.getElementsByTagName("sheetData/row", sheetFile);
+      // let cellData = []
+      // for (let i = cellrange.row[0]; i <= cellrange.row[1]; i++) {
+      //     let row = rows.find(r => {
+      //         let rowNo = getXmlAttibute(r.attributeList, "r", null);
+      //         if(rowNo == null) return false
+      //         let rowNoNum = parseInt(rowNo) - 1;
+      //         return rowNoNum === i
+      //     })
+      //     if(!row) continue
+      //     let cells = row.getInnerElements("c");
+      //     for(let key in cells){
+      //         let cell = cells[key];
+      //         let attrList = cell.attributeList;
+      //         let r = attrList.r;
+      //         let range = getcellrange(r);
+      //         if(range.column[0] < cellrange.column[0] || range.column[0] > cellrange.column[1]) continue
+      //         let cellValue = this.getCellValue(cell, sheetFile)
+      //         cellData.push(cellValue);
+      //     }
+      // }
+      // valueArr[key] = cellData.map((d: any) => d.v && d.v.v).join(',')
+      // }
     }
 
     return valueArr;
@@ -19870,7 +19869,7 @@ function (_super) {
     var rows = this.readXml.getElementsByTagName("hyperlinks/hyperlink", this.sheetFile);
     var hyperlink = {};
 
-    var _loop_3 = function _loop_3(i) {
+    var _loop_1 = function _loop_1(i) {
       var row = rows[i];
       var attrList = row.attributeList;
 
@@ -19885,8 +19884,8 @@ function (_super) {
 
       if (!_address) {
         var rid_1 = attrList["r:id"];
-        var sheetFile = this_2.sheetFile;
-        var relationshipList = this_2.readXml.getElementsByTagName("Relationships/Relationship", "xl/worksheets/_rels/" + sheetFile.replace(constant_1.worksheetFilePath, "") + ".rels");
+        var sheetFile = this_1.sheetFile;
+        var relationshipList = this_1.readXml.getElementsByTagName("Relationships/Relationship", "xl/worksheets/_rels/" + sheetFile.replace(constant_1.worksheetFilePath, "") + ".rels");
         var findRid = relationshipList === null || relationshipList === void 0 ? void 0 : relationshipList.find(function (e) {
           return e.attributeList["Id"] === rid_1;
         });
@@ -19916,13 +19915,66 @@ function (_super) {
       }
     };
 
-    var this_2 = this;
+    var this_1 = this;
 
     for (var i = 0; i < rows.length; i++) {
-      _loop_3(i);
+      _loop_1(i);
     }
 
     return hyperlink;
+  };
+
+  LuckySheet.prototype.generateConfigRangeNames = function () {
+    var rangeNames = [];
+
+    for (var _i = 0, _a = this.definedNames; _i < _a.length; _i++) {
+      var item = _a[_i];
+      var attrList = item.attributeList;
+      var valueArr = item.value.split("!");
+      var order = Number(this.sheetList[valueArr[0]]) - 1;
+      if (Number(this.order) !== order) continue;
+      var range = valueArr[1].replaceAll('$', '');
+      var name_2 = {
+        cellImageId: null,
+        name: attrList.name,
+        order: order,
+        range: range
+      };
+      rangeNames.push(name_2);
+    }
+
+    return rangeNames;
+  };
+
+  LuckySheet.prototype.generateConfigConditionformat = function () {
+    var conditionFormats = [];
+
+    for (var _i = 0, _a = this.definedNames; _i < _a.length; _i++) {
+      var item = _a[_i];
+      var attrList = item.attributeList;
+      var valueArr = item.value.split("!");
+      var order = Number(this.sheetList[valueArr[0]]) - 1;
+      if (Number(this.order) !== order) continue;
+      var sheet = this.getSheetBysheetName(valueArr[0]);
+      var sheetId = sheet.attributeList["r:id"];
+      var cellrange = method_1.getcellrange(item.value, this.sheetList, sheetId);
+      var conditionFormat = {
+        cellImageId: null,
+        cellRangeName: attrList.name,
+        cellrange: [cellrange],
+        conditionName: "rangeName",
+        conditionRange: [],
+        conditionValue: [1],
+        format: {
+          textColor: '#000000',
+          cellColor: '#ff0000'
+        },
+        type: 'default'
+      };
+      conditionFormats.push(conditionFormat);
+    }
+
+    return conditionFormats;
   };
 
   return LuckySheet;

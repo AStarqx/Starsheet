@@ -1,4 +1,4 @@
-import { replaceHtml } from '../utils/util';
+import { ABCatNum, replaceHtml } from '../utils/util';
 import formula from '../global/formula';
 import { isRealNum, isRealNull } from '../global/validate';
 import { isdatetime, diff } from '../global/datecontroll';
@@ -15,6 +15,7 @@ import sheetmanage from './sheetmanage';
 import { getSheetIndex, getRangetxt } from '../methods/get';
 import locale from '../locale/locale';
 import Store from '../store';
+import { getCellValue, getRangeValue } from '../global/api';
 
 const dataVerificationCtrl = {
     defaultItem: {
@@ -1541,17 +1542,50 @@ const dataVerificationCtrl = {
             })
         }
     },
+    getFormulaDropdownList(func) {
+        const list = []
+        switch(func) {
+            case "INDIRECT": 
+                
+                break
+        }
+    },
     getDropdownList: function(r, c, txt){
         let list = [];
-
-        if(txt.match(/\((.*?)\)/)) {
-            let strtext = txt.replaceAll('$', '')
-            //在文本公式前面添加=
-            if(strtext.trim().indexOf('=')!=0)
-            {
-                strtext = '=' + strtext;
+        if(txt.substr(0, 1) === '=') {
+            if(txt.match(/\((.*?)\)/)) {
+                let strtext = txt.replaceAll('$', '')
+                //在文本公式前面添加=
+                if(strtext.trim().indexOf('=')!=0)
+                {
+                    strtext = '=' + strtext;
+                }
+                let func = strtext.match(/([A-Za-z_]\w*)\(/g)
+                let funcName = func[0].replaceAll('(', '')
+                if(funcName === 'INDIRECT') {
+                    let cell = strtext.match(/[A-Za-z]+\d+/g)[0]
+                    let c = ABCatNum(cell.replace(/[^a-zA-z]/g, ''))
+                    let r = parseFloat(cell.replace(/[^\d]/g, '')) - 1
+                    let val = getCellValue(r, c, { order: getSheetIndex(Store.currentSheetIndex) })
+                    let dropdownlist = this.getDropdownList(r, c, '=' + val)
+                    list.push(...dropdownlist)
+                }
             }
-            var result = formula.execstringformula(strtext, r, c, Store.currentSheetIndex);
+            else if(txt.match(/[A-Z]+\d+/g)) {
+                console.log(1, txt)
+            }
+            // rangeNames
+            else {
+                const allRanges = Store.luckysheetfile.map(file => file.luckysheet_conditionformat_save).flat().filter(c => c.conditionName === 'rangeName')
+                const currItem = allRanges.find(r => r.cellRangeName === txt.substr(1))
+                if(currItem && currItem.cellrange.length) {
+                    let valueArr = getRangeValue({ range: currItem.cellrange[0], order: getSheetIndex(currItem.cellrange[0].sheetIndex) })
+                    valueArr.forEach(val => {
+                        let v = val[0].m || val[0].v;
+                        list.push(v)
+                    })
+                }
+            }
         }
         else if(formula.iscelldata(txt)){
             let range = formula.getcellrange(txt);
