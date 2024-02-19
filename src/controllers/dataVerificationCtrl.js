@@ -1572,7 +1572,7 @@ const dataVerificationCtrl = {
                 }
             }
             else if(txt.match(/[A-Z]+\d+/g)) {
-                console.log(1, txt)
+                list.push(txt.substr(1))
             }
             // rangeNames
             else {

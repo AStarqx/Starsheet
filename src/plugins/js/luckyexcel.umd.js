@@ -19719,40 +19719,7 @@ function (_super) {
         txt = '=' + txt;
       }
 
-      valueArr[key] = txt; // else {
-      // const names = this.definedNames || []
-      // const definedName = names.find((d: { attributeList: IattributeList; }) => getXmlAttibute(d.attributeList, 'name', null) === item)
-      // if(!definedName) continue
-      // const formulaValue = definedName.value;
-      // const splitText = formulaValue.split('!')
-      // const sheetName = splitText.length === 2 ? splitText[0] : ''
-      // const sheet = this.getSheetBysheetName(sheetName)
-      // const sheetId = sheet.attributeList["r:id"];
-      // const cellrange = getcellrange(formulaValue, this.sheetList, sheetId)
-      // const sheetFile = this.getSheetFileBysheetId(sheetId)
-      // let rows = this.readXml.getElementsByTagName("sheetData/row", sheetFile);
-      // let cellData = []
-      // for (let i = cellrange.row[0]; i <= cellrange.row[1]; i++) {
-      //     let row = rows.find(r => {
-      //         let rowNo = getXmlAttibute(r.attributeList, "r", null);
-      //         if(rowNo == null) return false
-      //         let rowNoNum = parseInt(rowNo) - 1;
-      //         return rowNoNum === i
-      //     })
-      //     if(!row) continue
-      //     let cells = row.getInnerElements("c");
-      //     for(let key in cells){
-      //         let cell = cells[key];
-      //         let attrList = cell.attributeList;
-      //         let r = attrList.r;
-      //         let range = getcellrange(r);
-      //         if(range.column[0] < cellrange.column[0] || range.column[0] > cellrange.column[1]) continue
-      //         let cellValue = this.getCellValue(cell, sheetFile)
-      //         cellData.push(cellValue);
-      //     }
-      // }
-      // valueArr[key] = cellData.map((d: any) => d.v && d.v.v).join(',')
-      // }
+      valueArr[key] = txt;
     }
 
     return valueArr;
