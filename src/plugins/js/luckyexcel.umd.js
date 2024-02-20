@@ -18528,8 +18528,7 @@ function (_super) {
           drawingRelsFile: drawingRelsFile,
           hide: hide,
           definedNames: definedNames,
-          sheets: sheets,
-          sheetNameList: this.sheetNameList
+          sheets: sheets
         });
         this.columnWidthSet = [];
         this.rowHeightSet = [];
@@ -19095,8 +19094,7 @@ function (_super) {
     _this.imageList = allFileOption.imageList;
     _this.hide = allFileOption.hide;
     _this.definedNames = allFileOption.definedNames;
-    _this.sheets = allFileOption.sheets;
-    _this.sheetNameList = allFileOption.sheetNameList; //Output
+    _this.sheets = allFileOption.sheets; //Output
 
     _this.name = sheetName;
     _this.index = sheetId;
@@ -19684,21 +19682,6 @@ function (_super) {
     });
     if (!sheet) return;
     return sheet;
-  };
-  /**
-  * @param sheetName WorkSheet'name
-  * @return sheet file name and path in zip
-  */
-
-
-  LuckySheet.prototype.getSheetFileBysheetId = function (sheetId) {
-    // for(let i=0;i<this.sheetNameList.length;i++){
-    //     let sheetFileName = this.sheetNameList[i];
-    //     if(sheetFileName.indexOf("sheet"+sheetId)>-1){
-    //         return sheetFileName;
-    //     }
-    // }
-    return this.sheetNameList[sheetId];
   };
 
   LuckySheet.prototype.getMulitValue = function (formulaValueArr) {
@@ -22129,7 +22112,9 @@ function chatatABC(index) {
 
       last1 = Math.ceil(last1 / Math.pow(wordlen, x - 1)); //last1 = last1 % wordlen;
 
-      ret += constant_1.columeHeader_word[last1 - 1];
+      if (constant_1.columeHeader_word[last1 - 1]) {
+        ret += constant_1.columeHeader_word[last1 - 1];
+      }
 
       if (x > 1) {
         last = last - (last1 - 1) * wordlen;

@@ -201,7 +201,8 @@ export function setCellValue(row, column, value, options = {}) {
             if(value.f!=null){
                 curv.f = value.f;
             } else {
-                formula.delFunctionGroup(row, column);
+                delete curv.f
+                formula.delFunctionGroup(row, column, order);
             }
             if(value.v!=null){
                 curv.v = value.v;
@@ -290,6 +291,7 @@ export function clearCell(row, column, options = {}) {
     if(getObjType(cell) == "object"){
         delete cell["m"];
         delete cell["v"];
+        delete cell["f"];
 
         let deleteCellParams = ['ct', 'bg', 'ff', 'fc', 'bl', 'it', 'fs', 'cl', 'vt', 'ht', 'mc', 'tr', 'rt', 'tb', 'v', 'm', 'f', 'ps'];
 

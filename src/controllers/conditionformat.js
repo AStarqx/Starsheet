@@ -1984,7 +1984,7 @@ const conditionformat = {
                         </div>`;
             $("body").append(replaceHtml(modelHTML, {
                 "id": "luckysheet-administerRule-dialog",
-                "addclass": "luckysheet-administerRule-dialog",
+                "addclass": "luckysheet-administerRule-dialog luckysheet-definedNames-dialog",
                 "title": "字段管理器",
                 "content": content,
                 "botton":  `<button id="luckysheet-administerRule-dialog-confirm" class="btn btn-primary">${conditionformat_Text.confirm}</button>
@@ -2104,7 +2104,7 @@ const conditionformat = {
                             rangeText = rangeTxtArr[0]
                         }
                         itemHtml =  '<div class="item" data-item="' + i + '">' +
-                                '<div class="format" style="width: 28%; overflow:hidden;text-overflow: ellipsis;text-wrap: nowrap;" title="'+ ruleArr[i].cellRangeName +'" title="'+ ruleArr[i].cellRangeName +'">' + ruleArr[i].cellRangeName + '</div>' +
+                                '<div class="format" style="width: 50%; overflow:hidden;text-overflow: ellipsis;text-wrap: nowrap;" title="'+ ruleArr[i].cellRangeName +'" title="'+ ruleArr[i].cellRangeName +'">' + ruleArr[i].cellRangeName + '</div>' +
                                 '<div class="ruleRange">' +
                                     '<input class="formulaInputFocus" readonly="true" value="' + rangeText + '"/>' +
                                     '<i class="fa fa-table" aria-hidden="true" title="'+ conditionformat_Text.selectRange +'"></i>' +
