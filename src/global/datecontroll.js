@@ -5,11 +5,21 @@ function isdatetime(s) {
     if (s == null || s.toString().length < 5) {
         return false;
     }
-    else if(checkDateTime(s)){
+    else if(checkDateTime(formatDate(s, '-'))){
         return true;
     }
     else {
         return false;
+    }
+
+    function formatDate(numb, format) {
+        const old = numb - 1;
+        const t = Math.round((old - Math.floor(old)) * 24 * 60 * 60);
+        const time = new Date(1900, 0, old, 0, 0, t)
+        const year = time.getFullYear() ;
+        const month = time.getMonth() + 1 ;
+        const date = time.getDate() ;
+        return year + format + (month < 10 ? '0' + month : month) + format + (date < 10 ? '0' + date : date)
     }
 
     function checkDateTime(str){

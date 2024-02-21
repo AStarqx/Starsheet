@@ -1218,6 +1218,8 @@ const dataVerificationCtrl = {
 
         let failureText = '';
 
+        let optionLabel2 = _this.optionLabel[item.type2] || ''
+
         if(Store.lang == 'en'){
             if(item.type == 'dropdown'){
                 failureText += 'what you selected is not an option in the drop-down list';
@@ -1261,7 +1263,7 @@ const dataVerificationCtrl = {
 
             }
             else if(item.type == 'number' || item.type == 'number_integer' || item.type == 'number_decimal'){
-                failureText += '你输入的不是' + _this.optionLabel[item.type2] + item.value1;
+                failureText += '你输入的不是' + optionLabel2 + item.value1;
 
                 if(item.type2 == 'bw' || item.type2 == 'nb'){
                     failureText += '和' + item.value2 + '之间';
@@ -1270,10 +1272,10 @@ const dataVerificationCtrl = {
                 failureText += '的' + _this.optionLabel[item.type];
             }
             else if(item.type == 'text_content'){
-                failureText += '你输入的不是内容' + _this.optionLabel[item.type2] + item.value1 + '的文本';
+                failureText += '你输入的不是内容' + optionLabel2 + item.value1 + '的文本';
             }
             else if(item.type == 'text_length'){
-                failureText += '你输入的不是长度' + _this.optionLabel[item.type2] + item.value1;
+                failureText += '你输入的不是长度' + optionLabel2 + item.value1;
                 
                 if(item.type2 == 'bw' || item.type2 == 'nb'){
                     failureText += '和' + item.value2 + '之间';
@@ -1282,7 +1284,7 @@ const dataVerificationCtrl = {
                 failureText += '的文本';
             }
             else if(item.type == 'date'){
-                failureText += '你输入的不是' + _this.optionLabel[item.type2] + item.value1;
+                failureText += '你输入的不是' + optionLabel2 + item.value1;
 
                 if(item.type2 == 'bw' || item.type2 == 'nb'){
                     failureText += '和' + item.value2 + '之间';
@@ -1291,7 +1293,7 @@ const dataVerificationCtrl = {
                 failureText += '的日期';
             }
             else if(item.type == 'validity'){
-                failureText += '你输入的不是一个正确的' + _this.optionLabel[item.type2];
+                failureText += '你输入的不是一个正确的' + optionLabel2;
             }
         }
 
