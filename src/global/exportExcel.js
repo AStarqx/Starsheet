@@ -1098,6 +1098,14 @@ var getBorderInfo = function(luckysheetfile){
                         borderInfoCompute[bd_r + "_" + bd_c].l = { "color": value.l.color, "style": value.l.style };
  
                         let bd_c_left = bd_c - 1;
+
+                        if(data[bd_r][bd_c].mc.cs == null || data[bd_r][bd_c].mc.rs == null) {
+                            let r = data[bd_r][bd_c].mc.r, c = data[bd_r][bd_c].mc.c
+                            if(borderInfoCompute[r + "_" + c] == null) {
+                                borderInfoCompute[r + "_" + c] = {}
+                            }
+                            borderInfoCompute[r + "_" + c].l = { "color": value.l.color, "style": value.l.style }
+                        }
  
                         if(bd_c_left >= 0 && borderInfoCompute[bd_r + "_" + bd_c_left]){
                             if(data[bd_r] != null && getObjType(data[bd_r][bd_c_left]) == "object" && data[bd_r][bd_c_left].mc != null){
@@ -1122,6 +1130,14 @@ var getBorderInfo = function(luckysheetfile){
                         borderInfoCompute[bd_r + "_" + bd_c].r = { "color": value.r.color, "style": value.r.style };
  
                         let bd_c_right = bd_c + 1;
+
+                        if(data[bd_r][bd_c].mc.cs == null || data[bd_r][bd_c].mc.rs == null) {
+                            let r = data[bd_r][bd_c].mc.r, c = data[bd_r][bd_c].mc.c
+                            if(borderInfoCompute[r + "_" + c] == null) {
+                                borderInfoCompute[r + "_" + c] = {}
+                            }
+                            borderInfoCompute[r + "_" + c].r = { "color": value.r.color, "style": value.r.style }
+                        }
  
                         if(bd_c_right < data[0].length && borderInfoCompute[bd_r + "_" + bd_c_right]){
                             if(data[bd_r] != null && getObjType(data[bd_r][bd_c_right]) == "object" && data[bd_r][bd_c_right].mc != null){
@@ -1146,6 +1162,14 @@ var getBorderInfo = function(luckysheetfile){
                         borderInfoCompute[bd_r + "_" + bd_c].t = { "color": value.t.color, "style": value.t.style };
  
                         let bd_r_top = bd_r - 1;
+
+                        if(data[bd_r][bd_c].mc.cs == null || data[bd_r][bd_c].mc.rs == null) {
+                            let r = data[bd_r][bd_c].mc.r, c = data[bd_r][bd_c].mc.c
+                            if(borderInfoCompute[r + "_" + c] == null) {
+                                borderInfoCompute[r + "_" + c] = {}
+                            }
+                            borderInfoCompute[r + "_" + c].t = { "color": value.t.color, "style": value.t.style }
+                        }
  
                         if(bd_r_top >= 0 && borderInfoCompute[bd_r_top + "_" + bd_c]){
                             if(data[bd_r_top] != null && getObjType(data[bd_r_top][bd_c]) == "object" && data[bd_r_top][bd_c].mc != null){
@@ -1170,6 +1194,14 @@ var getBorderInfo = function(luckysheetfile){
                         borderInfoCompute[bd_r + "_" + bd_c].b = { "color": value.b.color, "style": value.b.style };
  
                         let bd_r_bottom = bd_r + 1;
+
+                        if(data[bd_r][bd_c].mc.cs == null || data[bd_r][bd_c].mc.rs == null) {
+                            let r = data[bd_r][bd_c].mc.r, c = data[bd_r][bd_c].mc.c
+                            if(borderInfoCompute[r + "_" + c] == null) {
+                                borderInfoCompute[r + "_" + c] = {}
+                            }
+                            borderInfoCompute[r + "_" + c].b = { "color": value.b.color, "style": value.b.style }
+                        }
  
                         if(bd_r_bottom < data.length && borderInfoCompute[bd_r_bottom + "_" + bd_c]){
                             if(data[bd_r_bottom] != null && getObjType(data[bd_r_bottom][bd_c]) == "object" && data[bd_r_bottom][bd_c].mc != null){

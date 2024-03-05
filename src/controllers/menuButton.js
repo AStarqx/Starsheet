@@ -3815,6 +3815,20 @@ const menuButton = {
 
         return [style, color];
     },
+    celldataIsDate(data) {
+        if(isNaN(data)&&!isNaN(Date.parse(data))){
+        　　return true
+        }
+        return false
+    },
+    // 计算两个日期距离的天数
+    getDistanceDays(d1, d2) {
+        let date1 = new Date(d1);
+        let date2 = new Date(d2);
+        let diffTime = Math.abs(date2 - date1);
+        let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays + 1
+    },
     updateFormatCell: function(d, attr, foucsStatus, row_st, row_ed, col_st, col_ed) {
         if (d == null || attr == null) {
             return;
@@ -3842,6 +3856,10 @@ const menuButton = {
 
                     if (foucsStatus != "@" && isRealNum(value)) {
                         value = parseFloat(value);
+                    }
+
+                    if(this.celldataIsDate(value)) {
+                        value = this.getDistanceDays('1900-1-1', value)
                     }
 
                     let mask = update(foucsStatus, value);

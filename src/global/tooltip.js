@@ -3,6 +3,7 @@ import browser from './browser';
 import { replaceHtml } from '../utils/util';
 import locale from '../locale/locale';
 import server from '../controllers/server';
+import * as clipboard from "clipboard-polyfill";
 
 const tooltip = {
     info: function (title, content) {
@@ -71,8 +72,25 @@ const tooltip = {
             $("#luckysheet-modal-dialog-mask").hide();
         });
     },
+    base64ToBlob(data) {
+        let byteString
+        if (data.split(',')[0].indexOf('base64') >= 0) {
+            byteString = atob(data.split(',')[1])
+        } else {
+            byteString = unescape(data.split(',')[1])
+        }
+        const mimeString = data
+            .split(',')[0]
+            .split(':')[1]
+            .split(';')[0]
+        const ia = new Uint8Array(byteString.length)
+        for (let i = 0; i < byteString.length; i += 1) {
+            ia[i] = byteString.charCodeAt(i)
+        }
+        return new Blob([ia], { type: mimeString })
+    },
     screenshot: function (title, content, imgurl) {
-
+        let _this = this
         const _locale = locale();
         const locale_screenshot = _locale.screenshot;
         $("#luckysheet-modal-dialog-mask").show();
@@ -116,13 +134,17 @@ const tooltip = {
         });
 
         $('#luckysheet-confirm .luckysheet-model-copy-btn').click(function(){
-            let dt = new clipboard.DT();
-            dt.setData("text/html", "<img src='"+ imgurl +"'>");
+            // let dt = new clipboard.DT();
+            // dt.setData("text/html", "<img src='"+ imgurl +"'>");
+            const item = new clipboard.ClipboardItem({
+                "image/png": _this.base64ToBlob(imgurl)
+            });
+            clipboard.write([item]);
             if(browser.isIE() == "1"){
                 alert(locale_screenshot.rightclickTip);
             }
             else{
-                clipboard.write(dt);
+                // clipboard.write(dt);
                 alert(locale_screenshot.successTip);  
             }
         });

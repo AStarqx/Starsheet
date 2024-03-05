@@ -232,7 +232,6 @@ const luckysheetPostil = {
         for (let line of valueLines) {
             commentDivs += '<div>' + _this.htmlEscape(line) + '</div>';
         }
-
         let html =  '<div id="luckysheet-postil-overshow">' +
                         '<canvas class="arrowCanvas" width="'+ size[2] +'" height="'+ size[3] +'" style="position:absolute;left:'+ size[0] +'px;top:'+ size[1] +'px;z-index:100;pointer-events:none;"></canvas>' +
                         '<div style="width:'+ (width - 12) +'px;min-height:'+ (height - 12) +'px;color:#000;padding:5px;border:1px solid #000;background-color:rgb(255,255,225);position:absolute;left:'+ fromX +'px;top:'+ fromY +'px;z-index:100;">'+ commentDivs +'</div>' +
@@ -560,7 +559,6 @@ const luckysheetPostil = {
             for (let line of valueLines) {
                 commentDivs += '<div>' + _this.htmlEscape(line) + '</div>';
             }
-
             let html =  '<div id="luckysheet-postil-show_'+ r +'_'+ c +'" class="luckysheet-postil-show luckysheet-postil-show-active">' +
                             '<canvas class="arrowCanvas" width="'+ size[2] +'" height="'+ size[3] +'" style="position:absolute;left:'+ size[0] +'px;top:'+ size[1] +'px;z-index:100;pointer-events:none;"></canvas>' +
                             '<div class="luckysheet-postil-show-main" style="width:'+ width +'px;height:'+ height +'px;color:#000;padding:5px;border:1px solid #000;background-color:rgb(255,255,225);position:absolute;left:'+ left +'px;top:'+ top +'px;box-sizing:border-box;z-index:100;">' +
@@ -816,7 +814,6 @@ const luckysheetPostil = {
                         for (let line of valueLines) {
                             commentDivs += '<div>' + _this.htmlEscape(line) + '</div>';
                         }
-
                         let html =  '<div id="luckysheet-postil-show_'+ rowIndex +'_'+ colIndex +'" class="luckysheet-postil-show">' +
                                         '<canvas class="arrowCanvas" width="'+ size[2] +'" height="'+ size[3] +'" style="position:absolute;left:'+ size[0] +'px;top:'+ size[1] +'px;z-index:100;pointer-events:none;"></canvas>' +
                                         '<div class="luckysheet-postil-show-main" style="width:'+ width +'px;height:'+ height +'px;color:#000;padding:5px;border:1px solid #000;background-color:rgb(255,255,225);position:absolute;left:'+ left +'px;top:'+ top +'px;box-sizing:border-box;z-index:100;">' +

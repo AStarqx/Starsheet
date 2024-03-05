@@ -242,7 +242,9 @@ export function datagridgrowth(data, addr, addc, iscallback) {
 export function getcellFormula(r, c, i, data) {
     let cell;
     if(data!=null){
-        cell = data[r][c];
+        if(data[r]) {
+            cell = data[r][c];
+        }
     }
     else{
         cell = getOrigincell(r,c,i);
