@@ -4,6 +4,8 @@ import { genarate, update } from "./format";
 import server from "../controllers/server";
 import luckysheetConfigsetting from "../controllers/luckysheetConfigsetting";
 import Store from "../store/index";
+import formula from '../global/formula';
+import menuButton from '../controllers/menuButton';
 
 //Set cell value
 function setcellvalue(r, c, d, v) {
@@ -12,7 +14,7 @@ function setcellvalue(r, c, d, v) {
     }
     // 若采用深拷贝，初始化时的单元格属性丢失
     // let cell = $.extend(true, {}, d[r][c]);
-    let cell = d[r][c];
+    let cell = d[r] ? d[r][c] : {};
 
     let vupdate;
 
@@ -23,6 +25,7 @@ function setcellvalue(r, c, d, v) {
         } else {
             if (v.f != null) {
                 cell.f = v.f;
+                formula.insertUpdateFunctionGroup(r, c, Store.currentSheetIndex)
             } else if (cell.hasOwnProperty("f")) {
                 delete cell.f;
             }
@@ -51,6 +54,14 @@ function setcellvalue(r, c, d, v) {
                 cell.fc = v.fc;
             }
 
+            if(v.ps != null) {
+                cell.ps = v.ps
+            }
+
+            if(menuButton.celldataIsDate(v.v)) {
+                cell.v = menuButton.getDistanceDays('1900-1-1', v.v)
+            }
+
             for (const key in v) {
                 if(cellParams.indexOf(key) == -1 && v[key] != null) {
                     cell[key] = v[key]
@@ -64,6 +75,10 @@ function setcellvalue(r, c, d, v) {
             vupdate = v.v;
         }
     } else {
+        if(menuButton.celldataIsDate(v)) {
+            v = menuButton.getDistanceDays('1900-1-1', v)
+        }
+
         vupdate = v;
     }
 
@@ -234,7 +249,7 @@ function setcellvalue(r, c, d, v) {
         }
     }
 
-    d[r][c] = cell;
+    if(d[r]) d[r][c] = cell
     return cell;
 }
 

@@ -139,6 +139,7 @@ const tooltip = {
             const item = new clipboard.ClipboardItem({
                 "image/png": _this.base64ToBlob(imgurl)
             });
+            console.log(clipboard, item)
             clipboard.write([item]);
             if(browser.isIE() == "1"){
                 alert(locale_screenshot.rightclickTip);

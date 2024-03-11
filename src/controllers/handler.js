@@ -5185,6 +5185,11 @@ export default function luckysheetHandler() {
         $(this)
             .parent()
             .hide();
+        if(imageCtrl.currentImgId != null){
+            imageCtrl.copyImgItem(event);
+            return;
+        }
+    
         //复制范围内包含部分合并单元格，提示
         if (Store.config["merge"] != null) {
             let has_PartMC = false;
@@ -5393,6 +5398,9 @@ export default function luckysheetHandler() {
             .css({ width: ch_width, height: rh_height });
 
         luckysheetDrawMain(scrollWidth, scrollHeight, ch_width, rh_height, 1, 1, null, null, newCanvas);
+
+        console.log(newCanvas)
+
         let ctx_newCanvas = newCanvas.get(0).getContext("2d");
 
         //补上 左边框和上边框

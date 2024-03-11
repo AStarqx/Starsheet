@@ -278,13 +278,19 @@ export function clearCell(row, column, options = {}) {
     let curSheetOrder = getSheetIndex(Store.currentSheetIndex);
     let {
         order = curSheetOrder,
+        isRefresh = true,
         success
     } = {...options}
 
     let file = Store.luckysheetfile[order]
     let cell = undefined
     let targetSheetData = []
+    let index = undefined
     if(file) {
+        index = file.index
+    }
+
+    if(file && isRefresh) {
         targetSheetData = $.extend(true, [], file.data);
         cell = targetSheetData[row][column];
     }
@@ -292,7 +298,6 @@ export function clearCell(row, column, options = {}) {
     if(getObjType(cell) == "object"){
         delete cell["m"];
         delete cell["v"];
-        delete cell["f"];
 
         let deleteCellParams = ['ct', 'bg', 'ff', 'fc', 'bl', 'it', 'fs', 'cl', 'vt', 'ht', 'mc', 'tr', 'rt', 'tb', 'v', 'm', 'f', 'ps'];
 
@@ -305,9 +310,9 @@ export function clearCell(row, column, options = {}) {
         }
 
         if(cell["f"] != null){
-            delete cell["f"];
-            formula.delFunctionGroup(row, column, order);
+            formula.delFunctionGroup(row, column, index);
 
+            delete cell["f"];
             delete cell["spl"];
         }
 
@@ -322,7 +327,7 @@ export function clearCell(row, column, options = {}) {
     }
 
     // 若操作为当前sheet页，则刷新当前sheet页
-    if (order === curSheetOrder) {
+    if (order === curSheetOrder && isRefresh) {
         jfrefreshgrid(targetSheetData, [{
             row: [row, row],
             column: [column, column]
