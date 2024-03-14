@@ -75,7 +75,7 @@ function setcellvalue(r, c, d, v) {
             vupdate = v.v;
         }
     } else {
-        if(menuButton.celldataIsDate(v)) {
+        if(menuButton.celldataIsDate(v) && v.substr(-1) !== '%') {
             v = menuButton.getDistanceDays('1900-1-1', v)
         }
 

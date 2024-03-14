@@ -12,6 +12,7 @@ import { getSheetIndex } from "../methods/get";
 import { getRangeValue } from "./api"
 import Store from "../store";
 import method from "./method";
+import luckysheetConfigsetting from '../controllers/luckysheetConfigsetting';
 
 /**
  * 增加行列
@@ -1869,12 +1870,13 @@ function luckysheetdeletetable(type, st, ed, sheetIndex) {
 
 //删除单元格
 function luckysheetDeleteCell(type, str, edr, stc, edc, sheetIndex) {
+    const cellRightClickConfig = luckysheetConfigsetting.cellRightClickConfig;
     sheetIndex = sheetIndex || Store.currentSheetIndex;
     if (!checkProtectionNotEnable(sheetIndex)) {
         return;
     }
     // Hook function
-    if (!method.createHookFunction("rangeDeleteBefore", Store.luckysheet_select_save, getRangeValue())) {
+    if (!method.createHookFunction("rangeDeleteBefore", Store.luckysheet_select_save, getRangeValue(), Store.luckysheet_scroll_status)) {
         return;
     }
 

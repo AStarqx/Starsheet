@@ -4493,7 +4493,7 @@ const luckysheetformula = {
         let luckysheetfile = getluckysheetfile();
         let file = luckysheetfile[getSheetIndex(index)];
 
-        let calcChain = file.calcChain;
+        let calcChain = file ? file.calcChain : [];
         if (calcChain == null) {
             calcChain = [];
         }

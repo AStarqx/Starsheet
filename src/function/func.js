@@ -174,7 +174,6 @@ function luckysheet_compareWith() {
 
         return v;
     }
-      
     if(sp == "*"){ //乘
         if(getObjType(fp) == "array" && getObjType(tp) == "array"){
             let result = [];

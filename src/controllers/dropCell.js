@@ -14,6 +14,7 @@ import { getObjType, replaceHtml } from '../utils/util';
 import Store from '../store';
 import locale from '../locale/locale';
 import dayjs from 'dayjs'
+import method from '../global/method';
 
 //选区下拉
 const luckysheetDropCell = {
@@ -577,6 +578,8 @@ const luckysheetDropCell = {
                         if(dataVerification[bd_r + "_" + bd_c]){
                             dataVerification[j + "_" + i] = dataVerification[bd_r + "_" + bd_c];
                         }
+
+                        method.createHookFunction("cellUpdated", j, i, {}, cell, false);
                     }
                 }
                 if(direction == "up"){
@@ -671,6 +674,8 @@ const luckysheetDropCell = {
                         if(dataVerification[bd_r + "_" + bd_c]){
                             dataVerification[j + "_" + i] = dataVerification[bd_r + "_" + bd_c];
                         }
+
+                        method.createHookFunction("cellUpdated", j, i, {}, cell, false);
                     }
                 }
             }

@@ -278,6 +278,8 @@ export function keyboardInitial(){
         let shiftKey = event.shiftKey;
         let kcode = event.keyCode;
 
+        const cellRightClickConfig = luckysheetConfigsetting.cellRightClickConfig;
+
         if ($("#luckysheet-modal-dialog-mask").is(":visible") || $(event.target).hasClass("luckysheet-mousedown-cancel") || $(event.target).hasClass("sp-input") || (parseInt($("#luckysheet-input-box").css("top")) > 0 && $(event.target).closest(".luckysheet-input-box").length > 0 && kcode != keycode.ENTER && kcode != keycode.TAB && kcode != keycode.UP && kcode != keycode.DOWN && kcode != keycode.LEFT && kcode != keycode.RIGHT)) {
             let anchor = $(window.getSelection().anchorNode);
             
@@ -808,7 +810,7 @@ export function keyboardInitial(){
                 else{
                     $("#luckysheet-delete-text").click();
                 }
-                method.createHookFunction("rangeDeleteBefore", Store.luckysheet_select_save, getRangeValue())
+                method.createHookFunction("rangeDeleteBefore", Store.luckysheet_select_save, getRangeValue(), Store.luckysheet_scroll_status)
                 event.preventDefault();
             }
             else if(kcode == 8 && imageCtrl.currentImgId != null){

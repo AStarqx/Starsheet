@@ -279,6 +279,7 @@ export function clearCell(row, column, options = {}) {
     let {
         order = curSheetOrder,
         isRefresh = true,
+        deleteCellParams = [],
         success
     } = {...options}
 
@@ -292,38 +293,58 @@ export function clearCell(row, column, options = {}) {
 
     if(file && isRefresh) {
         targetSheetData = $.extend(true, [], file.data);
-        cell = targetSheetData[row][column];
+        if(targetSheetData[row]) {
+            cell = targetSheetData[row][column];
+        }
     }
 
     if(getObjType(cell) == "object"){
-        delete cell["m"];
-        delete cell["v"];
-
-        let deleteCellParams = ['ct', 'bg', 'ff', 'fc', 'bl', 'it', 'fs', 'cl', 'vt', 'ht', 'mc', 'tr', 'rt', 'tb', 'v', 'm', 'f', 'ps'];
-
-        if(cell["bg"] != null){
-            delete cell["bg"];
+        if(deleteCellParams && deleteCellParams.length) {
+            for (const key in cell) {
+                if(deleteCellParams.indexOf(key) > -1) {
+                    if(key == 'f') {
+                        formula.delFunctionGroup(row, column, index);
+                    }
+                    delete cell[key];
+                }
+            }
         }
-
-        if(cell['fc'] != null){
-            delete cell['fc'];
-        }
-
-        if(cell["f"] != null){
-            formula.delFunctionGroup(row, column, index);
-
-            delete cell["f"];
-            delete cell["spl"];
-        }
-
-        for (const key in cell) {
-            if(deleteCellParams.indexOf(key) == -1) {
-                delete cell[key];
+        else {
+            delete cell["m"];
+            delete cell["v"];
+            if(cell["bg"] != null) {
+                delete cell["bg"];
+            }
+    
+            if(cell['fc'] != null){
+                delete cell['fc'];
+            }
+    
+            if(cell["f"] != null){
+                formula.delFunctionGroup(row, column, index);
+    
+                delete cell["f"];
+                delete cell["spl"];
+            }
+    
+            if(cell['ps'] != null) {
+                delete cell['ps']
+            }
+    
+            if(cell['dd'] != null) {
+                delete cell['dd']
             }
         }
     }
     else{
         cell = null;
+    }
+
+    if(targetSheetData[row]) {
+        if(!targetSheetData[row][column]) {
+            targetSheetData[row][column] = {}
+        }
+        targetSheetData[row][column] = cell
     }
 
     // 若操作为当前sheet页，则刷新当前sheet页
