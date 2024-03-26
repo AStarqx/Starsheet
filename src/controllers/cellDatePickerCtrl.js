@@ -75,38 +75,38 @@ const cellDatePickerCtrl = {
             time_24hr = false;
         }
 
-        const fp = flatpickr('#luckysheet-input-box', {
-            allowInput: false,
-            noCalendar,
-            enableSeconds,
-            enableTime,
-            dateFormat,
-            time_24hr,
-            defaultDate,
-            onClose() {
-                setTimeout(() => {
-                    fp.destroy()
-                }, 0);
-            },
-            parseDate: (datestr, format) => {
-                return dayjs(datestr).toDate();
-            },
-            formatDate: (date, format, locale) => {
-                if (hasChineseTime) {
-                    return dayjs(date).format(format).replace('AM', '上午').replace('PM', '下午')
-                }
-                return dayjs(date).format(format);
-            },
-            onChange: function (selectedDates, dateStr) {
-                let currentVal = datenum_local(new Date(selectedDates))
-                $("#luckysheet-rich-text-editor").html(dateStr);
-                setCellValue(r, c, currentVal, { isRefresh: false })
-                setCellFormat(r, c, 'ct', cell.ct)
-                if (!enableTime) {
-                    formula.updatecell(Store.luckysheetCellUpdate[0], Store.luckysheetCellUpdate[1]);
-                }
-            }
-        });
+        // const fp = flatpickr('#luckysheet-input-box', {
+        //     allowInput: false,
+        //     noCalendar,
+        //     enableSeconds,
+        //     enableTime,
+        //     dateFormat,
+        //     time_24hr,
+        //     defaultDate,
+        //     onClose() {
+        //         setTimeout(() => {
+        //             fp.destroy()
+        //         }, 0);
+        //     },
+        //     parseDate: (datestr, format) => {
+        //         return dayjs(datestr).toDate();
+        //     },
+        //     formatDate: (date, format, locale) => {
+        //         if (hasChineseTime) {
+        //             return dayjs(date).format(format).replace('AM', '上午').replace('PM', '下午')
+        //         }
+        //         return dayjs(date).format(format);
+        //     },
+        //     onChange: function (selectedDates, dateStr) {
+        //         let currentVal = datenum_local(new Date(selectedDates))
+        //         $("#luckysheet-rich-text-editor").html(dateStr);
+        //         setCellValue(r, c, currentVal, { isRefresh: false })
+        //         setCellFormat(r, c, 'ct', cell.ct)
+        //         if (!enableTime) {
+        //             formula.updatecell(Store.luckysheetCellUpdate[0], Store.luckysheetCellUpdate[1]);
+        //         }
+        //     }
+        // });
 
         $("#luckysheet-input-box").click();
     },

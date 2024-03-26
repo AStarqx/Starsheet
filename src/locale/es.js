@@ -6122,6 +6122,10 @@ export default {
             "value": "yyyy/MM/dd"
         },
         {
+            "name": "1930年8月",
+            "value": 'yyyy"年"M"月"'
+        },
+        {
             "name": "1930年8月5日",
             "value": 'yyyy"年"M"月"d"日"',
         },

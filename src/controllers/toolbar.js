@@ -53,7 +53,7 @@ export const defaultToolbar = [
     'conditionalFormat',
     'dataVerification',
     'splitColumn',
-    'screenshot',
+    // 'screenshot',
     'findAndReplace',
     'protection',
     'print',

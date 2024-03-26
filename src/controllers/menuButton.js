@@ -3857,13 +3857,15 @@ const menuButton = {
                     if (foucsStatus != "@" && isRealNum(value)) {
                         value = parseFloat(value);
                     }
+                    
+                    let type = "n";
 
                     if(this.celldataIsDate(value)) {
                         value = this.getDistanceDays('1900-1-1', value)
+                        type = "d"
                     }
 
                     let mask = update(foucsStatus, value);
-                    let type = "n";
 
                     if (
                         is_date(foucsStatus) ||

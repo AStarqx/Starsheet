@@ -39,6 +39,7 @@ import Store from "../store";
 import locale from "../locale/locale";
 import json from "./json";
 import method from "./method";
+import { getSheetData } from "./api";
 
 const luckysheetformula = {
     error: {
@@ -4109,6 +4110,9 @@ const luckysheetformula = {
             cal2 = [],
             bracket = [];
         let firstSQ = -1;
+
+        let luckysheetfile = luckysheet.getluckysheetfile()
+
         while (i < funcstack.length) {
             let s = funcstack[i];
 
@@ -4220,7 +4224,14 @@ const luckysheetformula = {
                 if (s + s_next in _this.operatorjson) {
                     if (bracket.length == 0) {
                         if ($.trim(str).length > 0) {
-                            cal2.unshift(_this.functionParser($.trim(str), cellRangeFunction));
+                            const reg = /[A-Za-z0-9_-]+![A-Z]+[0-9]+/g
+                            const sheetFormula = txt.match(reg)
+                            if(sheetFormula && sheetFormula.length && sheetFormula.filter(s => s.indexOf(str) > -1).length) {
+                                cal2.unshift($.trim(str));
+                            }
+                            else {
+                                cal2.unshift(_this.functionParser($.trim(str), cellRangeFunction));
+                            }
                         } else if ($.trim(function_str).length > 0) {
                             cal2.unshift($.trim(function_str));
                         }
@@ -4244,7 +4255,7 @@ const luckysheetformula = {
 
                     i++;
                 } else {
-                    if (bracket.length == 0) {
+                    if (bracket.length == 0 && luckysheetfile.filter(item => item.name.indexOf(str + s + s_next) > -1).length === 0) {
                         if ($.trim(str).length > 0) {
                             cal2.unshift(_this.functionParser($.trim(str), cellRangeFunction));
                         } else if ($.trim(function_str).length > 0) {
@@ -4265,7 +4276,6 @@ const luckysheetformula = {
                                 stackCeilPri = stackCeilPri == null ? 1000 : stackCeilPri;
                             }
                         }
-
                         cal1.unshift(s);
 
                         function_str = "";
@@ -5999,6 +6009,7 @@ const luckysheetformula = {
         Store.calculateSheetIndex = index;
 
         let newTxt = txt
+
         // 处理百分比
         const regex2 = /(?:[0-9]+(?:\.[0-9]+)?%)|(?:[0-9]+(?:\.[0-9]+)?%(?=\*))/g
         const numArr2 = newTxt.match(regex2)
@@ -6018,7 +6029,6 @@ const luckysheetformula = {
         }
 
         let fp = $.trim(_this.functionParserExe(newTxt));
-
         fp = fp.replaceAll('FALSE', 'false')
             .replaceAll('TRUE', 'true')
             .replaceAll('()', '1')
@@ -6145,6 +6155,10 @@ const luckysheetformula = {
 
         if (r != null && c != null) {
             if (isrefresh) {
+                let sheet = Store.luckysheetfile[getSheetIndex(index)]
+                if(sheet && sheet.data && sheet.data[r] && sheet.data[r][c]) {
+                    sheet.data[r][c]['f'] = newTxt
+                }
                 _this.execFunctionGroup(r, c, result, index);
             }
 

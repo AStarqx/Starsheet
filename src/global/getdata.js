@@ -166,6 +166,9 @@ export function getcellvalue(r, c, data, type) {
     if(getObjType(d_value) == "object"){
         retv = d_value[type];
 
+        if(d_value.ct && d_value.ct.s && d_value.ct.s.length) {
+            d_value['v'] = d_value.ct.s.map(item => item.v).join('')
+        }
         if (type == "f" && retv != null) {
             retv = formula.functionHTMLGenerate(retv);
         }
@@ -307,6 +310,9 @@ export function getInlineStringNoStyle(r, c){
             }
         }
         return value;
+    }
+    if(getObjType(ct) !== "object") {
+        return ct
     }
 
     return "";
