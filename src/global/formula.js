@@ -2739,6 +2739,8 @@ const luckysheetformula = {
                 _this.setCaretPosition($span.get(0), 0, range.length);
             }
         } else {
+            const functionrangeCells = document.querySelector('.luckysheet-formula-functionrange-cell')
+            _this.functionHTMLIndex = functionrangeCells ? functionrangeCells.length : 0
             let function_str =
                 '<span class="luckysheet-formula-functionrange-cell" rangeindex="' +
                 _this.functionHTMLIndex +
