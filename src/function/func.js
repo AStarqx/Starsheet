@@ -1540,7 +1540,6 @@ function luckysheet_compareWith() {
             else{
                 result = error.v;
             }
-
             return result;
         }
     }
@@ -1647,10 +1646,9 @@ function luckysheet_getcelldata(txt) {
                 "row": [row, row],
                 "column": [col, col]
             })[0][0];
-
             if (formula.execFunctionGlobalData != null) {
                 let ef = formula.execFunctionGlobalData[row+"_"+col+"_"+sheetIndex];
-                if(ef!=null){
+                if(ef != null){
                     ret = ef;
                 }
             }

@@ -1,6 +1,6 @@
 import { getObjType } from "../utils/util";
 import { isRealNull, isRealNum, valueIsError } from "./validate";
-import { genarate, update } from "./format";
+import { datenum_local, genarate, update } from "./format";
 import server from "../controllers/server";
 import luckysheetConfigsetting from "../controllers/luckysheetConfigsetting";
 import Store from "../store/index";
@@ -17,7 +17,7 @@ function setcellvalue(r, c, d, v) {
     let cell = d[r] ? d[r][c] : {};
 
     let vupdate;
-
+    let dateValue = ''
     if (getObjType(v) == "object") {
         let cellParams = ['ct', 'bg', 'ff', 'fc', 'bl', 'it', 'fs', 'cl', 'vt', 'ht', 'mc', 'tr', 'rt', 'tb', 'v', 'm', 'f', 'ps'];
         if (cell == null) {
@@ -59,7 +59,10 @@ function setcellvalue(r, c, d, v) {
             }
 
             if(menuButton.celldataIsDate(v.v)) {
-                cell.v = menuButton.getDistanceDays('1900-1-1', v.v)
+                dateValue = v.v
+                // cell.v = menuButton.getDistanceDays('1900-1-1', v.v)
+                v.v = datenum_local(new Date(v.v))
+                delete cell.qp
             }
 
             for (const key in v) {
@@ -76,7 +79,8 @@ function setcellvalue(r, c, d, v) {
         }
     } else {
         if(menuButton.celldataIsDate(v) && v.substr(-1) !== '%') {
-            v = menuButton.getDistanceDays('1900-1-1', v)
+            // v = menuButton.getDistanceDays('1900-1-1', v)
+            v = datenum_local(new Date(v))
         }
 
         vupdate = v;
@@ -103,7 +107,6 @@ function setcellvalue(r, c, d, v) {
     }
 
     let vupdateStr = vupdate.toString();
-
     if (vupdateStr.substr(0, 1) == "'") {
         cell.m = vupdateStr.substr(1);
         cell.ct = { fa: "@", t: "s" };
@@ -122,9 +125,19 @@ function setcellvalue(r, c, d, v) {
         cell.ct = { fa: "General", t: "b" };
         cell.v = false;
     } else if (vupdateStr.substr(-1) === "%" && isRealNum(vupdateStr.substring(0, vupdateStr.length - 1))) {
-        cell.ct = { fa: "0%", t: "n" };
-        cell.v = vupdateStr.substring(0, vupdateStr.length - 1) / 100;
-        cell.m = vupdate;
+        if(!dateValue || (dateValue && !menuButton.celldataIsDate(dateValue))) {
+            cell.ct = { fa: "0%", t: "n" };
+            cell.m = vupdate;
+            cell.v = vupdateStr.substring(0, vupdateStr.length - 1) / 100;
+        }
+        else{
+            cell.v = vupdate
+            let mask = update(cell.ct.fa, vupdate);
+
+            if (mask !== vupdate) {
+                cell.m = mask.toString();
+            }
+        }
     } else if (valueIsError(vupdate)) {
         cell.m = vupdateStr;
         // cell.ct = { "fa": "General", "t": "e" };

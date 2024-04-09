@@ -582,7 +582,7 @@ function jfrefreshgrid_adRC(data, cfg, ctrlType, ctrlValue, calc, filterObj, pri
             let clc_result = formula.execfunction(clc_funcStr, clc_r, clc_c, clc_i,null, true);
             clc.func = clc_result;
 
-            if(data[clc_r] && data[clc_r][clc_c].f == clc_funcStr){
+            if(data[clc_r] && data[clc_r][clc_c] && data[clc_r][clc_c].f == clc_funcStr){
                 setcellvalue(clc_r, clc_c, data, clc_result[1]);
                 // funcData存储当前结果没有用处，每次还是需要从calc公式链实时从当前数据中计算比较靠谱
                 // funcData.push({ "r": clc_r, "c": clc_c });
@@ -812,7 +812,7 @@ function jfrefreshgrid_deleteCell(data, cfg, ctrl, calc, filterObj, printareaObj
             let clc_result = formula.execfunction(clc_funcStr, clc_r, clc_c, clc_i,null, true);
             clc.func = clc_result;
 
-            if(data[clc_r] && data[clc_r][clc_c].f == clc_funcStr){
+            if(data[clc_r] && data[clc_r][clc_c] && data[clc_r][clc_c].f == clc_funcStr){
                 setcellvalue(clc_r, clc_c, data, clc_result[1]);
                 // funcData.push({ "r": clc_r, "c": clc_c });
             }

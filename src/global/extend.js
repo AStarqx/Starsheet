@@ -32,6 +32,9 @@ function luckysheetextendtable(type, index, value, direction, sheetIndex) {
         return;
     }
 
+    formula.execFunctionGlobalData = null
+    window.luckysheet_getcelldata_cache = {}
+
     let curOrder = getSheetIndex(sheetIndex);
     let file = Store.luckysheetfile[curOrder];
     let d = $.extend(true, [], file.data);
@@ -1040,6 +1043,9 @@ function luckysheetdeletetable(type, st, ed, sheetIndex) {
     } else if (type == "column" && !checkProtectionAuthorityNormal(sheetIndex, "deleteColumns")) {
         return;
     }
+
+    formula.execFunctionGlobalData = null
+    window.luckysheet_getcelldata_cache = {}
 
     let curOrder = getSheetIndex(sheetIndex);
 

@@ -1,4 +1,4 @@
-import {luckysheetfontformat} from '../utils/util';
+import {getObjType, luckysheetfontformat} from '../utils/util';
 import menuButton from '../controllers/menuButton';
 import {checkstatusByCell} from './getdata';
 import {colLocationByIndex,colSpanLocationByIndex} from './location';
@@ -373,6 +373,24 @@ function isSupportBoundingBox(ctx){
     return true;
 }
 
+function containsChineseEnglishAndDigits(str) {
+    // 匹配中文字符的正则表达式
+    var chineseRegex = /[\u4e00-\u9fa5]/;
+    // // 匹配英文字符的正则表达式
+    // var englishRegex = /[a-zA-Z]/;
+    //  // 匹配数字的正则表达式
+    //  var digitRegex = /\d/;
+ 
+    //  // 判断字符串中是否同时包含中文字符、英文字符和数字
+    //  return (chineseRegex.test(str) && englishRegex.test(str)) ||
+    //         (chineseRegex.test(str) && digitRegex.test(str)) ||
+    //         (chineseRegex.test(str) && englishRegex.test(str) && digitRegex.test(str))
+    if(!str) return false
+    const txt = str.toString()
+    // var regex = /([A-Za-z]+|[\u4e00-\u9fa5]+|[^\w\s\d]+|\d+)/
+    return chineseRegex.test(txt)
+}
+
 
 //获取单元格文本内容的渲染信息
 // let measureTextCache = {}, measureTextCacheTimeOut = null;
@@ -452,10 +470,48 @@ function getCellTextInfo(cell , ctx, option){
     textContent.values = [];
 
     let fontset, cancelLine="0", underLine="0", fontSize=11, isInline=false, value, inlineStringArr=[];
+
+    if(cell && cell.m && containsChineseEnglishAndDigits(cell.m)) {
+        let newCell = JSON.parse(JSON.stringify(cell))
+        let txt = newCell.m
+        if(isInlineStringCell(newCell)) {
+            txt = newCell.ct.s.join('')
+            newCell.ct = {}
+        }
+        let reg = RegExp(/([A-Za-z]+|[\u4e00-\u9fa5]+|[^\w\s\d]+|\d+)/g)
+        let arr = txt.match(reg)
+        if(arr && arr.length > 1) {
+            delete newCell.m
+            // delete newCell.v
+            if(!newCell.ct) newCell.ct = { }
+            let ss = []
+            arr.forEach(item => {
+                let sc = Object.assign({}, newCell)
+                delete sc.ct
+                if(/[\u4e00-\u9fa5]/.test(item)) {
+                    if(newCell.ff == 0 || newCell.ff === 'Times New Roman') {
+                        sc.ff = '宋体'
+                    }
+                }
+                sc.v = item
+                ss.push(sc)
+            });
+            newCell.ct.s = ss
+        }
+        cell = newCell
+    }
+
     if(isInlineStringCell(cell)){
         let sharedStrings = cell.ct.s, similarIndex = 0;
         for(let i=0;i<sharedStrings.length;i++){
             let shareCell = sharedStrings[i];
+            if (getObjType(shareCell) == "object") {
+                let txt = shareCell.ct && shareCell.ct.t == 'd' ? shareCell.m : shareCell.v
+                if(/[\u4e00-\u9fa5]/.test(txt) && (shareCell.ff === 'Times New Roman' || shareCell.ff == 0)) {
+                    delete shareCell.ff
+                    delete cell.ff
+                }
+            }
             let scfontset = luckysheetfontformat(shareCell);
             let fc = shareCell.fc, cl=shareCell.cl,un = shareCell.un, v = shareCell.v, fs=shareCell.fs;
             v = v.replace(/\r\n/g, "_x000D_").replace(/&#13;&#10;/g, "_x000D_").replace(/\r/g, "_x000D_").replace(/\n/g, "_x000D_");
@@ -511,6 +567,12 @@ function getCellTextInfo(cell , ctx, option){
         isInline = true;
     }
     else{
+        if (getObjType(cell) == "object") {
+            let txt = cell.ct && cell.ct.t == 'd' ? cell.m : cell.v
+            if(/[\u4e00-\u9fa5]/.test(txt) && (cell.ff === 'Times New Roman' || cell.ff == 0)) {
+                delete cell.ff
+            }
+        }
         fontset = luckysheetfontformat(cell);
         ctx.font = fontset;
 
@@ -532,6 +594,7 @@ function getCellTextInfo(cell , ctx, option){
             return null;
         }
     }
+    
     if(tr=="3"){//vertical text
         ctx.textBaseline = 'top';
 
@@ -550,7 +613,6 @@ function getCellTextInfo(cell , ctx, option){
 
 
                     if( preShareCell!=null && preShareCell.wrap!==true && (i<inlineStringArr.length-1)){
-                        // console.log("wrap",i,colIndex,preShareCell.wrap);
                         textH_all_ColumnHeight.push(textH_all_cache);
                         textH_all_cache = 0;
                         colIndex +=1;

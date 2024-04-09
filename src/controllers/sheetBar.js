@@ -139,7 +139,7 @@ let luckysheetsheetrightclick = function ($t, $cur, e) {
     if (formula.rangestart || formula.rangedrag_column_start || formula.rangedrag_row_start || formula.israngeseleciton()) {
         setTimeout(function () {
             const functionrangeCells = document.querySelectorAll('.luckysheet-formula-functionrange-cell')
-            const pos = functionrangeCells ? functionrangeCells.length : formula.rangeSetValueTo.text().length
+            const pos = (functionrangeCells ? functionrangeCells.length : formula.rangeSetValueTo.text().length) || 1
             formula.setCaretPosition(formula.rangeSetValueTo.get(0), 0, pos);
             formula.createRangeHightlight();
             $("#luckysheet-input-box-index").find(".luckysheet-input-box-index-sheettxt").remove().end().prepend("<span class='luckysheet-input-box-index-sheettxt'>" + sheetmanage.getSheetName(formula.rangetosheet) + "!</span>").show();

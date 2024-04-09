@@ -6,9 +6,6 @@ export  async function exportSheetExcel(luckysheet,name="file") { // 参数为lu
     // 2.创建表格，第二个参数可以配置创建什么样的工作表
     luckysheet.every(function (table) {
         if (table.data.length === 0) return true;
-        if (/[*?:/\\[\]]/.test(table.name)) {
-            console.log(table.name)
-        }
         const worksheet = workbook.addWorksheet(table.name, getWorksheetOptions(table));
         // 3.设置单元格合并,设置单元格边框,设置单元格样式,设置值
         setStyleAndValue(table, worksheet);

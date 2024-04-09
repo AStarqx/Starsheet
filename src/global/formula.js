@@ -2735,7 +2735,6 @@ const luckysheetformula = {
                 $editor = $(anchorOffset).closest("div");
 
                 let $span = $editor.find("span[rangeindex='" + _this.rangechangeindex + "']").html(range);
-
                 _this.setCaretPosition($span.get(0), 0, range.length);
             }
         } else {
@@ -3517,7 +3516,7 @@ const luckysheetformula = {
                 currSelection.selectAllChildren(obj.get(0));
                 currSelection.collapseToEnd();
             } else {
-                _this.setCaretPosition(obj.find("span").get(fri[0]), 0, fri[1]);
+                _this.setCaretPosition(obj.find("span").get(fri[0]), 0, 100000);
             }
         } else if (document.selection) {
             //ie10 9 8 7 6 5
@@ -3976,15 +3975,13 @@ const luckysheetformula = {
                 let s2 = stack.pop();
                 let s1 = stack.pop();
                 let str = "luckysheet_compareWith(" + s1 + ",'" + c + "', " + s2 + ")";
-
                 stack.push(str);
             } else {
                 stack.push(c);
             }
         }
-
         if (stack.length > 0) {
-            return stack[0];
+            return stack[0]
         } else {
             return "";
         }
@@ -4279,7 +4276,6 @@ const luckysheetformula = {
                             }
                         }
                         cal1.unshift(s);
-
                         function_str = "";
                         str = "";
                     } else {
@@ -4294,7 +4290,6 @@ const luckysheetformula = {
                     str += s;
                 }
             }
-
             if (i == funcstack.length - 1) {
                 let endstr = "";
                 let str_nb = $.trim(str).replace(/'/g, "\\'");
@@ -4330,25 +4325,71 @@ const luckysheetformula = {
                         endstr = str;
                     }
                 }
-                if (endstr.length > 0) {
-                    cal2.unshift(endstr);
-                }
-
-                if (cal1.length > 0) {
-                    if (function_str.length > 0) {
-                        cal2.unshift(function_str);
-                        function_str = "";
+                let reg = RegExp(/([-+*/^])(?=\d)/g)
+                let arr = endstr.match(reg)
+                if(Number.isInteger(parseFloat(endstr)) && arr && arr.length == 1 && function_str) {
+                    let calIndex = cal2.findIndex(item => item == endstr)
+                    if(calIndex > -1) {
+                        cal2.splice(calIndex, 1)
+                    }
+                    if (cal1.length > 0) {
+                        if (function_str.length > 0) {
+                            cal2.unshift(function_str);
+                            function_str = "";
+                        }
+    
+                        while (cal1.length > 0) {
+                            cal2.unshift(cal1.shift());
+                        }
+                    }
+                    if (cal2.length > 0) {
+                        function_str = _this.calPostfixExpression(cal2);
+                    } else {
+                        function_str += endstr;
                     }
 
-                    while (cal1.length > 0) {
-                        cal2.unshift(cal1.shift());
+
+
+                    let newendstr = endstr.replace(arr[0], '')
+                    cal1 = [arr[0]]
+                    cal2 = [function_str]
+                    function_str = newendstr
+
+                    if (cal1.length > 0) {
+                        if (function_str.length > 0) {
+                            cal2.unshift(function_str);
+                            function_str = "";
+                        }
+    
+                        while (cal1.length > 0) {
+                            cal2.unshift(cal1.shift());
+                        }
+                    }
+                    if (cal2.length > 0) {
+                        function_str = _this.calPostfixExpression(cal2);
+                    } else {
+                        function_str += endstr;
                     }
                 }
-
-                if (cal2.length > 0) {
-                    function_str = _this.calPostfixExpression(cal2);
-                } else {
-                    function_str += endstr;
+                else {
+                    if (endstr.length > 0) {
+                        cal2.unshift(endstr);
+                    }
+                    if (cal1.length > 0) {
+                        if (function_str.length > 0) {
+                            cal2.unshift(function_str);
+                            function_str = "";
+                        }
+    
+                        while (cal1.length > 0) {
+                            cal2.unshift(cal1.shift());
+                        }
+                    }
+                    if (cal2.length > 0) {
+                        function_str = _this.calPostfixExpression(cal2);
+                    } else {
+                        function_str += endstr;
+                    }
                 }
             }
 
@@ -5018,7 +5059,6 @@ const luckysheetformula = {
                         endstr = str;
                     }
                 }
-
                 if (endstr.length > 0) {
                     cal2.unshift(endstr);
                 }

@@ -1945,7 +1945,6 @@ let cellOverflowRender = function(
     if (checksCF != null && checksCF["textColor"] != null) {
         luckysheetTableContent.fillStyle = checksCF["textColor"];
     }
-
     cellTextRender(textInfo, luckysheetTableContent, {
         pos_x: pos_x,
         pos_y: pos_y,
@@ -2232,7 +2231,6 @@ function cellTextRender(textInfo, ctx, option) {
 
     // ctx.fillStyle = "rgba(255,255,0,0.2)";
     // ctx.fillRect((pos_x + values[0].left)/Store.zoomRatio, (pos_y+values[0].top-values[0].asc)/Store.zoomRatio, textInfo.textWidthAll, textInfo.textHeightAll)
-
     if (textInfo.rotate != 0 && textInfo.type != "verticalWrap") {
         ctx.save();
         ctx.translate(

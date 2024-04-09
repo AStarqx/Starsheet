@@ -214,7 +214,7 @@ export function setCellValue(row, column, value, options = {}) {
             if(value.m!=null){
                 curv.m = value.m;
             }
-            setcellvalue(row, column, data, curv);//update text value
+            value = setcellvalue(row, column, data, curv);//update text value
         }
         for(let attr in value){
             let v = value[attr];

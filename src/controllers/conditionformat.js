@@ -186,6 +186,7 @@ const conditionformat = {
                 })
                 Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["rangeNames"] = rangeNames;
             }
+            Store.currentImgId = undefined
         });
 
         $(document).off("click.CFadministerRuleConfirm").on("click.CFadministerRuleConfirm", "#luckysheet-administerRule-dialog-confirm", function(){

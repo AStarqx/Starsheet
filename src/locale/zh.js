@@ -6427,12 +6427,12 @@ export default {
         MicrosoftYaHei: "Microsoft YaHei",
     },
     fontarray: [
+        "宋体",
         "Times New Roman",
         "Arial",
         "Tahoma",
         "Verdana",
         "微软雅黑",
-        "宋体",
         "黑体",
         "楷体",
         "仿宋",

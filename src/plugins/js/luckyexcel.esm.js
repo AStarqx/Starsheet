@@ -2829,7 +2829,6 @@ var LuckySheet = /** @class */ (function (_super) {
                 if (!definedName)
                     return "continue";
                 var formulaValue = definedName.value;
-                console.log(definedName, formulaValue);
                 var splitText = formulaValue.split('!');
                 var sheetName = splitText.length === 2 ? splitText[0] : '';
                 var sheet = this_1.getSheetBysheetName(sheetName);
@@ -2864,7 +2863,6 @@ var LuckySheet = /** @class */ (function (_super) {
                     _loop_2(i);
                 }
                 valueArr[key] = cellData.map(function (d) { return d.v && d.v.v; }).join(',');
-                console.log(valueArr);
             }
         };
         var this_1 = this;

@@ -5399,8 +5399,6 @@ export default function luckysheetHandler() {
 
         luckysheetDrawMain(scrollWidth, scrollHeight, ch_width, rh_height, 1, 1, null, null, newCanvas);
 
-        console.log(newCanvas)
-
         let ctx_newCanvas = newCanvas.get(0).getContext("2d");
 
         //补上 左边框和上边框

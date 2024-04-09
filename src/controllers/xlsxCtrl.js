@@ -75,7 +75,6 @@ const xlsxCtrl = {
 
                 // 创建新的 XLSX 文件
                 const newWorkbook = new ExcelJS.Workbook();
-                console.log(workbook)
                 // 复制样式和数据
                 workbook.SheetNames.forEach(sheetName => {
                     const worksheet = workbook.Sheets[sheetName];

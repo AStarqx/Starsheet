@@ -19,7 +19,7 @@ import luckysheetPostil from "./postil";
 import { isRealNum, isRealNull, isEditMode, hasPartMC, checkIsAllowEdit } from "../global/validate";
 import tooltip from "../global/tooltip";
 import editor from "../global/editor";
-import { genarate, update, is_date } from "../global/format";
+import { genarate, update, is_date, datenum_local } from "../global/format";
 import { jfrefreshgrid, luckysheetrefreshgrid } from "../global/refresh";
 import { sortSelection } from "../global/sort";
 import luckysheetformula from "../global/formula";
@@ -77,6 +77,13 @@ const menuButton = {
                 if (value == null) {
                     value = this.defualtFont[itemvalue];
                 }
+            }
+        }
+        if(Store.luckysheet_select_save && Store.luckysheet_select_save.length && Store.flowdata[Store.luckysheet_select_save[0]['row'][0]]) {
+            let cell = Store.flowdata[Store.luckysheet_select_save[0]['row'][0]][Store.luckysheet_select_save[0]['column'][0]]
+            if(cell && cell.tb) {
+                const tbs = ['clip', 'overflow', 'wrap']
+                value = tbs[parseInt(cell.tb)]
             }
         }
         $obj.find(".luckysheet-cols-menuitem")
@@ -621,6 +628,7 @@ const menuButton = {
                     _this.focus($menuButton);
 
                     $menuButton.on("click", ".luckysheet-cols-menuitem", function() {
+                        
                         $menuButton.hide();
                         luckysheetContainerFocus();
 
@@ -633,7 +641,6 @@ const menuButton = {
                             .html(" " + itemname + " ");
 
                         let d = editor.deepCopyFlowData(Store.flowdata);
-
                         _this.updateFormat(d, "ff", itemvalue);
                     });
                 }
@@ -3860,12 +3867,16 @@ const menuButton = {
                     
                     let type = "n";
 
+                    let mask = update(foucsStatus, value);
+
                     if(this.celldataIsDate(value)) {
-                        value = this.getDistanceDays('1900-1-1', value)
+                        // value = this.getDistanceDays('1900-1-1', value)
+                        mask = value
+                        value = datenum_local(new Date(value))
                         type = "d"
                     }
 
-                    let mask = update(foucsStatus, value);
+                    
 
                     if (
                         is_date(foucsStatus) ||
@@ -3950,7 +3961,6 @@ const menuButton = {
 
                 for (let c = col_st; c <= col_ed; c++) {
                     let value = d[r][c];
-
                     if (getObjType(value) == "object") {
                         // if(attr in inlineStyleAffectAttribute && isInlineStringCell(value)){
                         updateInlineStringFormatOutside(value, attr, foucsStatus);
@@ -3985,7 +3995,6 @@ const menuButton = {
 
         let canvasElement = document.createElement("canvas");
         let canvas = canvasElement.getContext("2d");
-
         if (attr in inlineStyleAffectAttribute) {
             if (parseInt($("#luckysheet-input-box").css("top")) > 0) {
                 let value = $("#luckysheet-input-box").text();
@@ -4335,7 +4344,6 @@ const menuButton = {
         }
         const locale_fontarray = _locale.fontarray;
         const locale_fontjson = _locale.fontjson;
-
         if (attr == "bl") {
             if (foucsStatus != "0") {
                 $("#luckysheet-icon-bold").addClass("luckysheet-toolbar-button-hover");
@@ -4382,7 +4390,6 @@ const menuButton = {
                     foucsStatus = foucsStatus.replace(/"/g, "").replace(/'/g, "");
                     itemvalue = foucsStatus;
                     itemname = foucsStatus;
-
                     _this.addFontTolist(itemvalue);
                 }
             }
