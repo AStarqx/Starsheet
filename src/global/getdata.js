@@ -8,6 +8,7 @@ import sheetmanage from '../controllers/sheetmanage';
 import { isInlineStringCT,isInlineStringCell,convertCssToStyleList } from '../controllers/inlineString';
 import locale from '../locale/locale';
 import Store from '../store';
+import { update } from './format';
 
 //Get selection range value
 export function getdatabyselection(range, sheetIndex) {
@@ -292,6 +293,12 @@ export function getRealCellValue(r, c){
             let ct = getcellvalue(r, c, null, "ct");
             if(isInlineStringCT(ct)){
                 value = ct.s;
+            }
+        }
+        else {
+            let ct = getcellvalue(r, c, null, "ct");
+            if(ct && ct.fa && ct.t && ct.t === 'd') {
+                value = update(ct.fa, value);
             }
         }
     }

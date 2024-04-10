@@ -192,11 +192,11 @@ function createFilter() {
         selectHightlightShow();
 
         Store.luckysheet_shiftpositon = $.extend(true, {}, last);
-        luckysheetMoveEndCell("down", "range");
+        // luckysheetMoveEndCell("down", "range");
     }
     else if (last["row"][1] - last["row"][0] < 2) {
         Store.luckysheet_shiftpositon = $.extend(true, {}, last);
-        luckysheetMoveEndCell("down", "range");
+        // luckysheetMoveEndCell("down", "range");
     }
 
     Store.luckysheet_filter_save = $.extend(true, {}, Store.luckysheet_select_save[0]);

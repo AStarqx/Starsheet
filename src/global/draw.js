@@ -811,6 +811,8 @@ function luckysheetDrawMain(
 
         value = getRealCellValue(margeMaindata.r, margeMaindata.c);
 
+        cell.m = value
+
         r = margeMaindata.r;
         c = margeMaindata.c;
 

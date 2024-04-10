@@ -421,20 +421,20 @@ export default function luckysheetHandler() {
                 }
             }
             else {
-                //单元格数据下钻
-                if (
-                    Store.flowdata[row_index] != null &&
-                    Store.flowdata[row_index][col_index] != null &&
-                    Store.flowdata[row_index][col_index].dd != null
-                ) {
-                    if (
-                        luckysheetConfigsetting.fireMousedown != null &&
-                        getObjType(luckysheetConfigsetting.fireMousedown) == "function"
-                    ) {
-                        luckysheetConfigsetting.fireMousedown(Store.flowdata[row_index][col_index].dd);
-                        return;
-                    }
-                }
+                // //单元格数据下钻
+                // if (
+                //     Store.flowdata[row_index] != null &&
+                //     Store.flowdata[row_index][col_index] != null &&
+                //     Store.flowdata[row_index][col_index].dd != null
+                // ) {
+                //     if (
+                //         luckysheetConfigsetting.fireMousedown != null &&
+                //         getObjType(luckysheetConfigsetting.fireMousedown) == "function"
+                //     ) {
+                //         luckysheetConfigsetting.fireMousedown(Store.flowdata[row_index][col_index].dd);
+                //         return;
+                //     }
+                // }
             }
 
             
@@ -1686,6 +1686,23 @@ export default function luckysheetHandler() {
                         hyperlinkText: hyperlinkText
                     })
                     return
+                }
+            }
+
+            if (event.which != "3") {
+                //单元格数据下钻
+                if (
+                    Store.flowdata[row_index] != null &&
+                    Store.flowdata[row_index][col_index] != null &&
+                    Store.flowdata[row_index][col_index].dd != null
+                ) {
+                    if (
+                        luckysheetConfigsetting.fireMousedown != null &&
+                        getObjType(luckysheetConfigsetting.fireMousedown) == "function"
+                    ) {
+                        luckysheetConfigsetting.fireMousedown(Store.flowdata[row_index][col_index].dd);
+                        return;
+                    }
                 }
             }
 

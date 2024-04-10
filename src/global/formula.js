@@ -14,7 +14,7 @@ import { isdatetime, isdatatype } from "./datecontroll";
 import { getCellTextSplitArr, getCellTextInfo } from "../global/getRowlen";
 import { getcellvalue, getcellFormula, getInlineStringNoStyle, getOrigincell } from "./getdata";
 import { setcellvalue } from "./setdata";
-import { genarate, valueShowEs } from "./format";
+import { genarate, update, valueShowEs } from "./format";
 import editor from "./editor";
 import tooltip from "./tooltip";
 import { rowLocation, colLocation, colLocationByIndex, mouseposition } from "./location";
@@ -367,7 +367,13 @@ const luckysheetformula = {
                 if (typeof value === "string") {
                     value = value.replace(/\</g, "&lt;").replace(/\>/g, "&gt;");
                 }
-            } else if (cell.f != null) {
+            } 
+            // 日期格式
+            else if (cell.ct && cell.ct.t == 'd') {
+                let vupdate = valueShowEs(r, c, d);
+                value = update(cell.ct.fa, vupdate)
+            }
+            else if (cell.f != null) {
                 value = getcellvalue(r, c, d, "f");
             } else {
                 value = valueShowEs(r, c, d);
@@ -3516,7 +3522,7 @@ const luckysheetformula = {
                 currSelection.selectAllChildren(obj.get(0));
                 currSelection.collapseToEnd();
             } else {
-                _this.setCaretPosition(obj.find("span").get(fri[0]), 0, 100000);
+                _this.setCaretPosition(obj.find("span").get(fri[0]), 0, fri[1]);
             }
         } else if (document.selection) {
             //ie10 9 8 7 6 5

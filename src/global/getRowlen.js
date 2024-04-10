@@ -475,7 +475,7 @@ function getCellTextInfo(cell , ctx, option){
         let newCell = JSON.parse(JSON.stringify(cell))
         let txt = newCell.m
         if(isInlineStringCell(newCell)) {
-            txt = newCell.ct.s.join('')
+            txt = newCell.ct.s.map(item => item.v).join('')
             newCell.ct = {}
         }
         let reg = RegExp(/([A-Za-z]+|[\u4e00-\u9fa5]+|[^\w\s\d]+|\d+)/g)
@@ -498,6 +498,7 @@ function getCellTextInfo(cell , ctx, option){
             });
             newCell.ct.s = ss
         }
+        // console.log(newCell)
         cell = newCell
     }
 

@@ -208,7 +208,6 @@ export function rowColumnOperationInitial() {
                         formula.rangestart = false;
                         formula.rangedrag_column_start = false;
                         formula.rangedrag_row_start = false;
-
                         $("#luckysheet-functionbox-cell").html(vText);
                         formula.rangeHightlightselected($("#luckysheet-rich-text-editor"));
 
