@@ -177,7 +177,7 @@ export function setCellValue(row, column, value, options = {}) {
 
     if(value == null || value.toString().length == 0){
         formula.delFunctionGroup(row, column);
-        setcellvalue(row, column, data, value);
+        value = setcellvalue(row, column, data, value);
     }
     else if(value instanceof Object){
         let curv = {};

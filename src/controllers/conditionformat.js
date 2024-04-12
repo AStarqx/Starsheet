@@ -15,6 +15,7 @@ import locale from '../locale/locale';
 import {checkProtectionFormatCells} from './protection';
 import Store from '../store';
 import dayjs from 'dayjs'
+import imageCtrl from './imageCtrl';
 
 //条件格式
 const conditionformat = {
@@ -185,6 +186,10 @@ const conditionformat = {
                     }
                 })
                 Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["rangeNames"] = rangeNames;
+
+                if(Store.currentImgId) {
+                    imageCtrl.addImgTip()
+                }
             }
             Store.currentImgId = undefined
         });

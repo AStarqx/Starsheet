@@ -1300,17 +1300,19 @@ const selection = {
                         }
                     }
                     if (originCell instanceof Object) {
-                        originCell.v = value;
+                        let mask = genarate(value);
+                        originCell.v = mask[2];
                         if (originCell.ct != null && originCell.ct.fa != null) {
-                            originCell.m = update(originCell["ct"]["fa"], value);
+                            originCell.m = update(originCell["ct"]["fa"], mask[2]);
                         } else {
-                            originCell.m = value;
+                            originCell.m = mask[0];
                         }
 
                         if (originCell.f != null && originCell.f.length > 0) {
                             originCell.f = "";
                             formula.delFunctionGroup(r + curR, c + curC, Store.currentSheetIndex);
                         }
+                        console.log(originCell)
                     } else {
                         let cell = {};
                         let mask = genarate(value);

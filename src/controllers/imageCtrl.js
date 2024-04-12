@@ -422,6 +422,8 @@ const imageCtrl = {
 
             _this.sliderHtmlShow();
 
+            _this.addImgTip()
+
             e.stopPropagation();
         })
 
@@ -533,6 +535,27 @@ const imageCtrl = {
             e.stopPropagation();
         })
     },
+    addImgTip() {
+        let _this = this
+        // 设置图片提示
+        const rangeNames = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["rangeNames"] || []
+        const imageRangeNames = rangeNames.filter(item => item.cellImageId)
+        if(_this.currentImgId && imageRangeNames.find(item => item.cellImageId === _this.currentImgId)) {
+            let item = _this.images[_this.currentImgId];
+            let imgItemParam = _this.getImgItemParam(item);
+            let left = imgItemParam.left;
+            let top = imgItemParam.top;
+            let position = imgItemParam.position;
+
+            if($(`#image-tip-${_this.currentImgId}`)) $(`#image-tip-${_this.currentImgId}`).remove()
+
+            const modelHtml = `<div id="image-tip-${_this.currentImgId}" style="padding:0;position:${position};left:${left}px;top:${top - 23}px;
+                z-index:200;background: #fff;border: 2px solid #0188fb;font-size: 14px;">
+                单击选中图片，使用Ctrl+V粘贴覆盖原图片或右键选择更换图片
+            </div>`
+            $("#luckysheet-image-showBoxs").append(modelHtml);
+        }
+    },
     configChange: function(type, value){
         let _this = this;
 
@@ -630,6 +653,8 @@ const imageCtrl = {
         $("#luckysheet-modal-dialog-cropping").hide();
         $("#luckysheet-modal-dialog-slider-imageCtrl").hide();
         $("#luckysheetChangeImage").hide();
+
+        if($(`#image-tip-${_this.currentImgId}`)) $(`#image-tip-${_this.currentImgId}`).remove()
 
         let imgItem = _this.images[_this.currentImgId];
         let imgItemParam = _this.getImgItemParam(imgItem);
@@ -758,6 +783,8 @@ const imageCtrl = {
             item.default.top = (obj.offsetTop - item.crop.offsetTop) / zoomRatio;
         }
 
+        _this.addImgTip()
+
         _this.ref();
     },
     resizeImgItem: function() {
@@ -791,6 +818,7 @@ const imageCtrl = {
             item.default.left = (obj.offsetLeft - item.crop.offsetLeft) / zoomRatio;
             item.default.top = (obj.offsetTop - item.crop.offsetTop) / zoomRatio;
         }
+        _this.addImgTip()
         _this.ref();
     },
     croppingEnter: function() {
@@ -949,6 +977,8 @@ const imageCtrl = {
         $("#luckysheet-modal-dialog-cropping").hide();
         $("#luckysheet-modal-dialog-slider-imageCtrl").hide();
         $("#" + _this.currentImgId).remove();
+
+        if($(`#image-tip-${_this.currentImgId}`)) $(`#image-tip-${_this.currentImgId}`).remove()
 
 
         delete _this.images[_this.currentImgId];

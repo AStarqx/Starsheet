@@ -3828,6 +3828,11 @@ const menuButton = {
         }
         return false
     },
+    endsWithNoPunctuation(str) {
+        // 匹配结尾不包含标点符号的字符串
+        const regex = /^[^\p{P}]+$/u;
+        return regex.test(str);
+    },
     // 计算两个日期距离的天数
     getDistanceDays(d1, d2) {
         let date1 = new Date(d1);
@@ -3867,9 +3872,10 @@ const menuButton = {
                     
                     let type = "n";
 
+                    console.log('after setting format:', foucsStatus, value)
                     let mask = update(foucsStatus, value);
 
-                    if(this.celldataIsDate(value)) {
+                    if(this.celldataIsDate(value) && this.endsWithNoPunctuation(value)) {
                         // value = this.getDistanceDays('1900-1-1', value)
                         mask = value
                         value = datenum_local(new Date(value))

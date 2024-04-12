@@ -7,6 +7,7 @@ import Store from "../store/index";
 import formula from '../global/formula';
 import menuButton from '../controllers/menuButton';
 
+
 //Set cell value
 function setcellvalue(r, c, d, v) {
     if (d == null) {
@@ -58,7 +59,7 @@ function setcellvalue(r, c, d, v) {
                 cell.ps = v.ps
             }
 
-            if(menuButton.celldataIsDate(v.v)) {
+            if(menuButton.celldataIsDate(v.v) && menuButton.endsWithNoPunctuation(v.v)) {
                 dateValue = v.v
                 // cell.v = menuButton.getDistanceDays('1900-1-1', v.v)
                 v.v = datenum_local(new Date(v.v))
@@ -78,14 +79,12 @@ function setcellvalue(r, c, d, v) {
             vupdate = v.v;
         }
     } else {
-        if(menuButton.celldataIsDate(v) && v.substr(-1) !== '%') {
+        if(menuButton.celldataIsDate(v) && menuButton.endsWithNoPunctuation(v)) {
             // v = menuButton.getDistanceDays('1900-1-1', v)
             v = datenum_local(new Date(v))
         }
-
         vupdate = v;
     }
-
     // fix #81， vupdate = ''
     if (vupdate == null) {
         if (getObjType(cell) == "object") {
@@ -197,6 +196,11 @@ function setcellvalue(r, c, d, v) {
                 vupdate = parseFloat(vupdate);
             }
 
+            if(['0%', '#0%', '0.00%', '#0.00%'].includes(cell.ct.fa)) {
+                if(vupdate != undefined && vupdate != null && !Number.isNaN(Number(vupdate))) {
+                    vupdate = vupdate / 100
+                }
+            }
             let mask = update(cell.ct.fa, vupdate);
 
             if (mask === vupdate) {
