@@ -672,9 +672,13 @@ export function keyboardInitial(){
                     return;
                 }
                 else if (kcode == 90) {//Ctrl + Z  撤销
+                    formula.execFunctionGlobalData = null
+                    window.luckysheet_getcelldata_cache = {}
+
                     controlHistory.redo(event);
                     luckysheetactiveCell();
                     event.stopPropagation();
+                    
                     return;
                 }
                 else if (kcode == 89) {//Ctrl + Y  重做

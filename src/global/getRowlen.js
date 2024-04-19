@@ -476,46 +476,52 @@ function getCellTextInfo(cell , ctx, option){
         let txt = newCell.m
         if(isInlineStringCell(newCell)) {
             txt = newCell.ct.s.map(item => item.v).join('')
-            newCell.ct = {}
+            // newCell.ct = {}
         }
         let reg = RegExp(/([A-Za-z]+|[\u4e00-\u9fa5]+|[^\w\s\d]+|\d+)/g)
         let arr = txt.match(reg)
         if(arr && arr.length > 1) {
             delete newCell.m
-            // delete newCell.v
+            delete newCell.ff
             if(!newCell.ct) newCell.ct = { }
             let ss = []
             arr.forEach(item => {
-                let sc = Object.assign({}, newCell)
+                let sc = $.extend(true, {}, newCell)
                 delete sc.ct
                 if(/[\u4e00-\u9fa5]/.test(item)) {
-                    if(newCell.ff == 0 || newCell.ff === 'Times New Roman') {
+                    if(newCell.ff == 5 || newCell.ff === 'Times New Roman') {
                         sc.ff = '宋体'
                     }
                 }
                 sc.v = item
                 ss.push(sc)
             });
+
+            ss.forEach(s => {
+                if(!s.ff) {
+                    s.ff = 0
+                }
+            })
+
             newCell.ct.s = ss
         }
-        // console.log(newCell)
         cell = newCell
     }
 
     if(isInlineStringCell(cell)){
         let sharedStrings = cell.ct.s, similarIndex = 0;
+        delete cell.ff
         for(let i=0;i<sharedStrings.length;i++){
             let shareCell = sharedStrings[i];
             if (getObjType(shareCell) == "object") {
                 let txt = shareCell.ct && shareCell.ct.t == 'd' ? shareCell.m : shareCell.v
-                if(/[\u4e00-\u9fa5]/.test(txt) && (shareCell.ff === 'Times New Roman' || shareCell.ff == 0)) {
+                if(/[\u4e00-\u9fa5]/.test(txt) && (shareCell.ff === 'Times New Roman' || shareCell.ff == 5)) {
                     delete shareCell.ff
-                    delete cell.ff
                 }
             }
             let scfontset = luckysheetfontformat(shareCell);
             let fc = shareCell.fc, cl=shareCell.cl,un = shareCell.un, v = shareCell.v, fs=shareCell.fs;
-            v = v.replace(/\r\n/g, "_x000D_").replace(/&#13;&#10;/g, "_x000D_").replace(/\r/g, "_x000D_").replace(/\n/g, "_x000D_");
+            v = v.toString().replace(/\r\n/g, "_x000D_").replace(/&#13;&#10;/g, "_x000D_").replace(/\r/g, "_x000D_").replace(/\n/g, "_x000D_");
             let splitArr = v.split("_x000D_");
             for(let x=0;x<splitArr.length;x++){
                 let newValue = splitArr[x];
@@ -570,7 +576,7 @@ function getCellTextInfo(cell , ctx, option){
     else{
         if (getObjType(cell) == "object") {
             let txt = cell.ct && cell.ct.t == 'd' ? cell.m : cell.v
-            if(/[\u4e00-\u9fa5]/.test(txt) && (cell.ff === 'Times New Roman' || cell.ff == 0)) {
+            if(/[\u4e00-\u9fa5]/.test(txt) && (cell.ff === 'Times New Roman' || cell.ff == 5)) {
                 delete cell.ff
             }
         }

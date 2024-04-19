@@ -59,7 +59,7 @@ function setcellvalue(r, c, d, v) {
                 cell.ps = v.ps
             }
 
-            if(menuButton.celldataIsDate(v.v) && menuButton.endsWithNoPunctuation(v.v)) {
+            if(menuButton.celldataIsDate(v.v) && (v.v.toString().indexOf('-') > -1 || menuButton.endsWithNoPunctuation(v.v))) {
                 dateValue = v.v
                 // cell.v = menuButton.getDistanceDays('1900-1-1', v.v)
                 v.v = datenum_local(new Date(v.v))
@@ -79,7 +79,7 @@ function setcellvalue(r, c, d, v) {
             vupdate = v.v;
         }
     } else {
-        if(menuButton.celldataIsDate(v) && menuButton.endsWithNoPunctuation(v)) {
+        if(menuButton.celldataIsDate(v) && (v.toString().indexOf('-') > -1 || menuButton.endsWithNoPunctuation(v))) {
             // v = menuButton.getDistanceDays('1900-1-1', v)
             v = datenum_local(new Date(v))
         }
@@ -197,8 +197,10 @@ function setcellvalue(r, c, d, v) {
             }
 
             if(['0%', '#0%', '0.00%', '#0.00%'].includes(cell.ct.fa)) {
-                if(vupdate != undefined && vupdate != null && !Number.isNaN(Number(vupdate))) {
-                    vupdate = vupdate / 100
+                if(vupdate != undefined && vupdate != null && !Number.isNaN(Number(vupdate)) && vupdateStr.substr(-1) != '%') {
+                    if(parseInt($("#luckysheet-input-box").css("top")) > 0) {
+                        vupdate = vupdate / 100
+                    }
                 }
             }
             let mask = update(cell.ct.fa, vupdate);

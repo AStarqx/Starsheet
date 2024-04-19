@@ -1312,7 +1312,6 @@ const selection = {
                             originCell.f = "";
                             formula.delFunctionGroup(r + curR, c + curC, Store.currentSheetIndex);
                         }
-                        console.log(originCell)
                     } else {
                         let cell = {};
                         let mask = genarate(value);

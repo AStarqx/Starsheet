@@ -1756,6 +1756,16 @@ function fuzzydate(s) {
     return o;
 }
 
+function parseThousandSeparatedNumber(str) {
+    // 去除字符串中的逗号
+    const numStr = str.replace(/,/g, '');
+    
+    // 将字符串转换为数字
+    const number = parseFloat(numStr);
+    
+    return isNaN(number) ? null : number;
+}
+
 export function genarate(value) {//万 单位格式增加！！！
     var ret = [];
     var m = null, ct = {}, v = value;
@@ -1766,7 +1776,7 @@ export function genarate(value) {//万 单位格式增加！！！
 
     if (/^-?[0-9]{1,}[,][0-9]{3}(.[0-9]{1,2})?$/.test(value)) { // 表述金额的字符串，如：12,000.00 或者 -12,000.00
         m = value
-        v = Number(value.split('.')[0].replace(',', ''))
+        v = Number(value.split('.')[0].replaceAll(',', ''))
         let fa = "#,##0"
         if (value.split('.')[1]) {
             fa = "#,##0."
@@ -1775,7 +1785,21 @@ export function genarate(value) {//万 单位格式增加！！！
             }
         }
         ct= {fa, t: "n"}
-    } else if(value.toString().substr(0, 1) === "'"){
+    } 
+    else if(/^(\d{1,3}(,\d{3})*|\d+)(\.\d+)?$/.test(value)) {
+        let txt = value.toString()
+        m = txt
+        v = parseThousandSeparatedNumber(txt)
+        let fa = "#,##0"
+        if (txt.split('.')[1]) {
+            fa = "#,##0."
+            for (let i = 0; i < txt.split('.')[1].length; i++) {
+                fa += 0
+            }
+        }
+        ct = {fa, t: "n"}
+    }
+    else if(value.toString().substr(0, 1) === "'"){
         m = value.toString().substr(1);
         ct = { "fa": "@", "t": "s" };
     }

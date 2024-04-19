@@ -6168,81 +6168,36 @@ export default function luckysheetHandler() {
                             let c = 0;
                             $tr.find(cellElements).each(function() {
                                 let $td = $(this);
-                                let cell = {};
-                                let txt = $td.text();
-                                if ($.trim(txt).length == 0) {
-                                    cell.v = null;
-                                    cell.m = "";
-                                } else {
-                                    let mask = genarate($td.text());
-                                    cell.v = mask[2];
-                                    cell.ct = mask[1];
-                                    cell.m = mask[0];
-                                }
+                                let txt = $td.text()
+                                let cell = getPasteCell($td)
 
-                                let bg = $td.css("background-color");
-                                if (bg == "rgba(0, 0, 0, 0)") {
-                                    bg = null;
-                                }
+                                if($td.children() && $td.children().length > 1) {
+                                    let cts = []
+                                    $td.children().each(function() {
+                                        let $font = $(this)
+                                        let txt = $font.text()
+                                        if(txt.trim()) {
+                                            let fontCell = getPasteCell($font)
+                                            cts.push(fontCell)
+                                        }
+                                    })
 
-                                cell.bg = bg;
+                                    let firstText = txt.replace(cts.map(c => c.m).join(''), '')
+                                    if(firstText.trim()) {
+                                        let firstCell = $.extend(true, {}, cell)
+                                        firstCell.m = firstText
+                                        firstCell.v = firstText
 
-                                let bl = $td.css("font-weight");
-                                if (bl == 400 || bl == "normal") {
-                                    cell.bl = 0;
-                                } else {
-                                    cell.bl = 1;
-                                }
-
-                                // 检测下划线
-                                let un = $td.css("text-decoration");
-                                if (un.indexOf("underline") != -1) {
-                                    cell.un = 1;
-                                }
-
-                                let it = $td.css("font-style");
-                                if (it == "normal") {
-                                    cell.it = 0;
-                                } else {
-                                    cell.it = 1;
-                                }
-
-                                let ff = $td.css("font-family");
-                                let ffs = ff.split(",");
-                                for (let i = 0; i < ffs.length; i++) {
-                                    let fa = $.trim(ffs[i].toLowerCase());
-                                    fa = locale_fontjson[fa];
-                                    if (fa == null) {
-                                        cell.ff = 0;
-                                    } else {
-                                        cell.ff = fa;
-                                        break;
+                                        cts = [firstCell].concat(cts)
                                     }
-                                }
-                                let fs = Math.round((parseInt($td.css("font-size")) * 72) / 96);
-                                cell.fs = fs;
 
-                                let fc = $td.css("color");
-                                cell.fc = fc;
-
-                                // 水平对齐属性
-                                let ht = $td.css("text-align");
-                                if (ht == "center") {
-                                    cell.ht = 0;
-                                } else if (ht == "right") {
-                                    cell.ht = 2;
-                                } else {
-                                    cell.ht = 1;
-                                }
-
-                                // 垂直对齐属性
-                                let vt = $td.css("vertical-align");
-                                if (vt == "middle") {
-                                    cell.vt = 0;
-                                } else if (vt == "top" || vt == "text-top") {
-                                    cell.vt = 1;
-                                } else {
-                                    cell.vt = 2;
+                                    if(!cell.ct) {
+                                        cell.ct = {}
+                                    }
+                                    cell.ct.s = cts
+                                    
+                                    delete cell.fc
+                                    delete cell.m
                                 }
 
                                 while (c < colLen && data[r][c] != null) {
@@ -6484,6 +6439,88 @@ export default function luckysheetHandler() {
             menuButton.cancelPaintModel();
         }
     });
+}
+
+function getPasteCell($dom) {
+    const locale_fontjson = locale().fontjson;
+    let cell = {};
+    let txt = $dom.text();
+    if ($.trim(txt).length == 0) {
+        cell.v = null;
+        cell.m = "";
+    } else {
+        let mask = genarate(txt);
+        cell.v = mask[2];
+        cell.ct = mask[1];
+        cell.m = mask[0];
+    }
+
+    let bg = $dom.css("background-color");
+    if (bg == "rgba(0, 0, 0, 0)") {
+        bg = null;
+    }
+
+    cell.bg = bg;
+
+    let bl = $dom.css("font-weight");
+    if (bl == 400 || bl == "normal") {
+        cell.bl = 0;
+    } else {
+        cell.bl = 1;
+    }
+
+    // 检测下划线
+    let un = $dom.css("text-decoration");
+    if (un.indexOf("underline") != -1) {
+        cell.un = 1;
+    }
+
+    let it = $dom.css("font-style");
+    if (it == "normal") {
+        cell.it = 0;
+    } else {
+        cell.it = 1;
+    }
+
+    let ff = $dom.css("font-family");
+    let ffs = ff.split(",");
+    for (let i = 0; i < ffs.length; i++) {
+        let fa = $.trim(ffs[i].toLowerCase());
+        fa = locale_fontjson[fa];
+        if (fa == null) {
+            cell.ff = 0;
+        } else {
+            cell.ff = fa;
+            break;
+        }
+    }
+    let fs = Math.round((parseInt($dom.css("font-size")) * 72) / 96);
+    cell.fs = fs;
+
+    let fc = $dom.css("color");
+    cell.fc = fc;
+
+    // 水平对齐属性
+    let ht = $dom.css("text-align");
+    if (ht == "center") {
+        cell.ht = 0;
+    } else if (ht == "right") {
+        cell.ht = 2;
+    } else {
+        cell.ht = 1;
+    }
+
+    // 垂直对齐属性
+    let vt = $dom.css("vertical-align");
+    if (vt == "middle") {
+        cell.vt = 0;
+    } else if (vt == "top" || vt == "text-top") {
+        cell.vt = 1;
+    } else {
+        cell.vt = 2;
+    }
+
+    return cell
 }
 
 // 协同编辑其他用户不在操作的时候，且已经展示了用户名10秒，则用户名框隐藏

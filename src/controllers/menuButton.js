@@ -3845,6 +3845,14 @@ const menuButton = {
         if (d == null || attr == null) {
             return;
         }
+        var  w = window.getSelection(); 
+        var range;
+        if(w.type=="None"){
+            range = Store.inlineStringEditRange;
+        }
+        else{
+            range = w.getRangeAt(0);
+        } 
         if (attr == "ct") {
             for (let r = row_st; r <= row_ed; r++) {
                 if (Store.config["rowhidden"] != null && Store.config["rowhidden"][r] != null) {
@@ -4132,7 +4140,7 @@ const menuButton = {
                                 fv[mc_r + "_" + mc_c] = $.extend(true, {}, cell);
                             } else {
                                 // let cell_clone = fv[mc_r + "_" + mc_c];
-                                let cell_clone = JSON.parse(JSON.stringify(fv[mc_r + "_" + mc_c]));
+                                let cell_clone = fv[mc_r + "_" + mc_c] ? JSON.parse(JSON.stringify()) : {}
 
                                 delete cell_clone.v;
                                 delete cell_clone.m;
@@ -4198,7 +4206,7 @@ const menuButton = {
                                     fv[mc_r + "_" + mc_c] = $.extend(true, {}, cell);
                                 } else {
                                     // let cell_clone = fv[mc_r + "_" + mc_c];
-                                    let cell_clone = JSON.parse(JSON.stringify(fv[mc_r + "_" + mc_c]));
+                                    let cell_clone = fv[mc_r + "_" + mc_c] ? JSON.parse(JSON.stringify(fv[mc_r + "_" + mc_c])) : {}
 
                                     delete cell_clone.v;
                                     delete cell_clone.m;
@@ -4297,13 +4305,13 @@ const menuButton = {
         }
 
         const file = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)];
-        const calc = file.calcChain?.filter(({ r, c }) => d[r][c]?.f);
+        const calc = file.calcChain?.filter(({ r, c }) => d[r] && d[r][c]?.f);
         const hyperlink =
             file.hyperlink &&
             Object.fromEntries(
                 Object.entries(file.hyperlink).filter(([r_c]) => {
                     const [r, c] = r_c.split("_");
-                    return d[r][c]?.v;
+                    return d[r] && d[r][c]?.v;
                 }),
             );
 
@@ -5447,12 +5455,12 @@ const menuButton = {
     },
     fontSelectList: [],
     defualtFont: [
+        "宋体",
         "Times New Roman",
         "Arial",
         "Tahoma",
         "Verdana",
         "微软雅黑",
-        "宋体",
         "黑体",
         "楷体",
         "仿宋",

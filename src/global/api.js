@@ -214,7 +214,8 @@ export function setCellValue(row, column, value, options = {}) {
             if(value.m!=null){
                 curv.m = value.m;
             }
-            value = setcellvalue(row, column, data, curv);//update text value
+            let newvalue = setcellvalue(row, column, data, curv);//update text value
+            value = {...value, ...newvalue}
         }
         for(let attr in value){
             let v = value[attr];
@@ -3564,7 +3565,7 @@ export function cancelRangeMerge(options = {}) {
                     }
                     else{
                         // let cell_clone = fv[mc_r + "_" + mc_c];
-                        let cell_clone = JSON.parse(JSON.stringify(fv[mc_r + "_" + mc_c]));
+                        let cell_clone = fv[mc_r + "_" + mc_c] ? JSON.parse(JSON.stringify(fv[mc_r + "_" + mc_c])) : {}
 
                         delete cell_clone.v;
                         delete cell_clone.m;

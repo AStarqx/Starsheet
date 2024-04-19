@@ -1921,7 +1921,6 @@ let cellOverflowRender = function(
     luckysheetTableContent.rect(pos_x, pos_y, cellWidth, cellHeight);
     luckysheetTableContent.clip();
     luckysheetTableContent.scale(Store.zoomRatio, Store.zoomRatio);
-
     let textInfo = getCellTextInfo(cell, luckysheetTableContent, {
         cellWidth: cellWidth,
         cellHeight: cellHeight,
@@ -1992,7 +1991,6 @@ function getCellOverflowMap(canvas, col_st, col_ed, row_st, row_end) {
             ) {
                 //水平对齐
                 let horizonAlign = menuButton.checkstatus(data, r, c, "ht");
-
                 let textMetricsObj = getCellTextInfo(cell, canvas, {
                     r: r,
                     c: c,

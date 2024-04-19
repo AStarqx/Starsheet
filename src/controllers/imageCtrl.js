@@ -538,9 +538,9 @@ const imageCtrl = {
     addImgTip() {
         let _this = this
         // 设置图片提示
-        const rangeNames = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["rangeNames"] || []
-        const imageRangeNames = rangeNames.filter(item => item.cellImageId)
-        if(_this.currentImgId && imageRangeNames.find(item => item.cellImageId === _this.currentImgId)) {
+        const conditionformats = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["luckysheet_conditionformat_save"] || []
+        const conditionformat = conditionformats.filter(item => item.cellImageId)
+        if(_this.currentImgId && conditionformat.find(item => item.cellImageId === _this.currentImgId)) {
             let item = _this.images[_this.currentImgId];
             let imgItemParam = _this.getImgItemParam(item);
             let left = imgItemParam.left;
@@ -549,8 +549,8 @@ const imageCtrl = {
 
             if($(`#image-tip-${_this.currentImgId}`)) $(`#image-tip-${_this.currentImgId}`).remove()
 
-            const modelHtml = `<div id="image-tip-${_this.currentImgId}" style="padding:0;position:${position};left:${left}px;top:${top - 23}px;
-                z-index:200;background: #fff;border: 2px solid #0188fb;font-size: 14px;">
+            const modelHtml = `<div id="image-tip-${_this.currentImgId}" style="padding:0;position:${position};left:${left}px;top:${top - 32}px;
+                z-index:200;background: #ffffbf;border: 2px solid #0188fb;font-size: 20px;box-shadow: 2px 2px 5px #666;">
                 单击选中图片，使用Ctrl+V粘贴覆盖原图片或右键选择更换图片
             </div>`
             $("#luckysheet-image-showBoxs").append(modelHtml);
