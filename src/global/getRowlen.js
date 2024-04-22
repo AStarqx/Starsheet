@@ -1,7 +1,7 @@
 import {getObjType, luckysheetfontformat} from '../utils/util';
 import menuButton from '../controllers/menuButton';
 import {checkstatusByCell} from './getdata';
-import {colLocationByIndex,colSpanLocationByIndex} from './location';
+import {colLocationByIndex,colSpanLocationByIndex, rowLocationByIndex} from './location';
 import {checkWordByteLength, hasChinaword, isRealNull} from './validate';
 import {isInlineStringCell} from '../controllers/inlineString';
 
@@ -36,16 +36,16 @@ function rowlenByRange(d, r1, r2, cfg) {
 
         let currentRowLen = Store.defaultrowlen;
 
-        if(cfg_clone["customHeight"][r]==1){
-            continue;
-        }
+        // if(cfg_clone["customHeight"][r]==1){
+        //     continue;
+        // }
 
         delete cfg_clone["rowlen"][r];
 
         for(let c = 0; c < d[r].length; c++){
             let cell = d[r][c];
 
-            if(cell == null){
+            if (cell == null) {
                 continue;
             }
 
@@ -63,9 +63,12 @@ function rowlenByRange(d, r1, r2, cfg) {
                     cellWidth = colLocationByIndex(c)[1] - colLocationByIndex(c)[0] - 2;
                 }
 
+                let cellHeight = rowLocationByIndex(r)[1] - rowLocationByIndex(r)[0] - 2;
+                
                 let textInfo = getCellTextInfo(cell, canvas,{
                     r:r,
                     c:c,
+                    cellHeight: cellHeight,
                     cellWidth:cellWidth
                 });
 
@@ -472,7 +475,7 @@ function getCellTextInfo(cell , ctx, option){
     let fontset, cancelLine="0", underLine="0", fontSize=11, isInline=false, value, inlineStringArr=[];
 
     if(cell && cell.m && containsChineseEnglishAndDigits(cell.m)) {
-        let newCell = JSON.parse(JSON.stringify(cell))
+        let newCell = $.extend(true, {}, cell)
         let txt = newCell.m
         if(isInlineStringCell(newCell)) {
             txt = newCell.ct.s.map(item => item.v).join('')
@@ -482,12 +485,12 @@ function getCellTextInfo(cell , ctx, option){
         let arr = txt.match(reg)
         if(arr && arr.length > 1) {
             delete newCell.m
-            delete newCell.ff
             if(!newCell.ct) newCell.ct = { }
             let ss = []
             arr.forEach(item => {
                 let sc = $.extend(true, {}, newCell)
                 delete sc.ct
+                delete sc.f
                 if(/[\u4e00-\u9fa5]/.test(item)) {
                     if(newCell.ff == 5 || newCell.ff === 'Times New Roman') {
                         sc.ff = '宋体'
