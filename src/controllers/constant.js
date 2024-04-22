@@ -382,7 +382,71 @@ function rightclickHTML() {
             </div>`,
         )
         .join("");
+        // <div id="luckysheetmatrix" class="luckysheet-cols-menuitem luckysheet-cols-submenu luckysheet-mousedown-cancel" style="display:${
+        //     config.matrix ? "block" : "none"
+        // };">
+        //     <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">
+        //         ${
+        //             rightclick.matrix
+        //         }<span class="luckysheet-submenu-arrow iconfont-luckysheet luckysheet-iconfont-youjiantou" style="user-select: none;"></span>
+        //     </div>
+        // </div>
+        // <div id="luckysheetorderby" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
+        //     config.sort ? "block" : "none"
+        // };">
+        //     <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
+        //         rightclick.sortSelection
+        //     }</div>
+        // </div>
+        // <div id="luckysheetfilter" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
+        //     config.filter ? "block" : "none"
+        // };">
+        //     <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
+        //         rightclick.filterSelection
+        //     }</div>
+        // </div>
+        // <div id="luckysheetdatavisual" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
+        //     config.chart ? "block" : "none"
+        // };">
+        //     <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
+        //         rightclick.chartGeneration
+        //     }</div>
+        // </div>
+        // <div id="luckysheetInsertImage" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
+        //     config.image ? "block" : "none"
+        // };">
+        //     <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
+        //         toolbar.insertImage
+        //     }</div>
+        // </div>
+        // <div id="luckysheetChangeImage" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:none;">
+        //     <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
+        //         toolbar.changeImage
+        //     }</div>
+        // </div>
+        // <div id="luckysheetInsertLink" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
+        //     config.link ? "block" : "none"
+        // };">
+        //     <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
+        //         toolbar.insertLink
+        //     }</div>
+        // </div>
+        // <div id="luckysheetDataVerification" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
+        //     config.data ? "block" : "none"
+        // };">
+        //     <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
+        //         toolbar.dataVerification
+        //     }</div>
+        // </div>
+        // <div id="luckysheetCellFormatRightClickMenu" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
+        //     config.cellFormat ? "block" : "none"
+        // };">
+        //     <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
+        //         toolbar.cellFormat
+        //     }</div>
+        // </div>
     const rightclickContainer = `<div id="luckysheet-rightclick-menu" class="luckysheet-cols-menu luckysheet-rightgclick-menu luckysheet-mousedown-cancel">
+                ${customsButtons}
                 <div id="luckysheet-copy-btn" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel luckysheet-copy-btn" data-clipboard-action="copy" data-clipboard-target="#luckysheet-copy-content" style="display:${
                     config.copy ? "block" : "none"
                 };">
@@ -558,69 +622,18 @@ function rightclickHTML() {
                             rightclick.clearContent
                         }</div>
                     </div>
-                    <div id="luckysheetmatrix" class="luckysheet-cols-menuitem luckysheet-cols-submenu luckysheet-mousedown-cancel" style="display:${
-                        config.matrix ? "block" : "none"
+                    <div id="luckysheetmore" class="luckysheet-cols-menuitem luckysheet-cols-submenu luckysheet-mousedown-cancel" style="display:${
+                        config.more ? "block" : "none"
                     };">
                         <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">
                             ${
-                                rightclick.matrix
+                                rightclick.more
                             }<span class="luckysheet-submenu-arrow iconfont-luckysheet luckysheet-iconfont-youjiantou" style="user-select: none;"></span>
                         </div>
                     </div>
-                    <div id="luckysheetorderby" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
-                        config.sort ? "block" : "none"
-                    };">
-                        <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
-                            rightclick.sortSelection
-                        }</div>
-                    </div>
-                    <div id="luckysheetfilter" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
-                        config.filter ? "block" : "none"
-                    };">
-                        <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
-                            rightclick.filterSelection
-                        }</div>
-                    </div>
-                    <div id="luckysheetdatavisual" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
-                        config.chart ? "block" : "none"
-                    };">
-                        <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
-                            rightclick.chartGeneration
-                        }</div>
-                    </div>
-                    <div id="luckysheetInsertImage" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
-                        config.image ? "block" : "none"
-                    };">
-                        <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
-                            toolbar.insertImage
-                        }</div>
-                    </div>
-                    <div id="luckysheetChangeImage" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:none;">
-                        <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
-                            toolbar.changeImage
-                        }</div>
-                    </div>
-                    <div id="luckysheetInsertLink" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
-                        config.link ? "block" : "none"
-                    };">
-                        <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
-                            toolbar.insertLink
-                        }</div>
-                    </div>
-                    <div id="luckysheetDataVerification" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
-                        config.data ? "block" : "none"
-                    };">
-                        <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
-                            toolbar.dataVerification
-                        }</div>
-                    </div>
-                    <div id="luckysheetCellFormatRightClickMenu" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${
-                        config.cellFormat ? "block" : "none"
-                    };">
-                        <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
-                            toolbar.cellFormat
-                        }</div>
-                    </div>
+
+
+                    
                     <div id="luckysheetSetPrintArea" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${config.setPrintArea ? 'block' : 'none'};">
                         <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${toolbar.setPrintArea}</div>
                     </div>
@@ -633,7 +646,6 @@ function rightclickHTML() {
                     <div id="luckysheetManageRangeNameRules" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${config.manageRangeNameRules ? 'block' : 'none'};">
                         <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${conditionformat.manageRangeNameRules}</div>
                     </div>
-                    ${customsButtons}
                 </div>
             </div>
             <div id="luckysheetcopyfor_sub" class="luckysheet-cols-menu luckysheet-rightgclick-menu luckysheet-rightgclick-menu-sub luckysheet-mousedown-cancel">
@@ -787,6 +799,73 @@ function rightclickHTML() {
                 <div id="luckysheet-delCellsMoveUp" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel">
                     <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">
                         ${rightclick.moveUp}
+                    </div>
+                </div>
+            </div>
+            <div id="luckysheetmore_sub" class="luckysheet-cols-menu luckysheet-rightgclick-menu luckysheet-rightgclick-menu-sub luckysheet-mousedown-cancel">
+                <div class="luckysheet-cols-menuitem luckysheet-mousedown-cancel">
+                    <div id="luckysheetmatrix" class="luckysheet-cols-menuitem-content luckysheet-cols-submenu luckysheet-mousedown-cancel" style="display:${
+                        config.matrix ? "block" : "none"
+                    };">
+                        <div class="luckysheet-mousedown-cancel">
+                            ${
+                                rightclick.matrix
+                            }<span class="luckysheet-submenu-arrow iconfont-luckysheet luckysheet-iconfont-youjiantou" style="user-select: none;"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="luckysheet-cols-menuitem luckysheet-mousedown-cancel">
+                    <div id="luckysheetorderby" class="luckysheet-cols-menuitem-content luckysheet-cols-submenu luckysheet-mousedown-cancel" style="display:${
+                        config.sort ? "block" : "none"
+                    };">
+                        <div class="luckysheet-mousedown-cancel">${ rightclick.sortSelection }</div>
+                    </div>
+                </div>
+                <div class="luckysheet-cols-menuitem luckysheet-mousedown-cancel">
+                    <div id="luckysheetfilter" class="luckysheet-cols-menuitem-content luckysheet-cols-submenu luckysheet-mousedown-cancel" style="display:${
+                        config.filter ? "block" : "none"
+                    };">
+                        <div class="luckysheet-mousedown-cancel">${ rightclick.filterSelection }</div>
+                    </div>
+                </div>
+                <div class="luckysheet-cols-menuitem luckysheet-mousedown-cancel">
+                    <div id="luckysheetdatavisual" class="luckysheet-cols-menuitem-content luckysheet-cols-submenu luckysheet-mousedown-cancel" style="display:${
+                        config.chart ? "block" : "none"
+                    };">
+                        <div class="luckysheet-mousedown-cancel">${ rightclick.chartGeneration }</div>
+                    </div>
+                </div>
+                <div class="luckysheet-cols-menuitem luckysheet-mousedown-cancel">
+                    <div id="luckysheetInsertImage" class="luckysheet-cols-menuitem-content luckysheet-cols-submenu luckysheet-mousedown-cancel" style="display:${
+                        config.image ? "block" : "none"
+                    };">
+                        <div class="luckysheet-mousedown-cancel">${ toolbar.insertImage }</div>
+                    </div>
+                </div>
+                <div class="luckysheet-cols-menuitem luckysheet-mousedown-cancel">
+                    <div id="luckysheetChangeImage" class="luckysheet-cols-menuitem-content luckysheet-cols-submenu luckysheet-mousedown-cancel" style="display:none;">
+                        <div class="luckysheet-mousedown-cancel">${ toolbar.changeImage }</div>
+                    </div>
+                </div>
+                <div class="luckysheet-cols-menuitem luckysheet-mousedown-cancel">
+                    <div id="luckysheetInsertLink" class="luckysheet-cols-menuitem-content luckysheet-cols-submenu luckysheet-mousedown-cancel" style="display:${
+                        config.link ? "block" : "none"
+                    };">
+                        <div class="luckysheet-mousedown-cancel">${ toolbar.insertLink }</div>
+                    </div>
+                </div>
+                <div class="luckysheet-cols-menuitem luckysheet-mousedown-cancel">
+                    <div id="luckysheetDataVerification" class="luckysheet-cols-menuitem-content luckysheet-cols-submenu luckysheet-mousedown-cancel" style="display:${
+                        config.data ? "block" : "none"
+                    };">
+                        <div class="luckysheet-mousedown-cancel">${ toolbar.dataVerification }</div>
+                    </div>
+                </div>
+                <div class="luckysheet-cols-menuitem luckysheet-mousedown-cancel">
+                    <div id="luckysheetCellFormatRightClickMenu" class="luckysheet-cols-menuitem-content luckysheet-cols-submenu luckysheet-mousedown-cancel" style="display:${
+                        config.cellFormat ? "block" : "none"
+                    };">
+                        <div class="luckysheet-mousedown-cancel">${ toolbar.cellFormat }</div>
                     </div>
                 </div>
             </div>
@@ -1493,6 +1572,7 @@ function customCellRightClickConfig() {
         resetPrintArea: true,
         definedFields: true,
         manageRangeNameRules: true,
+        more: true,
     };
 
     // cellRightClickConfig determines the final result

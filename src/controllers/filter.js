@@ -324,18 +324,27 @@ function initialFilterHandler(){
         },
         function () {
             let $t = $(this), attrid = $t.attr("id"), $attr = $("#" + attrid + "_sub");
-            submenuhide = setTimeout(function () { $attr.hide(); }, 200);
+            submenuhide = setTimeout(function () {
+                $attr.hide();
+            }, 200);
         }
     );
 
     $(".luckysheet-rightgclick-menu-sub").hover(
         function () {
-            rightclickmenu.addClass("luckysheet-cols-menuitem-hover");
+            let $t = $(this), attrid = $t.attr("id"), $attr = $("#" + attrid + "_sub");
+            if(!$attr) {
+                rightclickmenu.addClass("luckysheet-cols-menuitem-hover");
+            }
             clearTimeout(submenuhide);
         },
         function () {
-            rightclickmenu.removeClass("luckysheet-cols-menuitem-hover");
-            $(this).hide();
+            let $t = $(this), attrid = $t.attr("id"), $attr = $("#" + attrid + "_sub");
+            
+            if(!$attr) {
+                rightclickmenu.removeClass("luckysheet-cols-menuitem-hover");
+                $(this).hide();
+            }
         }
     );
 
