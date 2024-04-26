@@ -64,6 +64,9 @@ const controlHistory = {
             return;
         }
 
+        formula.execFunctionGlobalData = null
+        window.luckysheet_getcelldata_cache = {}
+
         let ctr = Store.jfredo.pop();
         Store.jfundo.push(ctr);
         Store.clearjfundo = false;
