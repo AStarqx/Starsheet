@@ -17,7 +17,7 @@ import { setcellvalue } from "./setdata";
 import { genarate, update, valueShowEs } from "./format";
 import editor from "./editor";
 import tooltip from "./tooltip";
-import { rowLocation, colLocation, colLocationByIndex, mouseposition } from "./location";
+import { rowLocation, colLocation, colLocationByIndex, mouseposition, rowLocationByIndex } from "./location";
 import { luckysheetRangeLast } from "./cursorPos";
 import { jfrefreshgrid } from "./refresh";
 import { isInlineStringCell, convertSpanToShareString } from "../controllers/inlineString";
@@ -1661,11 +1661,13 @@ const luckysheetformula = {
                 //     currentRowLen = cfg["rowlen"][r];
                 // }
 
+                let cellHeight = rowLocationByIndex(r)[1] - rowLocationByIndex(r)[0] - 2;
                 let cellWidth = colLocationByIndex(c)[1] - colLocationByIndex(c)[0] - 2;
 
                 let textInfo = getCellTextInfo(d[r][c], canvas, {
                     r: r,
                     c: c,
+                    cellHeight: cellHeight,
                     cellWidth: cellWidth,
                 });
 
@@ -4350,9 +4352,10 @@ const luckysheetformula = {
                     }
                     if (cal2.length > 0) {
                         function_str = _this.calPostfixExpression(cal2);
-                    } else {
-                        function_str += endstr;
-                    }
+                    } 
+                    // else {
+                    //     function_str += endstr;
+                    // }
 
 
 
@@ -6055,6 +6058,10 @@ const luckysheetformula = {
         }
 
         Store.calculateSheetIndex = index;
+
+        // if(txt.substr(0, 1) === '=') {
+        //     txt = txt.replaceAll('（', '(').replaceAll('）', ')')
+        // }
 
         let newTxt = txt
 

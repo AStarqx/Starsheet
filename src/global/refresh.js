@@ -128,9 +128,9 @@ function jfrefreshgrid(data, range, allParam, isRunExecFunction = true, isRefres
     file.data = Store.flowdata;
 
     // 必须要处理，可能之前的config为空，则也需要清空
-    if(cfg != null){
-        Store.config = cfg;
-        file.config = Store.config;
+    if(cfg != null) {
+        Store.config = cfg
+        file.config = Store.config
 
         server.saveParam("all", Store.currentSheetIndex, cfg, { "k": "config" });
 
@@ -198,6 +198,7 @@ function jfrefreshgrid(data, range, allParam, isRunExecFunction = true, isRefres
     if (isRunExecFunction) {
         runExecFunction(range, Store.currentSheetIndex, data);
     }
+
     //刷新表格
     if(isRefreshCanvas){
         refreshCanvasTimeOut = setTimeout(function () {
@@ -326,6 +327,7 @@ function jfrefreshgridall(colwidth, rowheight, data, cfg, range, ctrlType, ctrlV
 
     //Store.flowdata
     Store.flowdata = data;
+
     editor.webWorkerFlowDataCache(data);//worker存数据
     Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)].data = Store.flowdata;
 

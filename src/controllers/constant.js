@@ -622,17 +622,6 @@ function rightclickHTML() {
                             rightclick.clearContent
                         }</div>
                     </div>
-                    <div id="luckysheetmore" class="luckysheet-cols-menuitem luckysheet-cols-submenu luckysheet-mousedown-cancel" style="display:${
-                        config.more ? "block" : "none"
-                    };">
-                        <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">
-                            ${
-                                rightclick.more
-                            }<span class="luckysheet-submenu-arrow iconfont-luckysheet luckysheet-iconfont-youjiantou" style="user-select: none;"></span>
-                        </div>
-                    </div>
-
-
                     
                     <div id="luckysheetSetPrintArea" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${config.setPrintArea ? 'block' : 'none'};">
                         <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${toolbar.setPrintArea}</div>
@@ -645,6 +634,16 @@ function rightclickHTML() {
                     </div>
                     <div id="luckysheetManageRangeNameRules" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel" style="display:${config.manageRangeNameRules ? 'block' : 'none'};">
                         <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${conditionformat.manageRangeNameRules}</div>
+                    </div>
+
+                    <div id="luckysheetmore" class="luckysheet-cols-menuitem luckysheet-cols-submenu luckysheet-mousedown-cancel" style="display:${
+                        config.more ? "block" : "none"
+                    };">
+                        <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">
+                            ${
+                                rightclick.more
+                            }<span class="luckysheet-submenu-arrow iconfont-luckysheet luckysheet-iconfont-youjiantou" style="user-select: none;"></span>
+                        </div>
                     </div>
                 </div>
             </div>

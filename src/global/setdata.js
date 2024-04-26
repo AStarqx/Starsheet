@@ -59,11 +59,22 @@ function setcellvalue(r, c, d, v) {
                 cell.ps = v.ps
             }
 
-            if(menuButton.celldataIsDate(v.v) && (v.v.toString().indexOf('-') > -1 || menuButton.endsWithNoPunctuation(v.v))) {
-                dateValue = v.v
-                // cell.v = menuButton.getDistanceDays('1900-1-1', v.v)
-                v.v = datenum_local(new Date(v.v))
-                delete cell.qp
+            if(v.ct && v.ct.t === 'd' && v.m) {
+                const dateFormatList = ['hh:mm AM/PM', 'hh:mm', 'yyyy-MM-dd hh:mm AM/PM', 'yyyy-MM-dd hh:mm', 'yyyy-MM-dd',
+                'yyyy/MM/dd', 'yyyy"年"M"月"d"日"', 'MM-dd', 'M-d', 'M"月"d"日"', 'h:mm:ss', 'h:mm', 'AM/PM hh:mm', 'AM/PM h:mm',
+                'AM/PM h:mm:ss', 'MM-dd AM/PM hh:mm']
+                if(v.ct.fa && dateFormatList.includes(v.ct.fa)) {
+                    
+                    let mm = isRealNum(v.v) ? v.m : v.v
+                    dateValue = mm
+                    if(mm) {
+                        mm = mm.replaceAll('年', '-').replaceAll('月', '-').replaceAll('日', '')
+                    }
+                    // cell.v = menuButton.getDistanceDays('1900-1-1', v.v)
+                    v.v = datenum_local(new Date(mm))
+                    delete cell.qp
+                }
+                
             }
 
             for (const key in v) {

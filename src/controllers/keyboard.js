@@ -453,6 +453,23 @@ export function keyboardInitial(){
                         formula.functionInputHanddler($("#luckysheet-functionbox-cell"), $("#luckysheet-rich-text-editor"), kcode);
                     }
                 }
+                else if (kcode == 18) {//Ctrl + Alt
+                    const cellRightClickConfig = luckysheetConfigsetting.cellRightClickConfig;
+                    const rowIndex = Store.luckysheet_select_save[0].row[0];
+                    const columnIndex = Store.luckysheet_select_save[0].column[0];
+                    if (cellRightClickConfig.customs && cellRightClickConfig.customs.filter(item => item.keyCode && item.keyCode === 18).length) {
+                        try {
+                            const rightclick = cellRightClickConfig.customs.find(item => item.keyCode && item.keyCode === 18)
+                            rightclick.onClick(
+                                undefined,
+                                event,
+                                { rowIndex, columnIndex },
+                            );
+                        } catch (e) {
+                            console.error("custom click error", e);
+                        }
+                    }
+                }
                 else if (kcode == 66) {//Ctrl + B  加粗
                     $("#luckysheet-icon-bold").click();
                 }

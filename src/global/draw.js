@@ -19,6 +19,7 @@ import method from "./method";
 import Store from "../store";
 import locale from "../locale/locale";
 import sheetmanage from "../controllers/sheetmanage";
+import { rowLocationByIndex } from "./location";
 
 function luckysheetDrawgridRowTitle(scrollHeight, drawHeight, offsetTop) {
     if (scrollHeight == null) {
@@ -1746,6 +1747,9 @@ let cellRender = function(
 
         let pos_x = start_c + offsetLeft;
         let pos_y = start_r + offsetTop + 1;
+
+        // cellHeight = rowLocationByIndex(r)[1] - rowLocationByIndex(r)[0] - 2;
+        // console.log(cellHeight)
 
         luckysheetTableContent.save();
         luckysheetTableContent.beginPath();

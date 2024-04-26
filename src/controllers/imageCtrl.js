@@ -319,6 +319,7 @@ const imageCtrl = {
         //关闭
         $("#luckysheet-modal-dialog-slider-imageCtrl .luckysheet-model-close-btn").click(function () {
             $("#luckysheet-modal-dialog-slider-imageCtrl").hide();
+            if($(`#image-tip-${_this.currentImgId}`)) $(`#image-tip-${_this.currentImgId}`).remove()
             Store.currentImgId = null;
             luckysheetsizeauto();
         });
@@ -832,6 +833,8 @@ const imageCtrl = {
         $("#luckysheet-modal-dialog-activeImage").hide();
         $("#luckysheet-modal-dialog-slider-imageCtrl").hide();
 
+        if($(`#image-tip-${_this.currentImgId}`)) $(`#image-tip-${_this.currentImgId}`).remove()
+
         let item = _this.images[_this.currentImgId];
         let imgItemParam = _this.getImgItemParam(item);
 
@@ -882,6 +885,8 @@ const imageCtrl = {
         _this.cropping = false;
 
         $("#luckysheet-modal-dialog-cropping").hide();
+
+        if($(`#image-tip-${_this.currentImgId}`)) $(`#image-tip-${_this.currentImgId}`).remove()
 
         let item = _this.images[_this.currentImgId];
         let imgItemParam = _this.getImgItemParam(item);
@@ -1058,6 +1063,8 @@ const imageCtrl = {
         $("#luckysheet-modal-dialog-cropping").hide();
         $("#luckysheet-modal-dialog-slider-imageCtrl").hide();
         $("#luckysheet-image-showBoxs .img-list").empty();
+
+        if($(`#image-tip-${_this.currentImgId}`)) $(`#image-tip-${_this.currentImgId}`).remove()
 
         if(_this.images == null){
             return;

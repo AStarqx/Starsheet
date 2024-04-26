@@ -2457,6 +2457,145 @@ export function rowColumnOperationInitial() {
     });
 }
 
+export function initLuckysheetConfig(data) {
+    let d = editor.deepCopyFlowData(data);
+    let cfg = $.extend(true, {}, Store.config);
+
+    let canvas = $("#luckysheetTableContent")
+        .get(0)
+        .getContext("2d");
+
+    for (let r = 0; r < data.length; r++) {
+        for (let c = 0; c < data[r].length; c++) {
+            let rowIndex = r;
+            
+            if (cfg["rowlen"] == null) {
+                cfg["rowlen"] = {};
+            }
+
+            let matchRow = {};
+            let scrollLeft = $("#luckysheet-cell-main").scrollLeft(),
+                drawWidth = Store.luckysheetTableContentHW[0];
+            // let dataset_column_st = luckysheet_searcharrayX(Store.visibledatacolumn, scrollLeft);
+            // let dataset_column_ed = luckysheet_searcharrayX(Store.visibledatacolumn, scrollLeft + drawWidth);
+            // dataset_column_ed += dataset_column_ed - dataset_column_st;
+            let dataset_column_st = 0
+            let dataset_column_ed = d.length ? d[0].length - 1 : 0
+            for (let s = 0; s < Store.luckysheet_select_save.length; s++) {
+                let r1 = Store.luckysheet_select_save[s].row[0],
+                    r2 = Store.luckysheet_select_save[s].row[1];
+
+                if (rowIndex < r1 || rowIndex > r2) {
+                    if (rowIndex in matchRow) {
+                        //此列已计算过
+                        continue;
+                    }
+                    let rows = []
+                    for (let c = dataset_column_st; c <= dataset_column_ed; c++) {
+                        let currentRowLen = Store.defaultrowlen;
+                        let cell = d[rowIndex][c];
+                        if (cell == null || (isRealNull(cell.v) && !isInlineStringCell(cell))) {
+                            continue;
+                        }
+                        if(cell.mc && cell.mc.rs && cell.mc.rs > 1) {
+                            continue;
+                        }
+                        let cellHeight = rowLocationByIndex(rowIndex)[1] - rowLocationByIndex(rowIndex)[0] - 2;
+                        let cellWidth = colLocationByIndex(c)[1] - colLocationByIndex(c)[0] - 2;
+                        if(cell.mc && cell.mc.cs) {
+                            let cellsWidth = 0
+                            for (let index = c; index < c + cell.mc.cs; index++) {
+                                cellsWidth += colLocationByIndex(index)[1] - colLocationByIndex(index)[0] - 2;
+                            }
+                            cellWidth = cellsWidth || cellWidth
+                        }
+                        let textInfo = getCellTextInfo(cell, canvas, {
+                            r: rowIndex,
+                            c: c,
+                            cellHeight: cellHeight,
+                            cellWidth: cellWidth
+                        });
+                        let computeColumnlen = 0;
+                        if (textInfo != null) {
+                            computeColumnlen = textInfo.textHeightAll;
+                        }
+                        if (computeColumnlen + 6 > currentRowLen) {
+                            currentRowLen = computeColumnlen + 6;
+                        }
+                        rows.push(currentRowLen)
+                    }
+                    let rowlen = Store.defaultrowlen
+                    if(rows.length) {
+                        rowlen = Math.max(...rows)
+                    }
+                    if(rowlen < Store.defaultrowlen) {
+                        rowlen = Store.defaultrowlen
+                    }
+                    cfg["rowlen"][rowIndex] = rowlen;
+                    if (cfg["customHeight"]) {
+                        delete cfg["customHeight"][rowIndex];
+                    }
+                    matchRow[rowIndex] = 1;
+                } else {
+                    for (let r = r1; r <= r2; r++) {
+                        if (r in matchRow) {
+                            //此列已计算过
+                            continue;
+                        }
+                        let rows = []
+                        for (let c = dataset_column_st; c <= dataset_column_ed; c++) {
+                            let currentRowLen = Store.defaultrowlen;
+                            let cell = d[r][c];
+                            if (cell == null || (isRealNull(cell.v) && !isInlineStringCell(cell))) {
+                                continue;
+                            }
+                            if(cell.mc && cell.mc.rs && cell.mc.rs > 1) {
+                                continue;
+                            }
+                            let cellHeight = rowLocationByIndex(r)[1] - rowLocationByIndex(r)[0] - 2;
+                            let cellWidth = colLocationByIndex(c)[1] - colLocationByIndex(c)[0] - 2;
+                            if(cell.mc && cell.mc.cs) {
+                                let cellsWidth = 0
+                                for (let index = c; index < c + cell.mc.cs; index++) {
+                                    cellsWidth += colLocationByIndex(index)[1] - colLocationByIndex(index)[0] - 2;
+                                }
+                                cellWidth = cellsWidth || cellWidth
+                            }
+                            let textInfo = getCellTextInfo(cell, canvas, {
+                                r: r,
+                                c: c,
+                                cellHeight: cellHeight,
+                                cellWidth: cellWidth
+                            });
+                            let computeColumnlen = 0;
+                            if (textInfo != null) {
+                                computeColumnlen = textInfo.textHeightAll;
+                            }
+                            if (computeColumnlen + 6 > currentRowLen) {
+                                currentRowLen = computeColumnlen + 6;
+                            }
+                            rows.push(currentRowLen)
+                        }
+                        let rowlen = Store.defaultrowlen
+                        if(rows.length) {
+                            rowlen = Math.max(...rows)
+                        }
+                        if(rowlen < Store.defaultrowlen) {
+                            rowlen = Store.defaultrowlen
+                        }
+                        cfg["rowlen"][r] = rowlen;
+                        if (cfg["customHeight"]) {
+                            delete cfg["customHeight"][r];
+                        }
+                        matchRow[r] = 1;
+                    }
+                }
+            }
+        }
+    }
+    return cfg
+} 
+
 function luckysheetrowsdbclick() {
     Store.luckysheet_rows_change_size = false;
 
@@ -2670,10 +2809,12 @@ function luckysheetcolsdbclick() {
 
                 // let value = getcellvalue(r, colIndex, d, "m").toString(); //单元格文本
                 // let textMetrics = getMeasureText(value, canvas).width; //文本宽度
+                let cellHeight = rowLocationByIndex(rowIndex)[1] - rowLocationByIndex(rowIndex)[0] - 2;
                 let cellWidth = colLocationByIndex(colIndex)[1] - colLocationByIndex(colIndex)[0] - 2;
                 let textInfo = getCellTextInfo(cell, canvas, {
                     r: r,
                     c: colIndex,
+                    cellHeight: cellHeight,
                     cellWidth: cellWidth,
                 });
 
@@ -2722,10 +2863,12 @@ function luckysheetcolsdbclick() {
                     //     currentColLen = textMetrics + 6;
                     // }
 
+                    let cellHeight = rowLocationByIndex(r)[1] - rowLocationByIndex(r)[0] - 2;
                     let cellWidth = colLocationByIndex(c)[1] - colLocationByIndex(c)[0] - 2;
                     let textInfo = getCellTextInfo(cell, canvas, {
                         r: r,
                         c: c,
+                        cellHeight: cellHeight,
                         cellWidth: cellWidth,
                     });
 

@@ -3828,6 +3828,13 @@ const menuButton = {
         }
         return false
     },
+    isValidDate(dateString) {
+        // 通过 Date 对象尝试解析日期
+        var date = new Date(dateString);
+    
+        // 如果解析后的日期是有效的，并且解析后的字符串与原始字符串相同，说明解析成功
+        return !isNaN(date.getTime()) && dateString === date.toISOString().slice(0, 10);
+    },
     endsWithNoPunctuation(str) {
         // 匹配结尾不包含标点符号的字符串
         const regex = /^[^\p{P}]+$/u;

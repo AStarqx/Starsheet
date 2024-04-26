@@ -1294,6 +1294,9 @@ const sheetmanage = {
                 ", #luckysheet-filter-options-sheet" +
                 Store.currentSheetIndex,
         ).hide();
+
+        if($(`#image-tip-${Store.currentImgId}`)) $(`#image-tip-${Store.currentImgId}`).remove()
+
         $("#luckysheet-filter-selected-sheet" + index + ", #luckysheet-filter-options-sheet" + index).show();
 
         $('#luckysheet-printarea-selected-sheet' + Store.currentSheetIndex).hide();
