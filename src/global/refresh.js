@@ -426,6 +426,7 @@ function jfrefreshgrid_adRC(data, cfg, ctrlType, ctrlValue, calc, filterObj, pri
         let mc = cfg["merge"][m];
 
         for(let r = mc.r; r <= mc.r + mc.rs - 1; r++){
+            if(!data[r]) continue
             for(let c = mc.c; c <= mc.c + mc.cs - 1; c++){
                 if(data[r][c] == null){
                     data[r][c] = {};

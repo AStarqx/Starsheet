@@ -144,7 +144,7 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
 
                                     let mc = cfg["merge"][cell_top.mc.r + "_" + cell_top.mc.c];
 
-                                    if(mc.r + mc.rs - 1 == bd_r_top){
+                                    if(mc && mc.r + mc.rs - 1 == bd_r_top){
                                         borderInfoCompute[bd_r_top + "_" + bd_c].b = { "color": borderColor, "style": borderStyle };
                                     }
                                 }
@@ -182,7 +182,7 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
 
                                     let mc = cfg["merge"][cell_bottom.mc.r + "_" + cell_bottom.mc.c];
 
-                                    if(mc.r == bd_r_bottom){
+                                    if(mc && mc.r == bd_r_bottom){
                                         borderInfoCompute[bd_r_bottom + "_" + bd_c].t = { "color": borderColor, "style": borderStyle }; 
                                     }
                                 }
@@ -212,7 +212,7 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
 
                                     let mc = cfg["merge"][cell.mc.r + "_" + cell.mc.c];
 
-                                    if(mc.r == bd_r){
+                                    if(mc && mc.r == bd_r){
                                         if(borderInfoCompute[bd_r + "_" + bd_c] == null){
                                             borderInfoCompute[bd_r + "_" + bd_c] = {};
                                         }
@@ -220,7 +220,7 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
                                         borderInfoCompute[bd_r + "_" + bd_c].t = { "color": borderColor, "style": borderStyle };
                                     }
                                     
-                                    if(mc.r + mc.rs - 1 == bd_r){
+                                    if(mc && mc.r + mc.rs - 1 == bd_r){
                                         if(borderInfoCompute[bd_r + "_" + bd_c] == null){
                                             borderInfoCompute[bd_r + "_" + bd_c] = {};
                                         }
@@ -228,7 +228,7 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
                                         borderInfoCompute[bd_r + "_" + bd_c].b = { "color": borderColor, "style": borderStyle };
                                     }
 
-                                    if(mc.c == bd_c){
+                                    if(mc && mc.c == bd_c){
                                         if(borderInfoCompute[bd_r + "_" + bd_c] == null){
                                             borderInfoCompute[bd_r + "_" + bd_c] = {};
                                         }
@@ -236,7 +236,7 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
                                         borderInfoCompute[bd_r + "_" + bd_c].l = { "color": borderColor, "style": borderStyle };
                                     }
                                     
-                                    if(mc.c + mc.cs - 1 == bd_c){
+                                    if(mc && mc.c + mc.cs - 1 == bd_c){
                                         if(borderInfoCompute[bd_r + "_" + bd_c] == null){
                                             borderInfoCompute[bd_r + "_" + bd_c] = {};
                                         }
@@ -264,7 +264,7 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
 
                                             let mc = cfg["merge"][cell_top.mc.r + "_" + cell_top.mc.c];
 
-                                            if(mc.r + mc.rs - 1 == bd_r_top){
+                                            if(mc && mc.r + mc.rs - 1 == bd_r_top){
                                                 borderInfoCompute[bd_r_top + "_" + bd_c].b = { "color": borderColor, "style": borderStyle };
                                             }
                                         }
@@ -283,7 +283,7 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
 
                                             let mc = cfg["merge"][cell_bottom.mc.r + "_" + cell_bottom.mc.c];
 
-                                            if(mc.r == bd_r_bottom){
+                                            if(mc && mc.r == bd_r_bottom){
                                                 borderInfoCompute[bd_r_bottom + "_" + bd_c].t = { "color": borderColor, "style": borderStyle }; 
                                             }
                                         }
@@ -359,7 +359,7 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
 
                                             let mc = cfg["merge"][cell_top.mc.r + "_" + cell_top.mc.c];
 
-                                            if(mc.r + mc.rs - 1 == bd_r_top){
+                                            if(mc && mc.r + mc.rs - 1 == bd_r_top){
                                                 borderInfoCompute[bd_r_top + "_" + bd_c].b = { "color": borderColor, "style": borderStyle };
                                             }
                                         }
@@ -384,7 +384,7 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
 
                                             let mc = cfg["merge"][cell_bottom.mc.r + "_" + cell_bottom.mc.c];
 
-                                            if(mc.r == bd_r_bottom){
+                                            if(mc && mc.r == bd_r_bottom){
                                                 borderInfoCompute[bd_r_bottom + "_" + bd_c].t = { "color": borderColor, "style": borderStyle }; 
                                             }
                                         }
@@ -573,14 +573,14 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
 
                                         let mc = cfg["merge"][cell.mc.r + "_" + cell.mc.c];
 
-                                        if(mc.r == bd_r){
+                                        if(mc && mc.r == bd_r){
                                             if(borderInfoCompute[bd_r + "_" + bd_c] == null){
                                                 borderInfoCompute[bd_r + "_" + bd_c] = {};
                                             }
 
                                             borderInfoCompute[bd_r + "_" + bd_c].t = { "color": borderColor, "style": borderStyle };
                                         }
-                                        else if(mc.r + mc.rs - 1 == bd_r){
+                                        else if(mc && mc.r + mc.rs - 1 == bd_r){
                                             if(borderInfoCompute[bd_r + "_" + bd_c] == null){
                                                 borderInfoCompute[bd_r + "_" + bd_c] = {};
                                             }
@@ -604,14 +604,14 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
 
                                         let mc = cfg["merge"][cell.mc.r + "_" + cell.mc.c];
 
-                                        if(mc.r == bd_r){
+                                        if(mc && mc.r == bd_r){
                                             if(borderInfoCompute[bd_r + "_" + bd_c] == null){
                                                 borderInfoCompute[bd_r + "_" + bd_c] = {};
                                             }
 
                                             borderInfoCompute[bd_r + "_" + bd_c].t = { "color": borderColor, "style": borderStyle };
                                         }
-                                        else if(mc.r + mc.rs - 1 == bd_r){
+                                        else if(mc && mc.r + mc.rs - 1 == bd_r){
                                             if(borderInfoCompute[bd_r + "_" + bd_c] == null){
                                                 borderInfoCompute[bd_r + "_" + bd_c] = {};
                                             }
@@ -635,14 +635,14 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
 
                                         let mc = cfg["merge"][cell.mc.r + "_" + cell.mc.c];
 
-                                        if(mc.r == bd_r){
+                                        if(mc && mc.r == bd_r){
                                             if(borderInfoCompute[bd_r + "_" + bd_c] == null){
                                                 borderInfoCompute[bd_r + "_" + bd_c] = {};
                                             }
 
                                             borderInfoCompute[bd_r + "_" + bd_c].t = { "color": borderColor, "style": borderStyle };
                                         }
-                                        else if(mc.r + mc.rs - 1 == bd_r){
+                                        else if(mc && mc.r + mc.rs - 1 == bd_r){
                                             if(borderInfoCompute[bd_r + "_" + bd_c] == null){
                                                 borderInfoCompute[bd_r + "_" + bd_c] = {};
                                             }
@@ -716,7 +716,7 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
 
                                         let mc = cfg["merge"][cell.mc.r + "_" + cell.mc.c];
 
-                                        if(mc.r == bd_r){
+                                        if(mc && mc.r == bd_r){
                                             if(borderInfoCompute[bd_r + "_" + bd_c] == null){
                                                 borderInfoCompute[bd_r + "_" + bd_c] = {};
                                             }
@@ -911,7 +911,7 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
 
                                     let mc_r = cfg["merge"][cell_right.mc.r + "_" + cell_right.mc.c];
 
-                                    if(mc_r.c == bd_c_right){
+                                    if(mc_r && mc_r.c == bd_c_right){
                                         borderInfoCompute[bd_r + "_" + bd_c_right].l = { "color": value.r.color, "style": value.r.style }; 
                                     }
                                 }
@@ -1008,7 +1008,7 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
 
                                     let mc_r = cfg["merge"][cell_right.mc.r + "_" + cell_right.mc.c];
 
-                                    if(mc_r.c == bd_c_right){
+                                    if(mc_r && mc_r.c == bd_c_right){
                                         borderInfoCompute[bd_r + "_" + bd_c_right].l = { "color": value.r.color, "style": value.r.style }; 
                                     }
                                 }

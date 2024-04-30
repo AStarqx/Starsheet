@@ -6098,7 +6098,7 @@ export default {
         toolMoreTip: "更多功能",
         moreOptions: "更多选项",
 
-        cellFormat: "设置单元格格式",
+        cellFormat: "保护单元格",
         print: "打印",
         setPrintArea: "设置打印区域",
         resetPrintArea: "重设打印区域",
@@ -7237,7 +7237,7 @@ export default {
         authorityTitle: "允许此工作表的用户进行:",
         selectLockedCells: "选定锁定单元格",
         selectunLockedCells: "选定解除锁定的单元格",
-        formatCells: "设置单元格格式",
+        formatCells: "保护单元格",
         formatColumns: "设置列格式",
         formatRows: "设置行格式",
         insertColumns: "插入列",
@@ -7283,7 +7283,7 @@ export default {
             "该单元格或图表位于受保护的工作表中，若要进行更改，请取消工作表保护，您可能需要输入密码。",
     },
     cellFormat: {
-        cellFormatTitle: "设置单元格格式",
+        cellFormatTitle: "保护单元格",
         protection: "保护",
         locked: "锁定单元格",
         hidden: "隐藏公式",

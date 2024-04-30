@@ -2256,7 +2256,7 @@ export function getRangeHtml(options = {}) {
                                         }
                                     }
 
-                                    if(bd_c == c && borderInfoCompute[bd_r + "_" + bd_c] && borderInfoCompute[bd_r + "_" + bd_c].l){
+                                    if(bd_c == c && borderInfoCompute[bd_r + "_" + bd_c] && borderInfoCompute[bd_r + "_" + bd_c].l && borderInfoCompute[r + "_" + c].l){
                                         let linetype = borderInfoCompute[r + "_" + c].l.style;
                                         let bcolor = borderInfoCompute[bd_r + "_" + bd_c].l.color;
 
