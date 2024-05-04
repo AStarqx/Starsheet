@@ -2457,16 +2457,16 @@ export function rowColumnOperationInitial() {
     });
 }
 
-export function initLuckysheetConfig(data) {
-    let d = editor.deepCopyFlowData(data);
+export function initLuckysheetConfig() {
+    let d = editor.deepCopyFlowData(Store.flowdata);
     let cfg = $.extend(true, {}, Store.config);
 
     let canvas = $("#luckysheetTableContent")
         .get(0)
         .getContext("2d");
 
-    for (let r = 0; r < data.length; r++) {
-        for (let c = 0; c < data[r].length; c++) {
+    for (let r = 0; r < d.length; r++) {
+        for (let c = 0; c < d[r].length; c++) {
             let rowIndex = r;
             
             if (cfg["rowlen"] == null) {
@@ -2593,7 +2593,16 @@ export function initLuckysheetConfig(data) {
             }
         }
     }
-    return cfg
+
+    jfrefreshgridall(
+        Store.flowdata[0].length,
+        Store.flowdata.length,
+        Store.flowdata,
+        cfg,
+        Store.luckysheet_select_save,
+        "resizeR",
+        "rowlen",
+    );
 } 
 
 function luckysheetrowsdbclick() {
@@ -2739,6 +2748,7 @@ function luckysheetrowsdbclick() {
             }
         }
     }
+
     jfrefreshgridall(
         Store.flowdata[0].length,
         Store.flowdata.length,
