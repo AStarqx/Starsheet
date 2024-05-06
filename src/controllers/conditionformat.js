@@ -130,10 +130,15 @@ const conditionformat = {
                 tooltip.info("提示", "请输入字段名称");
                 return;
             }
-            if(rangeNames.filter(item => item.name == rangeName).length != 0) {
-                $("#rangeName").focus();
-                tooltip.info("字段名称已存在,可在字段管理器中查看!", "");
-                return
+
+            for (const sheet of sheets) {
+                if(sheet && sheet.rangeNames) {
+                    if(sheet.rangeNames.filter(item => item.name == rangeName).length != 0) {
+                        $("#rangeName").focus();
+                        tooltip.info("字段名称已存在,可在字段管理器中查看!", "");
+                        return
+                    }
+                }
             }
             if(conditionformat.definedFieldType !== 'default') {
                 const range = rangeNames.find(n => n.name === conditionformat.definedFieldName)
