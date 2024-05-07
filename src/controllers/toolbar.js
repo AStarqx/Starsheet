@@ -5,6 +5,8 @@ import { getObjType, camel2split } from '../utils/util';
 
 // 默认的工具栏按钮
 export const defaultToolbar = [
+    'importXlsx',
+    'exportXlsx',
     'undo',
     'redo',
     'paintFormat',
@@ -57,8 +59,6 @@ export const defaultToolbar = [
     'findAndReplace',
     'protection',
     'print',
-    'importXlsx',
-    'exportXlsx',
 ];
 
 // 工具栏按钮 id 关系
