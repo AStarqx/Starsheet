@@ -1448,6 +1448,12 @@ const luckysheetformula = {
                     curv.v = v[1];
                     curv.f = v[2];
 
+                    if(curv.f) {
+                        delete curv.m
+                        delete curv.ct
+                        delete d[r][c]['ct']
+                    }
+
                     //打进单元格的sparklines的配置串， 报错需要单独处理。
                     if (v.length == 4 && v[3].type == "sparklines") {
                         delete curv.m;
@@ -1480,6 +1486,12 @@ const luckysheetformula = {
                         curv = $.extend(true, {}, d[r][c]);
                         curv.v = v[1];
                         curv.f = v[2];
+
+                        if(curv.f) {
+                            delete curv.m
+                            delete curv.ct
+                            delete d[r][c]['ct']
+                        }
 
                         //打进单元格的sparklines的配置串， 报错需要单独处理。
                         if (v.length == 4 && v[3].type == "sparklines") {
@@ -1546,6 +1558,11 @@ const luckysheetformula = {
                     //     curv.v = gd.v;
                     // }
                     curv.v = value;
+                    if(!value || value == '') {
+                        delete curv.m
+                        delete curv.ct
+                        delete d[r][c]['ct']
+                    }
 
                     delete curv.f;
                     delete curv.spl;
@@ -6059,9 +6076,17 @@ const luckysheetformula = {
 
         Store.calculateSheetIndex = index;
 
-        // if(txt.substr(0, 1) === '=') {
-        //     txt = txt.replaceAll('（', '(').replaceAll('）', ')')
-        // }
+        // 替换公式中的中文括号
+        const sheets = Store.luckysheetfile || []
+        const sheetNames = sheets.map(sheet => sheet.name).filter(sheet => sheet)
+        const sheetNamesMap = sheetNames.map((name, index) => '#SHEETMAPINDEX' + index)
+        sheetNames.forEach((name, index) => {
+            txt = txt.replaceAll(name, sheetNamesMap[index])
+        })
+        txt = txt.replaceAll('（', '(').replaceAll('）', ')')
+        sheetNames.forEach((name, index) => {
+            txt = txt.replaceAll(sheetNamesMap[index], name)
+        })
 
         let newTxt = txt
 

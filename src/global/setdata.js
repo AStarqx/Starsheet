@@ -77,6 +77,10 @@ function setcellvalue(r, c, d, v) {
                 
             }
 
+            if(v.v == '') {
+                delete cell.ct
+            }
+
             for (const key in v) {
                 if(cellParams.indexOf(key) == -1 && v[key] != null) {
                     cell[key] = v[key]
