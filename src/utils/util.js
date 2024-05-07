@@ -478,6 +478,15 @@ function showrightclickmenu($menu, x, y) {
     }
 
     $menu.css({ top: top, left: left }).show();
+
+    const subMenus = $menu.get(0).querySelectorAll('.luckysheetColsRowsHandleAdd_custom[data-showProp]')
+    subMenus.forEach(subMenu => {
+        const showProp = subMenu.getAttribute('data-showProp')
+        if(showProp && showProp != undefined && showProp != 'undefined') {
+            const currCell = Store.flowdata[Store.luckysheet_select_save[0]['row'][0]][Store.luckysheet_select_save[0]['column'][0]]
+            subMenu.style.display = currCell && currCell[showProp] != null && currCell[showProp] != '' ? 'block' : 'none'
+        }
+    })
 }
 
 //单元格编辑聚焦

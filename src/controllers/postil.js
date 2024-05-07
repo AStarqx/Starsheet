@@ -197,7 +197,7 @@ const luckysheetPostil = {
             return;
         }
 
-        let value = postil["value"] == null ? "" : postil["value"];
+        let value = postil["value"] == null ? "" : postil["value"].toString()
 
         let row = Store.visibledatarow[row_index], 
             row_pre = row_index - 1 == -1 ? 0 : Store.visibledatarow[row_index - 1];
