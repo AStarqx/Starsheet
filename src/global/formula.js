@@ -3476,7 +3476,7 @@ const luckysheetformula = {
                 } else {
                     pfri[0] = pfri[0] + vlen - vplen;
                     if (v_a.length > vp_a.length) {
-                        pfri[1] = v_a[i + 1].length;
+                        pfri[1] = v_a.length + 1
                     } else {
                         pfri[1] = 1;
                     }
@@ -6065,7 +6065,7 @@ const luckysheetformula = {
             return [false, _this.error.r, txt];
         }
 
-        if (!_this.checkBracketNum(txt)) {
+        if (!_this.checkBracketNum(txt) && txt.substr(-1) != '）') {
             txt += ")";
         }
 

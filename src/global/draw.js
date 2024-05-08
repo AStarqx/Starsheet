@@ -645,8 +645,9 @@ function luckysheetDrawMain(
     }
 
     //动态数组公式计算
+    let currSheet = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)] || {}
     let dynamicArray_compute = dynamicArrayCompute(
-        Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["dynamicArray"],
+        currSheet["dynamicArray"],
     );
 
     //交替颜色计算

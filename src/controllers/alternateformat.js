@@ -1075,10 +1075,10 @@ const alternateformat = {
         }
     },
     getComputeMap: function(){
-        let file = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)];
-        let ruleArr = file["luckysheet_alternateformat_save"];
+        let file = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)] || {}
+        let ruleArr = file["luckysheet_alternateformat_save"] || []
 
-        let computeMap = this.compute(ruleArr);
+        let computeMap = this.compute(ruleArr)
 
         return computeMap;
     },
