@@ -2460,6 +2460,13 @@ export function rowColumnOperationInitial() {
 export function initLuckysheetConfig() {
     let d = editor.deepCopyFlowData(Store.flowdata);
     let cfg = $.extend(true, {}, Store.config);
+    if (cfg["rowlen"] == null) {
+        cfg["rowlen"] = {};
+    }
+
+    if(cfg["colhidden"] == null) {
+        cfg["colhidden"] = {}
+    }
 
     let canvas = $("#luckysheetTableContent")
         .get(0)
@@ -2468,10 +2475,6 @@ export function initLuckysheetConfig() {
     for (let r = 0; r < d.length; r++) {
         for (let c = 0; c < d[r].length; c++) {
             let rowIndex = r;
-            
-            if (cfg["rowlen"] == null) {
-                cfg["rowlen"] = {};
-            }
 
             let matchRow = {};
             let scrollLeft = $("#luckysheet-cell-main").scrollLeft(),
@@ -2492,6 +2495,10 @@ export function initLuckysheetConfig() {
                     }
                     let rows = []
                     for (let c = dataset_column_st; c <= dataset_column_ed; c++) {
+                        if(cfg["colhidden"][c] != null) {
+                            continue
+                        }
+
                         let currentRowLen = Store.defaultrowlen;
                         let cell = d[rowIndex][c];
                         if (cell == null || (isRealNull(cell.v) && !isInlineStringCell(cell))) {
@@ -2544,6 +2551,10 @@ export function initLuckysheetConfig() {
                         }
                         let rows = []
                         for (let c = dataset_column_st; c <= dataset_column_ed; c++) {
+                            if(cfg["colhidden"][c] != null) {
+                                continue
+                            }
+
                             let currentRowLen = Store.defaultrowlen;
                             let cell = d[r][c];
                             if (cell == null || (isRealNull(cell.v) && !isInlineStringCell(cell))) {
@@ -2630,6 +2641,10 @@ function luckysheetrowsdbclick() {
         cfg["rowlen"] = {};
     }
 
+    if(cfg["colhidden"] == null) {
+        cfg["colhidden"] = {}
+    }
+
     let matchRow = {};
     let scrollLeft = $("#luckysheet-cell-main").scrollLeft(),
         drawWidth = Store.luckysheetTableContentHW[0];
@@ -2649,6 +2664,10 @@ function luckysheetrowsdbclick() {
             }
             let rows = []
             for (let c = dataset_column_st; c <= dataset_column_ed; c++) {
+                if(cfg["colhidden"][c] != null) {
+                    continue
+                }
+
                 let currentRowLen = Store.defaultrowlen;
                 let cell = d[rowIndex][c];
                 if (cell == null || (isRealNull(cell.v) && !isInlineStringCell(cell))) {
@@ -2701,6 +2720,10 @@ function luckysheetrowsdbclick() {
                 }
                 let rows = []
                 for (let c = dataset_column_st; c <= dataset_column_ed; c++) {
+                    if(cfg["colhidden"][c] != null) {
+                        continue
+                    }
+
                     let currentRowLen = Store.defaultrowlen;
                     let cell = d[r][c];
                     if (cell == null || (isRealNull(cell.v) && !isInlineStringCell(cell))) {
