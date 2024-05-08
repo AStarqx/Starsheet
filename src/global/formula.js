@@ -2776,7 +2776,6 @@ const luckysheetformula = {
             let $t = $(function_str).insertAfter(_this.rangeSetValueTo);
             _this.rangechangeindex = _this.functionHTMLIndex;
             $editor = $(_this.rangeSetValueTo).closest("div");
-
             _this.setCaretPosition(
                 $editor.find("span[rangeindex='" + _this.rangechangeindex + "']").get(0),
                 0,
@@ -3354,7 +3353,7 @@ const luckysheetformula = {
             } else if (p.length == n.length) {
                 if (vp_a[i + 1] != null && v_a[i + 1] != null && vp_a[i + 1].length < v_a[i + 1].length) {
                     pfri[0] = pfri[0] + 1;
-                    pfri[1] = 1;
+                    pfri[1] = vp_a[i + 1].length + 1;
                 }
 
                 return pfri;
@@ -3366,7 +3365,7 @@ const luckysheetformula = {
                     (p.indexOf("{") > -1 || p.indexOf("}") > -1)
                 ) {
                     pfri[0] = pfri[0] + 1;
-                    pfri[1] = 1;
+                    pfri[1] = v_a[i + 1].length + 1
                 }
 
                 return pfri;

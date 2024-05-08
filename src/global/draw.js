@@ -812,7 +812,9 @@ function luckysheetDrawMain(
 
         value = getRealCellValue(margeMaindata.r, margeMaindata.c);
 
-        cell.m = value
+        if(value && cell.mc && (cell.mc.rs != null || cell.mc.cs != null)) {
+            cell.m = value
+        }
 
         r = margeMaindata.r;
         c = margeMaindata.c;
