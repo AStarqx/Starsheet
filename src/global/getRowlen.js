@@ -492,9 +492,10 @@ function getCellTextInfo(cell , ctx, option){
                 delete sc.ct
                 delete sc.f
                 if(/[\u4e00-\u9fa5]/.test(item)) {
-                    if(newCell.ff == 5 || newCell.ff === 'Times New Roman') {
+                    if(newCell.ff == 5 || newCell.ff === 'Times New Roman' || (newCell.ff && newCell.ff.toString().indexOf('times new roman') > -1)) {
                         sc.ff = '宋体'
                     }
+                    sc.ff = '宋体'
                 }
                 sc.v = item
                 ss.push(sc)
@@ -517,8 +518,9 @@ function getCellTextInfo(cell , ctx, option){
         for(let i=0;i<sharedStrings.length;i++){
             let shareCell = sharedStrings[i];
             if (getObjType(shareCell) == "object") {
+                shareCell.fs = cell.fs
                 let txt = shareCell.ct && shareCell.ct.t == 'd' ? shareCell.m : shareCell.v
-                if(/[\u4e00-\u9fa5]/.test(txt) && (shareCell.ff === 'Times New Roman' || shareCell.ff == 5)) {
+                if(/[\u4e00-\u9fa5]/.test(txt) && ((shareCell.ff && shareCell.ff.toString().indexOf('times new roman') > -1) || shareCell.ff === 'Times New Roman' || shareCell.ff == 5)) {
                     delete shareCell.ff
                 }
             }
