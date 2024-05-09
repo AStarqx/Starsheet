@@ -30,13 +30,13 @@ export function zoomChange(ratio){
         currentWheelZoom = null;
         Store.zoomRatio = ratio;
 
-        let currentSheet = sheetmanage.getSheetByIndex();
+        let currentSheet = sheetmanage.getSheetByIndex() || {}
 
         //批注
         luckysheetPostil.buildAllPs(currentSheet.data);
 
         //图片
-        imageCtrl.images = currentSheet.images;
+        imageCtrl.images = currentSheet['images']
         imageCtrl.allImagesShow();
         imageCtrl.init();
 

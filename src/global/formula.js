@@ -3353,7 +3353,14 @@ const luckysheetformula = {
             } else if (p.length == n.length) {
                 if (vp_a[i + 1] != null && v_a[i + 1] != null && vp_a[i + 1].length < v_a[i + 1].length) {
                     pfri[0] = pfri[0] + 1;
-                    pfri[1] = vp_a[i + 1].length + 1;
+
+                    const lenMap = {
+                        '（）': vp_a[i + 1].length,
+                        ')': vp_a[i].length,
+                        '）': vp_a[i].length
+                    }
+
+                    pfri[1] = lenMap[vp_a[i + 1]] ? lenMap[vp_a[i + 1]] : vp_a[i + 1].length + 1;
                 }
 
                 return pfri;
@@ -3476,7 +3483,9 @@ const luckysheetformula = {
                 } else {
                     pfri[0] = pfri[0] + vlen - vplen;
                     if (v_a.length > vp_a.length) {
-                        pfri[1] = v_a.length + 1
+                        let len = [')', '）'].indexOf(vp_a[vp_a.length - 1]) > -1 ? 1 : vp_a.length + 1
+                        console.log(len)
+                        pfri[1] = len
                     } else {
                         pfri[1] = 1;
                     }
@@ -4569,9 +4578,9 @@ const luckysheetformula = {
         // }
 
         let luckysheetfile = getluckysheetfile();
-        let file = luckysheetfile[getSheetIndex(index)];
+        let file = luckysheetfile[getSheetIndex(index)] || {}
 
-        let calcChain = file ? file.calcChain : [];
+        let calcChain = file.calcChain || []
         if (calcChain == null) {
             calcChain = [];
         }

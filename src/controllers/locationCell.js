@@ -265,8 +265,9 @@ const luckysheetLocationCell = {
         }
         else if(type == "locationCF"){ //条件格式
             let index = getSheetIndex(Store.currentSheetIndex);
-            let ruleArr = Store.luckysheetfile[index]["luckysheet_conditionformat_save"];
-            let data = Store.luckysheetfile[index]["data"];
+            const currSheet = Store.luckysheetfile[index] || {}
+            let ruleArr = currSheet["luckysheet_conditionformat_save"] || []
+            let data = currSheet["data"] || []
 
             if(ruleArr == null || ruleArr.length == 0){
                 if(isEditMode()){
