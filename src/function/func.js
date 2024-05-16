@@ -1649,6 +1649,14 @@ function luckysheet_getcelldata(txt) {
             if (formula.execFunctionGlobalData != null) {
                 let ef = formula.execFunctionGlobalData[row+"_"+col+"_"+sheetIndex];
                 if(ef != null){
+                    if(ret && ret.ct && ret.ct.fa && ['0%', '#0%', '0.00%', '#0.00%'].includes(ret.ct.fa)) {
+                        // if(ef.v && ef.v.toString().substr(-1) != '%') {
+                        if(parseInt($("#luckysheet-input-box").css("top")) > 0) {
+                            ef.v = ef.v / 100
+                        }
+                        // }
+                        
+                    }
                     ret = ef;
                 }
             }

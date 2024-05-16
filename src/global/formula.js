@@ -3354,13 +3354,12 @@ const luckysheetformula = {
                 if (vp_a[i + 1] != null && v_a[i + 1] != null && vp_a[i + 1].length < v_a[i + 1].length) {
                     pfri[0] = pfri[0] + 1;
 
-                    const lenMap = {
-                        '（）': vp_a[i + 1].length,
-                        ')': vp_a[i].length,
-                        '）': vp_a[i].length
+                    let len = vp_a[i + 1].length + 1
+                    if(vp_a[i + 1] && (vp_a[i + 1].substr(-1) === ')' || vp_a[i + 1].substr(-1) === '）')) {
+                        len = vp_a[i + 1].length
                     }
 
-                    pfri[1] = lenMap[vp_a[i + 1]] ? lenMap[vp_a[i + 1]] : vp_a[i + 1].length + 1;
+                    pfri[1] = len
                 }
 
                 return pfri;

@@ -581,8 +581,8 @@ function jfrefreshgrid_adRC(data, cfg, ctrlType, ctrlValue, calc, filterObj, pri
         for(let i = 0; i < calc.length; i++){
             let clc = calc[i];
             let clc_r = clc.r, clc_c = clc.c, clc_i = clc.index, clc_funcStr =  getcellFormula(clc_r, clc_c, clc_i, data);
-            
-            let clc_result = formula.execfunction(clc_funcStr, clc_r, clc_c, clc_i,null, true);
+            if(!clc_funcStr) continue
+            let clc_result = formula.execfunction(clc_funcStr, clc_r, clc_c, clc_i,null, true)
             clc.func = clc_result;
 
             if(data[clc_r] && data[clc_r][clc_c] && data[clc_r][clc_c].f == clc_funcStr){

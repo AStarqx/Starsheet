@@ -852,6 +852,45 @@ function getBorderInfoComputeRange(dataset_row_st,dataset_row_ed,dataset_col_st,
                             }
                         }
                     }
+                    else if(borderType == "border-none-lbr"){
+                        for(let bd_r = bd_r1; bd_r <= bd_r2; bd_r++){
+                            if (cfg["rowhidden"] != null && cfg["rowhidden"][bd_r] != null) {
+                                continue;
+                            }
+
+                            for(let bd_c = bd_c1; bd_c <= bd_c2; bd_c++){
+                                if(borderInfoCompute[bd_r + "_" + bd_c] != null){
+                                    delete borderInfoCompute[bd_r + "_" + bd_c].b
+                                    delete borderInfoCompute[bd_r + "_" + bd_c].r
+                                    delete borderInfoCompute[bd_r + "_" + bd_c].l
+                                }
+
+                                if(bd_r == bd_r1){
+                                    let bd_r_top = bd_r1 - 1;
+
+                                    if(bd_r_top >= 0 && borderInfoCompute[bd_r_top + "_" + bd_c]){
+                                        delete borderInfoCompute[bd_r_top + "_" + bd_c].b;
+                                    }
+                                }
+                                
+                                if(bd_c == bd_c1){
+                                    let bd_c_left = bd_c1 - 1;
+
+                                    if(bd_c_left >= 0 && borderInfoCompute[bd_r + "_" + bd_c_left]){
+                                        delete borderInfoCompute[bd_r + "_" + bd_c_left].r;
+                                    }
+                                }
+                                
+                                if(bd_c == bd_c2){
+                                    let bd_c_right = bd_c2 + 1;
+
+                                    if(bd_c_right < data[0].length && borderInfoCompute[bd_r + "_" + bd_c_right]){
+                                        delete borderInfoCompute[bd_r + "_" + bd_c_right].l;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
             else if(rangeType == "cell"){

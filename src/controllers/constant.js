@@ -375,7 +375,7 @@ function rightclickHTML() {
     const customsButtons = (config.customs || [])
         .map(
             (item, index) => `
-            <div data-showProp="${item.showProp}" data-index="${index}" class="luckysheetColsRowsHandleAdd_custom luckysheet-cols-menuitem luckysheet-mousedown-cancel">
+            <div data-showProp="${item.showProp}" data-sheetName="${item.sheetName}" data-index="${index}" class="luckysheetColsRowsHandleAdd_custom luckysheet-cols-menuitem luckysheet-mousedown-cancel">
                 <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">
                 ${item.title}
                 </div>

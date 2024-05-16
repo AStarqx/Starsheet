@@ -49,6 +49,33 @@ import { initLuckysheetConfig } from "../controllers/rowColumnOperation";
 const IDCardReg = /^\d{6}(18|19|20)?\d{2}(0[1-9]|1[12])(0[1-9]|[12]\d|3[01])\d{3}(\d|X)$/i;
 
 /**
+ * 获取单元格
+ * @param {Number} row 单元格所在行数；从0开始的整数，0表示第一行
+ * @param {Number} column 单元格所在列数；从0开始的整数，0表示第一列
+ * @param {Object} options 可选参数
+ * @param {String} options.type 单元格的值类型，可以设置为原始值"v"或者显示值"m"；默认值为'v',表示获取单元格的实际值
+ * @param {Number} options.order 工作表索引；默认值为当前工作表索引
+ */
+export function getCell(row, column, options = {}) {
+    if (!isRealNum(row) || !isRealNum(column)) {
+        return tooltip.info('Arguments row or column cannot be null or undefined.', '')
+    }
+    let curSheetOrder = getSheetIndex(Store.currentSheetIndex);
+    let {
+        order = curSheetOrder
+    } = { ...options };
+    let targetSheetData = Store.luckysheetfile[order].data;
+    let cellData = targetSheetData[row][column] || {}
+    let return_v = {}
+
+    if(getObjType(cellData) == "object"){
+        return_v = cellData;
+    }
+
+    return return_v;
+}
+
+/**
  * 获取单元格的值
  * @param {Number} row 单元格所在行数；从0开始的整数，0表示第一行
  * @param {Number} column 单元格所在列数；从0开始的整数，0表示第一列
@@ -403,6 +430,82 @@ export function deleteCell(move, row, column, options = {}) {
 
     if (success && typeof success === 'function') {
         success()
+    }
+}
+
+/**
+ * 设置某个单元格的属性，如果要设置单元格的值或者同时设置多个单元格属性，推荐使用setCellValue
+ * @param {Number} row 单元格所在行数；从0开始的整数，0表示第一行
+ * @param {Number} column 单元格所在列数；从0开始的整数，0表示第一列
+ * @param {String} attr
+ * @param {Number | String | Object} value 具体的设置值，一个属性会对应多个值，参考 单元格属性表的值示例，特殊情况：如果属性类型attr是单元格格式ct，则设置值value应提供ct.fa，比如设置A1单元格的格式为百分比格式：luckysheet.setCellFormat(0, 0, "ct", "0.00%")
+ * @param {Object} options 可选参数
+ * @param {Number} options.order 工作表索引；默认值为当前工作表索引
+ * @param {Function} options.success 操作结束的回调函数, callback参数为改变后的cell对象
+ */
+export function setRangeCellFormat(startRow, endRow, startColumn, endColumn, attr, value, options = {}) {
+    if (!isRealNum(startRow) || !isRealNum(startColumn) || !isRealNum(endRow) || !isRealNum(endColumn)) {
+        return tooltip.info('Arguments row or column cannot be null or undefined.', '')
+    }
+
+    if (!attr) {
+        return tooltip.info('Arguments attr cannot be null or undefined.', '')
+    }
+
+    let curSheetOrder = getSheetIndex(Store.currentSheetIndex);
+    let {
+        order = curSheetOrder,
+        success
+    } = { ...options };
+
+    let file = Store.luckysheetfile[order];
+
+    if(file == null){
+        return tooltip.info("The order parameter is invalid.", "");
+    }
+
+    let targetSheetData = $.extend(true, [], file.data);
+    if(targetSheetData.length == 0){
+        targetSheetData = sheetmanage.buildGridData(file);
+    }
+
+    let cfg = $.extend(true, {}, file.config);
+
+    if (attr == 'bd') {
+        if(cfg["borderInfo"] == null){
+            cfg["borderInfo"] = [];
+        }
+
+        value.forEach(item => {
+            let borderInfo = {
+                rangeType: "range",
+                borderType: "border-all",
+                color: "#000",
+                style: "1",
+                range: [{
+                    column: [startColumn, endColumn],
+                    row: [startRow, endRow]
+                }],
+                ...item,
+            }
+
+            cfg["borderInfo"].push(borderInfo);
+        })
+    }
+
+    // refresh
+    if(file.index == Store.currentSheetIndex){
+        file.config = cfg;
+        Store.config = cfg;
+        jfrefreshgrid(targetSheetData, [{ "row": [startRow, endRow], "column": [startColumn, endColumn] }]);
+    }
+    else {
+        file.config = cfg;
+        file.data = targetSheetData;
+    }
+
+    if (success && typeof success === 'function') {
+        success();
     }
 }
 

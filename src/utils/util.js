@@ -5,6 +5,7 @@ import { hasChinaword, isRealNum } from "../global/validate";
 import Store from "../store";
 import locale from "../locale/locale";
 import numeral from "numeral";
+import { getSheetIndex } from "../methods/get";
 // import method from '../global/method';
 
 /**
@@ -486,6 +487,18 @@ function showrightclickmenu($menu, x, y) {
             const currCell = Store.flowdata[Store.luckysheet_select_save[0]['row'][0]][Store.luckysheet_select_save[0]['column'][0]]
             subMenu.style.display = currCell && currCell[showProp] != null && currCell[showProp] != '' ? 'block' : 'none'
         }
+    })
+
+    const subMenus2 = $menu.get(0).querySelectorAll('.luckysheetColsRowsHandleAdd_custom[data-sheetName]')
+    subMenus2.forEach(subMenu => {
+        const sheetName = subMenu.getAttribute('data-sheetName')
+        if(sheetName && sheetName != undefined && sheetName != 'undefined') {
+            const currSheet = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)]
+            const currSheetName = currSheet && currSheet.name
+
+            subMenu.style.display = currSheetName && currSheetName.indexOf(sheetName) > -1 ? 'block' : 'none'
+        }
+        
     })
 }
 
