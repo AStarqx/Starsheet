@@ -1924,7 +1924,7 @@ export function genarate(value) {//万 单位格式增加！！！
         }
     }
     else if(value.toString().indexOf(".") > -1){
-        if(value.toString().indexOf(".") == value.toString().lastIndexOf(".")){
+        if(value.toString().indexOf(".") == value.toString().lastIndexOf(".") && isRealNum(value)){
             var value1 = value.toString().split(".")[0];
             var value2 = value.toString().split(".")[1];
 

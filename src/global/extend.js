@@ -23,7 +23,7 @@ import luckysheetConfigsetting from '../controllers/luckysheetConfigsetting';
  * @param {string | number} sheetIndex 操作的 sheet 的 index 属性
  * @returns
  */
-function luckysheetextendtable(type, index, value, direction, sheetIndex) {
+function luckysheetextendtable(type, index, value, direction, sheetIndex, clearjfundo = true) {
     sheetIndex = sheetIndex ?? Store.currentSheetIndex;
 
     if (type == "row" && !checkProtectionAuthorityNormal(sheetIndex, "insertRows")) {
@@ -940,6 +940,7 @@ function luckysheetextendtable(type, index, value, direction, sheetIndex) {
             newFreezen,
             newDataVerification,
             newHyperlink,
+            clearjfundo
         );
     } else {
         file.data = d;
@@ -1035,7 +1036,7 @@ function luckysheetextendData(rowlen, newData) {
 }
 
 //删除行列
-function luckysheetdeletetable(type, st, ed, sheetIndex) {
+function luckysheetdeletetable(type, st, ed, sheetIndex, clearjfundo = true) {
     sheetIndex = sheetIndex || Store.currentSheetIndex;
 
     if (type == "row" && !checkProtectionAuthorityNormal(sheetIndex, "deleteRows")) {
@@ -1859,6 +1860,7 @@ function luckysheetdeletetable(type, st, ed, sheetIndex) {
             newFreezen,
             newDataVerification,
             newHyperlink,
+            clearjfundo
         );
     } else {
         file.data = d;

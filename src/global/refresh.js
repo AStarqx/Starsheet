@@ -37,7 +37,7 @@ function runExecFunction(range, index, data){
     formula.execFunctionGlobalData = null;
 }
 
-function jfrefreshgrid(data, range, allParam, isRunExecFunction = true, isRefreshCanvas = true) {
+function jfrefreshgrid(data, range, allParam, isRunExecFunction = true, isRefreshCanvas = true, clearjfundo = true) {
     if(data == null){
         data = Store.flowdata;
     }
@@ -64,7 +64,7 @@ function jfrefreshgrid(data, range, allParam, isRunExecFunction = true, isRefres
 
     let file = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)];
 
-    if (Store.clearjfundo) {
+    if (Store.clearjfundo && clearjfundo) {
         Store.jfundo.length  = 0;
 
         let curConfig;
@@ -211,7 +211,7 @@ function jfrefreshgrid(data, range, allParam, isRunExecFunction = true, isRefres
     window.luckysheet_getcelldata_cache = null;
 }
 
-function jfrefreshgridall(colwidth, rowheight, data, cfg, range, ctrlType, ctrlValue, cdformat, isRefreshCanvas=true) {
+function jfrefreshgridall(colwidth, rowheight, data, cfg, range, ctrlType, ctrlValue, cdformat, isRefreshCanvas=true, clearjfundo = true) {
     let redo = {}, isRunExecFunction=false;
     clearTimeout(refreshCanvasTimeOut);
     if (ctrlType == "cellRowChange") {
@@ -313,7 +313,7 @@ function jfrefreshgridall(colwidth, rowheight, data, cfg, range, ctrlType, ctrlV
         }
     }
 
-    if (Store.clearjfundo) {
+    if (Store.clearjfundo && clearjfundo) {
         Store.jfundo.length  = 0;
 
         redo["data"] = Store.flowdata;
@@ -417,7 +417,7 @@ function jfrefreshrange(data, range, cdformat) {
 }
 
 //删除、增加行列 刷新表格
-function jfrefreshgrid_adRC(data, cfg, ctrlType, ctrlValue, calc, filterObj, printareaObj, cf, af, freezen, dataVerification, hyperlink){
+function jfrefreshgrid_adRC(data, cfg, ctrlType, ctrlValue, calc, filterObj, printareaObj, cf, af, freezen, dataVerification, hyperlink, clearjfundo = true){
     let file = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)];
     collaborativeEditBox();
     //merge改变对应的单元格值改变
@@ -465,7 +465,7 @@ function jfrefreshgrid_adRC(data, cfg, ctrlType, ctrlValue, calc, filterObj, pri
     //     }
     // }
 
-    if(Store.clearjfundo){
+    if(Store.clearjfundo && clearjfundo){
         Store.jfundo.length  = 0;
 
         Store.jfredo.push({

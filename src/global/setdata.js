@@ -61,7 +61,7 @@ function setcellvalue(r, c, d, v) {
 
             if(v.ct && v.ct.t === 'd' && v.m) {
                 const dateFormatList = ['hh:mm AM/PM', 'hh:mm', 'yyyy-MM-dd hh:mm AM/PM', 'yyyy-MM-dd hh:mm', 'yyyy-MM-dd',
-                'yyyy/MM/dd', 'yyyy"年"M"月"d"日"', 'MM-dd', 'M-d', 'M"月"d"日"', 'h:mm:ss', 'h:mm', 'AM/PM hh:mm', 'AM/PM h:mm',
+                'yyyy/MM/dd', 'yyyy"年"M"月"d"日"', 'yyyy"年"M"月"', 'MM-dd', 'M-d', 'M"月"d"日"', 'h:mm:ss', 'h:mm', 'AM/PM hh:mm', 'AM/PM h:mm',
                 'AM/PM h:mm:ss', 'MM-dd AM/PM hh:mm']
                 if(v.ct.fa && dateFormatList.includes(v.ct.fa)) {
                     
@@ -77,7 +77,7 @@ function setcellvalue(r, c, d, v) {
                 
             }
 
-            if(v.v == '') {
+            if(v.v === '') {
                 delete cell.ct
             }
 

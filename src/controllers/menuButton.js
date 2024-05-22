@@ -3884,10 +3884,20 @@ const menuButton = {
                     if (foucsStatus != "@" && isRealNum(value)) {
                         value = parseFloat(value);
                     }
+
+                    const dateFormatList = ['hh:mm AM/PM', 'hh:mm', 'yyyy-MM-dd hh:mm AM/PM', 'yyyy-MM-dd hh:mm', 'yyyy-MM-dd',
+                    'yyyy/MM/dd', 'yyyy"年"M"月"d"日"', 'yyyy"年"M"月"', 'MM-dd', 'M-d', 'M"月"d"日"', 'h:mm:ss', 'h:mm', 'AM/PM hh:mm', 'AM/PM h:mm',
+                    'AM/PM h:mm:ss', 'MM-dd AM/PM hh:mm']
+                    if(dateFormatList.includes(foucsStatus)) {
+                        if(!isRealNum(value)) {
+                            value = datenum_local(new Date(value))
+                        }
+                    }
                     
                     let type = "n";
-
+                    
                     console.log('after setting format:', foucsStatus, value)
+                    
                     let mask = update(foucsStatus, value);
 
                     if(this.celldataIsDate(value) && this.endsWithNoPunctuation(value)) {
@@ -4147,7 +4157,7 @@ const menuButton = {
                                 fv[mc_r + "_" + mc_c] = $.extend(true, {}, cell);
                             } else {
                                 // let cell_clone = fv[mc_r + "_" + mc_c];
-                                let cell_clone = fv[mc_r + "_" + mc_c] ? JSON.parse(JSON.stringify()) : {}
+                                let cell_clone = fv[mc_r + "_" + mc_c] ? JSON.parse(JSON.stringify(fv[mc_r + "_" + mc_c])) : {}
 
                                 delete cell_clone.v;
                                 delete cell_clone.m;

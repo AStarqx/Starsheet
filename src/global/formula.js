@@ -1448,11 +1448,11 @@ const luckysheetformula = {
                     curv.v = v[1];
                     curv.f = v[2];
 
-                    if(curv.f) {
-                        delete curv.m
-                        delete curv.ct
-                        delete d[r][c]['ct']
-                    }
+                    // if(curv.f) {
+                    //     delete curv.m
+                    //     delete curv.ct
+                    //     delete d[r][c]['ct']
+                    // }
 
                     //打进单元格的sparklines的配置串， 报错需要单独处理。
                     if (v.length == 4 && v[3].type == "sparklines") {

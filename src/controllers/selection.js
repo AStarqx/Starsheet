@@ -1822,7 +1822,7 @@ const selection = {
             jfrefreshgrid_pastcut(source, target, copyRowlChange);
         }
     },
-    pasteHandlerOfCopyPaste: function(copyRange) {
+    pasteHandlerOfCopyPaste: function(copyRange, clearjfundo = true) {
         if (!checkProtectionLockedRangeList(Store.luckysheet_select_save, Store.currentSheetIndex)) {
             return;
         }
@@ -2168,14 +2168,14 @@ const selection = {
                 cdformat: cdformat,
                 dataVerification: dataVerification,
             };
-            jfrefreshgrid(d, Store.luckysheet_select_save, allParam);
+            jfrefreshgrid(d, Store.luckysheet_select_save, allParam, true, true, clearjfundo);
         } else {
             let allParam = {
                 cfg: cfg,
                 cdformat: cdformat,
                 dataVerification: dataVerification,
             };
-            jfrefreshgrid(d, Store.luckysheet_select_save, allParam);
+            jfrefreshgrid(d, Store.luckysheet_select_save, allParam, true, true, clearjfundo);
 
             selectHightlightShow();
         }

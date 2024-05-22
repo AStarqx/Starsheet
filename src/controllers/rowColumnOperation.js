@@ -2457,7 +2457,7 @@ export function rowColumnOperationInitial() {
     });
 }
 
-export function initLuckysheetConfig() {
+export function initLuckysheetConfig(clearjfundo = true) {
     let d = editor.deepCopyFlowData(Store.flowdata);
     let cfg = $.extend(true, {}, Store.config);
     if (cfg["rowlen"] == null) {
@@ -2613,6 +2613,9 @@ export function initLuckysheetConfig() {
         Store.luckysheet_select_save,
         "resizeR",
         "rowlen",
+        null,
+        true,
+        clearjfundo
     );
 } 
 

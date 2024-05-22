@@ -48,6 +48,12 @@ import { initLuckysheetConfig } from "../controllers/rowColumnOperation";
 
 const IDCardReg = /^\d{6}(18|19|20)?\d{2}(0[1-9]|1[12])(0[1-9]|[12]\d|3[01])\d{3}(\d|X)$/i;
 
+
+// 清除历史操作记录
+export function clearHistory() {
+    Store.jfredo = []
+}
+
 /**
  * 获取单元格
  * @param {Number} row 单元格所在行数；从0开始的整数，0表示第一行
@@ -152,6 +158,7 @@ export function setCellValue(row, column, value, options = {}) {
         isRefresh = true,
         triggerBeforeUpdate = true,
         triggerUpdated = true,
+        clearjfundo = true,
         success
     } = {...options}
 
@@ -280,7 +287,7 @@ export function setCellValue(row, column, value, options = {}) {
     }, 0);
 
     if(file.index == Store.currentSheetIndex && isRefresh){
-        jfrefreshgrid(data, [{ "row": [row, row], "column": [column, column] }]);//update data, meanwhile refresh canvas and store data to history
+        jfrefreshgrid(data, [{ "row": [row, row], "column": [column, column] }], null, true, true, clearjfundo);//update data, meanwhile refresh canvas and store data to history
     }
     else{
         file.data = data;//only update data
@@ -309,6 +316,7 @@ export function clearCell(row, column, options = {}) {
         order = curSheetOrder,
         isRefresh = true,
         deleteCellParams = [],
+        clearjfundo = true,
         success
     } = {...options}
 
@@ -381,7 +389,7 @@ export function clearCell(row, column, options = {}) {
         jfrefreshgrid(targetSheetData, [{
             row: [row, row],
             column: [column, column]
-        }])
+        }], null, true, true, clearjfundo)
     }
     else{
         Store.luckysheetfile[order].data = targetSheetData;
@@ -455,6 +463,7 @@ export function setRangeCellFormat(startRow, endRow, startColumn, endColumn, att
     let curSheetOrder = getSheetIndex(Store.currentSheetIndex);
     let {
         order = curSheetOrder,
+        clearjfundo = true,
         success
     } = { ...options };
 
@@ -497,7 +506,7 @@ export function setRangeCellFormat(startRow, endRow, startColumn, endColumn, att
     if(file.index == Store.currentSheetIndex){
         file.config = cfg;
         Store.config = cfg;
-        jfrefreshgrid(targetSheetData, [{ "row": [startRow, endRow], "column": [startColumn, endColumn] }]);
+        jfrefreshgrid(targetSheetData, [{ "row": [startRow, endRow], "column": [startColumn, endColumn] }], null, true, true, clearjfundo);
     }
     else {
         file.config = cfg;
@@ -1333,6 +1342,7 @@ export function insertRowOrColumn(type, index = 0, options = {}) {
     let {
         number = 1,
         order = curSheetOrder,
+        clearjfundo = true,
         success
     } = {...options}
 
@@ -1365,7 +1375,7 @@ export function insertRowOrColumn(type, index = 0, options = {}) {
         }
     }
 
-    luckysheetextendtable(type, index, number, "lefttop", sheetIndex);
+    luckysheetextendtable(type, index, number, "lefttop", sheetIndex, clearjfundo);
 
     if (success && typeof success === 'function') {
         success();
@@ -1445,12 +1455,15 @@ export function importXlsx(file) {
  */
 export function copyRow(copyRow, row = 0, options = {}) {
     if(copyRow < 0) return
-    let { number = 1 } = options
+    let {
+        number = 1,
+        clearjfundo = true
+    } = options
     selection.copyRow(copyRow)
     Store.luckysheet_select_save = [
       { row: [row, row], column: [0, Store.flowdata[0].length - 1] }
     ]
-    selection.pasteHandlerOfCopyPaste(Store.luckysheet_copy_save);
+    selection.pasteHandlerOfCopyPaste(Store.luckysheet_copy_save, clearjfundo);
 }
 /**
  * 在第row行的位置，插入number行空白行
@@ -1513,6 +1526,7 @@ export function deleteRowOrColumn(type, startIndex, endIndex, options = {}) {
     let curSheetOrder = getSheetIndex(Store.currentSheetIndex);
     let {
         order = curSheetOrder,
+        clearjfundo = true,
         success
     } = {...options}
 
@@ -1523,7 +1537,7 @@ export function deleteRowOrColumn(type, startIndex, endIndex, options = {}) {
             sheetIndex = Store.luckysheetfile[order].index;
         }
     }
-    luckysheetdeletetable(type, startIndex, endIndex, sheetIndex);
+    luckysheetdeletetable(type, startIndex, endIndex, sheetIndex, clearjfundo);
 
     if (success && typeof success === 'function') {
         success()
@@ -3352,8 +3366,11 @@ export function setRangeFilter(type, options = {}) {
     }
 }
 
-export function refreshConfig() {
-    initLuckysheetConfig()
+export function refreshConfig(options = {}) {
+    let {
+        clearjfundo = true,
+    } = {...options}
+    initLuckysheetConfig(clearjfundo)
 }
 
 /**
@@ -5194,6 +5211,7 @@ export function setSheetData(options = {}) {
     let {
         sheetObject = {},
         order = lastOrder,
+        clearjfundo = true,
         success
     } = {...options}
 
@@ -5252,7 +5270,7 @@ export function setSheetData(options = {}) {
     server.saveParam("sha", null, $.extend(true, {}, sheetconfig));
     server.saveParam("shr", null, orders);
 
-    if (Store.clearjfundo) {
+    if (Store.clearjfundo && clearjfundo) {
         Store.jfundo.length  = 0;
         let redo = {};
         redo["type"] = "datachange";
@@ -5309,6 +5327,7 @@ export function setSheetAdd(options = {}) {
     let {
         sheetObject = {},
         order = lastOrder,
+        clearjfundo = true,
         success
     } = {...options}
 
@@ -5410,7 +5429,7 @@ export function setSheetAdd(options = {}) {
     server.saveParam("sha", null, $.extend(true, {}, sheetconfig));
     server.saveParam("shr", null, orders);
 
-    if (Store.clearjfundo) {
+    if (Store.clearjfundo && clearjfundo) {
         Store.jfundo.length  = 0;
         let redo = {};
         redo["type"] = "addSheet";

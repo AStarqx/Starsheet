@@ -2,10 +2,11 @@ import {getObjType, luckysheetfontformat} from '../utils/util';
 import menuButton from '../controllers/menuButton';
 import {checkstatusByCell} from './getdata';
 import {colLocationByIndex,colSpanLocationByIndex, rowLocationByIndex} from './location';
-import {checkWordByteLength, hasChinaword, isRealNull} from './validate';
+import {checkWordByteLength, hasChinaword, isRealNull, isRealNum} from './validate';
 import {isInlineStringCell} from '../controllers/inlineString';
 
 import Store from '../store';
+import { datenum_local, update } from './format';
 
 /**
  * 计算范围行高
@@ -474,7 +475,7 @@ function getCellTextInfo(cell , ctx, option){
 
     let fontset, cancelLine="0", underLine="0", fontSize=11, isInline=false, value, inlineStringArr=[];
 
-    if(cell && cell.m && containsChineseEnglishAndDigits(cell.m)) {
+    if(cell && cell.m && containsChineseEnglishAndDigits(cell.m) && cell.m.indexOf('\r\n') === -1) {
         let newCell = $.extend(true, {}, cell)
         let txt = newCell.m
         if(isInlineStringCell(newCell)) {
@@ -596,6 +597,19 @@ function getCellTextInfo(cell , ctx, option){
             value = cell.m;
             if(value == null){
                 value = cell.v;
+            }
+
+            if(cell.ct && cell.ct.fa) {
+                const dateFormatList = ['hh:mm AM/PM', 'hh:mm', 'yyyy-MM-dd hh:mm AM/PM', 'yyyy-MM-dd hh:mm', 'yyyy-MM-dd',
+                'yyyy/MM/dd', 'yyyy"年"M"月"d"日"', 'yyyy"年"M"月"', 'MM-dd', 'M-d', 'M"月"d"日"', 'h:mm:ss', 'h:mm', 'AM/PM hh:mm', 'AM/PM h:mm',
+                'AM/PM h:mm:ss', 'MM-dd AM/PM hh:mm']
+                if(dateFormatList.includes(cell.ct.fa)) {
+                    if(!isRealNum(value)) {
+                        value = datenum_local(new Date(value))
+                    }
+                }
+
+                value = update(cell.ct.fa, value)
             }
         }
         else{

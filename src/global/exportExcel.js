@@ -1401,51 +1401,62 @@ var setStyleAndValue = function (table, worksheet) {
     if(table.hide && table.hide === 1) {
         worksheet.state = 'hidden'
     }
-  let cellArr = table.data;
-  if (!Array.isArray(cellArr)) return;
-  cellArr.forEach(function (row, rowid) {
-    const dbrow = worksheet.getRow(rowid+1);
-    //设置单元格行高
-    dbrow.height = getRowHeight([rowid], table.config)[rowid] * 0.8;
-    row.every(function (cell, columnid) {
-      if (!cell) return true;
-    //   if(rowid==0){
-        const dobCol = worksheet.getColumn(columnid+1);
-         //设置单元格列宽
-        dobCol.width = getColumnWidth([columnid], table.config, { order: worksheet.order })[columnid] / 8;
-        dobCol.hidden = getColumnHidden([columnid], table.config)
-    //   }
-      let fill = fillConvert(cell.bg);
-      let font = fontConvert(cell.ff, cell.fc, cell.bl, cell.it, cell.fs, cell.cl, cell.ul);
-      let alignment = alignmentConvert(cell.vt, cell.ht, cell.tb, cell.tr);
-      let value;
- 
-      var v='';
-      if(cell.ct && cell.ct.s){
-        var s = cell.ct.s || []
-        s.forEach(function(val,num){
-          v += val.v;
+    let cellArr = table.data;
+    if (!Array.isArray(cellArr)) return;
+    const config = table.config || {}
+    const rowhidden = config.rowhidden || {}
+    const colhidden = config.colhidden || {}
+    cellArr.forEach(function (row, rowid) {
+        const dbrow = worksheet.getRow(rowid+1);
+        //设置单元格行高
+        dbrow.height = getRowHeight([rowid], table.config)[rowid] * 0.8;
+        if(rowhidden[rowid] !== null && rowhidden[rowid] !== undefined) {
+            dbrow.hidden = true
+        }
+        row.every(function (cell, columnid) {
+            if (!cell) return true;
+            //   if(rowid==0){
+                const dobCol = worksheet.getColumn(columnid+1);
+                //设置单元格列宽
+                dobCol.width = getColumnWidth([columnid], table.config, { order: worksheet.order })[columnid] / 8;
+                dobCol.hidden = getColumnHidden([columnid], table.config)
+            //   }
+
+            if(colhidden[columnid] !== null && colhidden[columnid] !== undefined) {
+                dobCol.hidden = true
+            }
+
+            let fill = fillConvert(cell.bg);
+            let font = fontConvert(cell.ff, cell.fc, cell.bl, cell.it, cell.fs, cell.cl, cell.ul);
+            let alignment = alignmentConvert(cell.vt, cell.ht, cell.tb, cell.tr);
+            let value;
+        
+            var v='';
+            if(cell.ct && cell.ct.s){
+                var s = cell.ct.s || []
+                s.forEach(function(val,num){
+                v += val.v;
+                })
+            }
+            else{
+                v = cell.v;
+            }
+            if (cell.f) {
+                value = { formula: cell.f, result: v };
+            } else {
+                value = v;
+            }
+            let target = worksheet.getCell(rowid + 1, columnid + 1);
+            target.fill = fill;
+            target.font = font;
+            target.alignment = alignment;
+            target.value = value;
+            if(cell.ct && cell.ct.fa) {
+                target.numFmt = cell.ct.fa
+            }
+            return true;
         })
-      }
-      else{
-        v = cell.v;
-      }
-      if (cell.f) {
-        value = { formula: cell.f, result: v };
-      } else {
-        value = v;
-      }
-      let target = worksheet.getCell(rowid + 1, columnid + 1);
-      target.fill = fill;
-      target.font = font;
-      target.alignment = alignment;
-      target.value = value;
-      if(cell.ct && cell.ct.fa) {
-        target.numFmt = cell.ct.fa
-      }
-      return true;
     })
-  })
 }
  
 //转换颜色

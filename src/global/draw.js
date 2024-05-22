@@ -125,45 +125,34 @@ function luckysheetDrawgridRowTitle(scrollHeight, drawHeight, offsetTop) {
         }
 
         //vertical
-        luckysheetTableContent.beginPath();
+        // luckysheetTableContent.beginPath();
         luckysheetTableContent.moveTo(Store.rowHeaderWidth - 2 + bodrder05, start_r + offsetTop - 2);
         luckysheetTableContent.lineTo(Store.rowHeaderWidth - 2 + bodrder05, end_r + offsetTop - 2);
         luckysheetTableContent.lineWidth = 1;
 
         luckysheetTableContent.strokeStyle = luckysheetdefaultstyle.strokeStyle;
-        luckysheetTableContent.stroke();
-        luckysheetTableContent.closePath();
-
+        
         //行标题栏横线,horizen
         if (
             Store.config["rowhidden"] != null &&
             Store.config["rowhidden"][r] == null &&
             Store.config["rowhidden"][r + 1] != null
         ) {
-            luckysheetTableContent.beginPath();
             luckysheetTableContent.moveTo(-1, end_r + offsetTop - 4 + bodrder05);
             luckysheetTableContent.lineTo(Store.rowHeaderWidth - 1, end_r + offsetTop - 4 + bodrder05);
             // luckysheetTableContent.lineWidth = 1;
             // luckysheetTableContent.strokeStyle = luckysheetdefaultstyle.strokeStyle;
-            luckysheetTableContent.closePath();
-            luckysheetTableContent.stroke();
         } else if (Store.config["rowhidden"] == null || Store.config["rowhidden"][r] == null) {
-            luckysheetTableContent.beginPath();
             luckysheetTableContent.moveTo(-1, end_r + offsetTop - 2 + bodrder05);
             luckysheetTableContent.lineTo(Store.rowHeaderWidth - 1, end_r + offsetTop - 2 + bodrder05);
 
             // luckysheetTableContent.lineWidth = 1;
             // luckysheetTableContent.strokeStyle = luckysheetdefaultstyle.strokeStyle;
-            luckysheetTableContent.closePath();
-            luckysheetTableContent.stroke();
         }
 
         if (Store.config["rowhidden"] != null && Store.config["rowhidden"][r - 1] != null && preEndR != null) {
-            luckysheetTableContent.beginPath();
             luckysheetTableContent.moveTo(-1, preEndR + offsetTop + bodrder05);
             luckysheetTableContent.lineTo(Store.rowHeaderWidth - 1, preEndR + offsetTop + bodrder05);
-            luckysheetTableContent.closePath();
-            luckysheetTableContent.stroke();
         }
 
         preEndR = end_r;
@@ -181,6 +170,10 @@ function luckysheetDrawgridRowTitle(scrollHeight, drawHeight, offsetTop) {
             luckysheetTableContent,
         );
     }
+
+    luckysheetTableContent.stroke();
+    luckysheetTableContent.closePath();
+
 
     //行标题栏竖线
     // luckysheetTableContent.beginPath();
@@ -250,6 +243,7 @@ function luckysheetDrawgridColumnTitle(scrollWidth, drawWidth, offsetLeft) {
     let end_c, start_c;
     let bodrder05 = 0.5; //Default 0.5
     let preEndC;
+    luckysheetTableContent.beginPath();
     for (let c = dataset_col_st; c <= dataset_col_ed; c++) {
         if (c == 0) {
             start_c = -scrollWidth;
@@ -306,43 +300,37 @@ function luckysheetDrawgridColumnTitle(scrollWidth, drawWidth, offsetLeft) {
             Store.config["colhidden"][c] == null &&
             Store.config["colhidden"][c + 1] != null
         ) {
-            luckysheetTableContent.beginPath();
+            
             luckysheetTableContent.moveTo(end_c + offsetLeft - 4 + bodrder05, 0);
             luckysheetTableContent.lineTo(end_c + offsetLeft - 4 + bodrder05, Store.columnHeaderHeight - 2);
             luckysheetTableContent.lineWidth = 1;
             luckysheetTableContent.strokeStyle = luckysheetdefaultstyle.strokeStyle;
-            luckysheetTableContent.closePath();
-            luckysheetTableContent.stroke();
+            
         } else if (Store.config["colhidden"] == null || Store.config["colhidden"][c] == null) {
-            luckysheetTableContent.beginPath();
+
             luckysheetTableContent.moveTo(end_c + offsetLeft - 2 + bodrder05, 0);
             luckysheetTableContent.lineTo(end_c + offsetLeft - 2 + bodrder05, Store.columnHeaderHeight - 2);
 
             luckysheetTableContent.lineWidth = 1;
             luckysheetTableContent.strokeStyle = luckysheetdefaultstyle.strokeStyle;
-            luckysheetTableContent.closePath();
-            luckysheetTableContent.stroke();
+            
         }
 
         if (Store.config["colhidden"] != null && Store.config["colhidden"][c - 1] != null && preEndC != null) {
-            luckysheetTableContent.beginPath();
+
             luckysheetTableContent.moveTo(preEndC + offsetLeft + bodrder05, 0);
             luckysheetTableContent.lineTo(preEndC + offsetLeft + bodrder05, Store.columnHeaderHeight - 2);
             // luckysheetTableContent.lineWidth = 1;
             // luckysheetTableContent.strokeStyle = luckysheetdefaultstyle.strokeStyle;
-            luckysheetTableContent.closePath();
-            luckysheetTableContent.stroke();
+
         }
 
         //horizen
-        luckysheetTableContent.beginPath();
         luckysheetTableContent.moveTo(start_c + offsetLeft - 1, Store.columnHeaderHeight - 2 + bodrder05);
         luckysheetTableContent.lineTo(end_c + offsetLeft - 1, Store.columnHeaderHeight - 2 + bodrder05);
         // luckysheetTableContent.lineWidth = 1;
 
         // luckysheetTableContent.strokeStyle = luckysheetdefaultstyle.strokeStyle;
-        luckysheetTableContent.stroke();
-        luckysheetTableContent.closePath();
 
         preEndC = end_c;
 
@@ -358,6 +346,9 @@ function luckysheetDrawgridColumnTitle(scrollWidth, drawWidth, offsetLeft) {
             luckysheetTableContent,
         );
     }
+
+    luckysheetTableContent.closePath();
+    luckysheetTableContent.stroke();
 
     //列标题栏横线
     // luckysheetTableContent.beginPath();
@@ -2252,6 +2243,7 @@ function cellTextRender(textInfo, ctx, option) {
     }
 
     // ctx.fillStyle = "rgb(0,0,0)";
+    ctx.beginPath();
     for (let i = 0; i < values.length; i++) {
         let word = values[i];
         if (word.inline === true && word.style != null) {
@@ -2267,7 +2259,7 @@ function cellTextRender(textInfo, ctx, option) {
 
         if (word.cancelLine != null) {
             let c = word.cancelLine;
-            ctx.beginPath();
+            
             ctx.moveTo(
                 Math.floor((pos_x + c.startX) / Store.zoomRatio) + 0.5,
                 Math.floor((pos_y + c.startY) / Store.zoomRatio) + 0.5,
@@ -2278,15 +2270,12 @@ function cellTextRender(textInfo, ctx, option) {
             );
             ctx.lineWidth = Math.floor(c.fs / 9);
             ctx.strokeStyle = ctx.fillStyle;
-            ctx.stroke();
-            ctx.closePath();
         }
 
         if (word.underLine != null) {
             let underLines = word.underLine;
             for (let a = 0; a < underLines.length; a++) {
                 let item = underLines[a];
-                ctx.beginPath();
                 ctx.moveTo(
                     Math.floor((pos_x + item.startX) / Store.zoomRatio) + 0.5,
                     Math.floor((pos_y + item.startY) / Store.zoomRatio),
@@ -2297,11 +2286,11 @@ function cellTextRender(textInfo, ctx, option) {
                 );
                 ctx.lineWidth = Math.floor(item.fs / 9);
                 ctx.strokeStyle = ctx.fillStyle;
-                ctx.stroke();
-                ctx.closePath();
             }
         }
     }
+    ctx.stroke();
+    ctx.closePath();
     // ctx.fillStyle = "rgba(0,0,0,0.2)";
     // ctx.fillRect((pos_x + values[0].left)/Store.zoomRatio, (pos_y+values[0].top-values[0].asc)/Store.zoomRatio, textInfo.textWidthAll, textInfo.textHeightAll)
     // ctx.fillStyle = "rgba(255,0,0,1)";
