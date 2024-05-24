@@ -264,9 +264,6 @@ var getBorderInfo = function(luckysheetfile){
  
                 if(borderType == "border-left"){
                     for(let bd_r = bd_r1; bd_r <= bd_r2; bd_r++){
-                        if (cfg["rowhidden"] != null && cfg["rowhidden"][bd_r] != null) {
-                            continue;
-                        }
  
                         if(borderInfoCompute[bd_r + "_" + bd_c1] == null){
                             borderInfoCompute[bd_r + "_" + bd_c1] = {};
@@ -302,9 +299,6 @@ var getBorderInfo = function(luckysheetfile){
                 }
                 else if(borderType == "border-right"){
                     for(let bd_r = bd_r1; bd_r <= bd_r2; bd_r++){
-                        if (cfg["rowhidden"] != null && cfg["rowhidden"][bd_r] != null) {
-                            continue;
-                        }
  
                         if(borderInfoCompute[bd_r + "_" + bd_c2] == null){
                             borderInfoCompute[bd_r + "_" + bd_c2] = {};
@@ -338,9 +332,6 @@ var getBorderInfo = function(luckysheetfile){
                     }
                 }
                 else if(borderType == "border-top"){
-                    if (cfg["rowhidden"] != null && cfg["rowhidden"][bd_r1] != null) {
-                        continue;
-                    }
  
                     for(let bd_c = bd_c1; bd_c <= bd_c2; bd_c++){
                         if(borderInfoCompute[bd_r1 + "_" + bd_c] == null){
@@ -376,9 +367,6 @@ var getBorderInfo = function(luckysheetfile){
                     }
                 }
                 else if(borderType == "border-bottom"){
-                    if (cfg["rowhidden"] != null && cfg["rowhidden"][bd_r2] != null) {
-                        continue;
-                    }
  
                     for(let bd_c = bd_c1; bd_c <= bd_c2; bd_c++){
                         if(borderInfoCompute[bd_r2 + "_" + bd_c] == null){
@@ -415,9 +403,6 @@ var getBorderInfo = function(luckysheetfile){
                 }
                 else if(borderType == "border-all"){
                     for(let bd_r = bd_r1; bd_r <= bd_r2; bd_r++){
-                        if (cfg["rowhidden"] != null && cfg["rowhidden"][bd_r] != null) {
-                            continue;
-                        }
  
                         for(let bd_c = bd_c1; bd_c <= bd_c2; bd_c++){
                             if(data[bd_r] != null && getObjType(data[bd_r][bd_c]) == "object" && data[bd_r][bd_c].mc != null){
@@ -550,9 +535,6 @@ var getBorderInfo = function(luckysheetfile){
                 }
                 else if(borderType == "border-outside"){
                     for(let bd_r = bd_r1; bd_r <= bd_r2; bd_r++){
-                        if (cfg["rowhidden"] != null && cfg["rowhidden"][bd_r] != null) {
-                            continue;
-                        }
  
                         for(let bd_c = bd_c1; bd_c <= bd_c2; bd_c++){
                             if(!(bd_r == bd_r1 || bd_r == bd_r2 || bd_c == bd_c1 || bd_c == bd_c2)){
@@ -663,9 +645,6 @@ var getBorderInfo = function(luckysheetfile){
                 }
                 else if(borderType == "border-inside"){
                     for(let bd_r = bd_r1; bd_r <= bd_r2; bd_r++){
-                        if (cfg["rowhidden"] != null && cfg["rowhidden"][bd_r] != null) {
-                            continue;
-                        }
  
                         for(let bd_c = bd_c1; bd_c <= bd_c2; bd_c++){
                             if(bd_r == bd_r1 && bd_c == bd_c1){
@@ -896,9 +875,6 @@ var getBorderInfo = function(luckysheetfile){
                 }
                 else if(borderType == "border-horizontal"){
                     for(let bd_r = bd_r1; bd_r <= bd_r2; bd_r++){
-                        if (cfg["rowhidden"] != null && cfg["rowhidden"][bd_r] != null) {
-                            continue;
-                        }
  
                         for(let bd_c = bd_c1; bd_c <= bd_c2; bd_c++){
                             if(bd_r == bd_r1){
@@ -960,9 +936,6 @@ var getBorderInfo = function(luckysheetfile){
                 }
                 else if(borderType == "border-vertical"){
                     for(let bd_r = bd_r1; bd_r <= bd_r2; bd_r++){
-                        if (cfg["rowhidden"] != null && cfg["rowhidden"][bd_r] != null) {
-                            continue;
-                        }
  
                         for(let bd_c = bd_c1; bd_c <= bd_c2; bd_c++){
                             if(bd_c == bd_c1){
@@ -1024,9 +997,6 @@ var getBorderInfo = function(luckysheetfile){
                 }
                 else if(borderType == "border-none"){
                     for(let bd_r = bd_r1; bd_r <= bd_r2; bd_r++){
-                        if (cfg["rowhidden"] != null && cfg["rowhidden"][bd_r] != null) {
-                            continue;
-                        }
  
                         for(let bd_c = bd_c1; bd_c <= bd_c2; bd_c++){
                             if(borderInfoCompute[bd_r + "_" + bd_c] != null){
@@ -1078,9 +1048,6 @@ var getBorderInfo = function(luckysheetfile){
                 continue;
             }
  
-            if (cfg["rowhidden"] != null && cfg["rowhidden"][bd_r] != null) {
-                continue;
-            }
  
             if(value.l != null || value.r != null || value.t != null || value.b != null){
                 if(borderInfoCompute[bd_r + "_" + bd_c] == null){
