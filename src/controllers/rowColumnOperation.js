@@ -2457,7 +2457,11 @@ export function rowColumnOperationInitial() {
     });
 }
 
-export function initLuckysheetConfig(clearjfundo = true) {
+export function initLuckysheetConfig(options) {
+    const {
+        range = undefined,
+        clearjfundo = true
+    } = options
     let d = editor.deepCopyFlowData(Store.flowdata);
     let cfg = $.extend(true, {}, Store.config);
     if (cfg["rowlen"] == null) {
@@ -2472,16 +2476,24 @@ export function initLuckysheetConfig(clearjfundo = true) {
         .get(0)
         .getContext("2d");
 
-    for (let r = 0; r < d.length; r++) {
-        for (let c = 0; c < d[r].length; c++) {
+    let startRow = 0;
+    let endRow = d.length
+    let startColumn = 0
+    let endColumn = d[0] ? d[0].length : 0
+    if(range && range.row && range.column) {
+        startRow = range.row[0]
+        endRow = range.row[1] + 1
+        startColumn = range.column[0]
+        endColumn = range.column[1] + 1
+    }
+
+    console.log(startRow, endRow, startColumn, endColumn)
+
+    for (let r = startRow; r < endRow; r++) {
+        for (let c = startColumn; c < endColumn; c++) {
             let rowIndex = r;
 
             let matchRow = {};
-            let scrollLeft = $("#luckysheet-cell-main").scrollLeft(),
-                drawWidth = Store.luckysheetTableContentHW[0];
-            // let dataset_column_st = luckysheet_searcharrayX(Store.visibledatacolumn, scrollLeft);
-            // let dataset_column_ed = luckysheet_searcharrayX(Store.visibledatacolumn, scrollLeft + drawWidth);
-            // dataset_column_ed += dataset_column_ed - dataset_column_st;
             let dataset_column_st = 0
             let dataset_column_ed = d.length ? d[0].length - 1 : 0
             for (let s = 0; s < Store.luckysheet_select_save.length; s++) {

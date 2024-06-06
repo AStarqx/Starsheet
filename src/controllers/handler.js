@@ -71,6 +71,7 @@ import Store from "../store";
 import { createLuckyChart, hideAllNeedRangeShow } from "../expendPlugins/chart/plugin";
 import luckysheetformula from "../global/formula";
 import {createExportDialog,fetchAndDownloadXlsx} from "../expendPlugins/exportXlsx/plugin";
+import { refreshConfig } from "../global/api";
 
 //, columeflowset, rowflowset
 export default function luckysheetHandler() {
@@ -6134,6 +6135,12 @@ export default function luckysheetHandler() {
                 } else {
                     selection.pasteHandlerOfCopyPaste(Store.luckysheet_copy_save);
                 }
+                const range = Store.luckysheet_select_save && Store.luckysheet_select_save.length ?
+                                Store.luckysheet_select_save[0] : undefined
+                refreshConfig({ 
+                    range: range,
+                    clearjfundo: false
+                })
             } else if (txtdata.indexOf("luckysheet_copy_action_image") > -1) {
                 imageCtrl.pasteImgItem();
             } else {
@@ -6355,6 +6362,13 @@ export default function luckysheetHandler() {
                 } else {
                     txtdata = clipboardData.getData("text/plain");
                     selection.pasteHandler(txtdata);
+
+                    const range = Store.luckysheet_select_save && Store.luckysheet_select_save.length ?
+                                Store.luckysheet_select_save[0] : undefined
+                    refreshConfig({ 
+                        range: range,
+                        clearjfundo: false
+                    })
                 }
                 $("#luckysheet-copy-content").empty();
             }

@@ -3370,7 +3370,7 @@ export function refreshConfig(options = {}) {
     let {
         clearjfundo = true,
     } = {...options}
-    initLuckysheetConfig(clearjfundo)
+    initLuckysheetConfig(options)
 }
 
 /**

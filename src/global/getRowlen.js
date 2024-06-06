@@ -482,7 +482,7 @@ function getCellTextInfo(cell , ctx, option){
             txt = newCell.ct.s.map(item => item.v).join('')
             // newCell.ct = {}
         }
-        let reg = RegExp(/([A-Za-z]+|[\u4e00-\u9fa5]+|[^\w\s\d]+|\d+)/g)
+        let reg = RegExp(/([A-Za-z]+|[\u4e00-\u9fa5_]+|[^\w\s\d]+|\d+)/g)
         let arr = txt.match(reg)
         if(arr && arr.length > 1) {
             delete newCell.m

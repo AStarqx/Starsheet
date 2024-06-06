@@ -1338,7 +1338,7 @@ const luckysheetformula = {
             }
         }
 
-        let curv = Store.flowdata[r][c];
+        let curv = $.extend(true, {}, Store.flowdata[r][c])
 
         // Store old value for hook function
         const oldValue = JSON.stringify(curv);
@@ -1436,7 +1436,8 @@ const luckysheetformula = {
 
         let isRunExecFunction = true;
 
-        let d = editor.deepCopyFlowData(Store.flowdata);
+        // let d = editor.deepCopyFlowData(Store.flowdata);
+        let d = $.extend(true, [], Store.flowdata)
         let dynamicArrayItem = null; //动态数组
 
         if (getObjType(curv) == "object") {

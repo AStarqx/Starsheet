@@ -142,15 +142,17 @@ const conditionformat = {
             }
             if(conditionformat.definedFieldType !== 'default') {
                 const range = rangeNames.find(n => n.name === conditionformat.definedFieldName)
+                let index = $("#luckysheet-administerRule-dialog .chooseSheet option:selected").val();
                 if(range) {
                     range.name = rangeName
-                    Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["rangeNames"] = rangeNames;
+                    Store.luckysheetfile[index]["rangeNames"] = rangeNames;
                 }
-                const formatArr = _this.fileClone[getSheetIndex(Store.currentSheetIndex)]["luckysheet_conditionformat_save"]
+                const formatArr = _this.fileClone[index]["luckysheet_conditionformat_save"]
                 if(formatArr && formatArr.length) {
                     const currItem = formatArr.find(f => f.cellRangeName === conditionformat.definedFieldName)
+                    if(!currItem) return tooltip.info("定义字段不存在!", "");
                     currItem.cellRangeName = rangeName
-                    Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["luckysheet_conditionformat_save"] = formatArr;
+                    Store.luckysheetfile[index]["luckysheet_conditionformat_save"] = formatArr;
                 }
                 $("#luckysheet-definedFields-dialog").hide();
                 conditionformat.definedFieldType = 'default'
