@@ -13,7 +13,7 @@ import luckysheetformula from './formula';
 import cleargridelement from './cleargridelement';
 import { genarate, update } from './format';
 import { setAccuracy,setcellvalue } from "./setdata";
-import { orderbydata } from "./sort";
+import { orderbydata, sortColumnSeletion } from "./sort";
 import { rowlenByRange } from "./getRowlen";
 import { getdatabyselection, getcellvalue } from "./getdata";
 import { luckysheetrefreshgrid, jfrefreshgrid, jfrefreshgrid_rhcw } from "./refresh";
@@ -281,7 +281,8 @@ export function setCellValue(row, column, value, options = {}) {
         }
         // Hook function
         if (triggerUpdated) {
-            method.createHookFunction("cellUpdated", row, column, oldValueObj, Store.flowdata[row][column], isRefresh);
+            let cell = Store.flowdata[row] && Store.flowdata[row][column]
+            method.createHookFunction("cellUpdated", row, column, oldValueObj, cell, isRefresh);
         }
 
     }, 0);
@@ -1852,6 +1853,13 @@ export function setColumnWidth(columnInfo, options = {}) {
     if (success && typeof success === 'function') {
         success()
     }
+}
+
+/**
+ * 排序
+ */
+export function sortColumn(orderbyindex = 0, isAsc = true) {
+    sortColumnSeletion(orderbyindex, isAsc)
 }
 
 

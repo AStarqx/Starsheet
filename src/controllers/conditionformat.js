@@ -143,6 +143,10 @@ const conditionformat = {
             if(conditionformat.definedFieldType !== 'default') {
                 const range = rangeNames.find(n => n.name === conditionformat.definedFieldName)
                 let index = $("#luckysheet-administerRule-dialog .chooseSheet option:selected").val();
+                let sheetIndex = getSheetIndex(index)
+                if(sheetIndex !== undefined && sheetIndex !== null) {
+                    index = sheetIndex
+                }
                 if(range) {
                     range.name = rangeName
                     Store.luckysheetfile[index]["rangeNames"] = rangeNames;

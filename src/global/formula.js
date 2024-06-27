@@ -14,7 +14,7 @@ import { isdatetime, isdatatype } from "./datecontroll";
 import { getCellTextSplitArr, getCellTextInfo } from "../global/getRowlen";
 import { getcellvalue, getcellFormula, getInlineStringNoStyle, getOrigincell } from "./getdata";
 import { setcellvalue } from "./setdata";
-import { genarate, update, valueShowEs } from "./format";
+import { datenum_local, genarate, update, valueShowEs } from "./format";
 import editor from "./editor";
 import tooltip from "./tooltip";
 import { rowLocation, colLocation, colLocationByIndex, mouseposition, rowLocationByIndex } from "./location";
@@ -39,7 +39,8 @@ import Store from "../store";
 import locale from "../locale/locale";
 import json from "./json";
 import method from "./method";
-import { getSheetData } from "./api";
+import { getSheetData, refreshFormula } from "./api";
+import { initLuckysheetConfig } from "../controllers/rowColumnOperation";
 
 const luckysheetformula = {
     error: {
@@ -1433,7 +1434,6 @@ const luckysheetformula = {
         }
 
         window.luckysheet_getcelldata_cache = null;
-
         let isRunExecFunction = true;
 
         // let d = editor.deepCopyFlowData(Store.flowdata);
@@ -1558,6 +1558,19 @@ const luckysheetformula = {
                     // if(gd!=null){
                     //     curv.v = gd.v;
                     // }
+
+                    const dateFormatList = ['hh:mm AM/PM', 'hh:mm', 'yyyy-MM-dd hh:mm AM/PM', 'yyyy-MM-dd hh:mm', 'yyyy-MM-dd',
+                    'yyyy/MM/dd', 'yyyy"年"M"月"d"日"', 'yyyy"年"M"月"', 'MM-dd', 'M-d', 'M"月"d"日"', 'h:mm:ss', 'h:mm', 'AM/PM hh:mm', 'AM/PM h:mm',
+                    'AM/PM h:mm:ss', 'MM-dd AM/PM hh:mm']
+                    if(curv && curv.ct && curv.ct.fa && dateFormatList.includes(curv.ct.fa)) {
+                        if(value) {
+                            value = value.toString().replaceAll('年', '-').replaceAll('月', '-').replaceAll('日', '')
+                        }
+                        curv.m = value
+                        value = datenum_local(new Date(value))
+                        delete curv.qp
+                    }
+
                     curv.v = value;
                     if(!value || value == '') {
                         delete curv.m
@@ -1576,6 +1589,7 @@ const luckysheetformula = {
                             curv.ct.t = "n";
                         }
                     }
+
                 }
             }
             value = curv;
@@ -1679,14 +1693,14 @@ const luckysheetformula = {
                 //     currentRowLen = cfg["rowlen"][r];
                 // }
 
-                let cellHeight = rowLocationByIndex(r)[1] - rowLocationByIndex(r)[0] - 2;
-                let cellWidth = colLocationByIndex(c)[1] - colLocationByIndex(c)[0] - 2;
+                // let cellHeight = rowLocationByIndex(r)[1] - rowLocationByIndex(r)[0] - 2;
+                // let cellWidth = colLocationByIndex(c)[1] - colLocationByIndex(c)[0] - 2;
 
                 let textInfo = getCellTextInfo(d[r][c], canvas, {
                     r: r,
                     c: c,
-                    cellHeight: cellHeight,
-                    cellWidth: cellWidth,
+                    // cellHeight: cellHeight,
+                    // cellWidth: cellWidth,
                 });
 
                 let currentRowLen = defaultrowlen;
@@ -1747,6 +1761,9 @@ const luckysheetformula = {
 
         if (isRefresh) {
             jfrefreshgrid(d, [{ row: [r, r], column: [c, c] }], allParam, isRunExecFunction);
+
+            refreshFormula()
+            initLuckysheetConfig({ range: { row: [r, r], column: [c, c] }, clearjfundo: false })
             // Store.luckysheetCellUpdate.length = 0; //clear array
             _this.execFunctionGlobalData = null; //销毁
         } else {
@@ -2363,11 +2380,11 @@ const luckysheetformula = {
 
         if (type == "del") {
             if (rc == "row") {
-                if (r1 >= stindex && r2 <= stindex + step - 1) {
-                    return _this.error.r;
-                }
+                // if (r1 >= stindex && r2 <= stindex + step - 1) {
+                //     return _this.error.r;
+                // }
 
-                if (r1 > stindex + step - 1) {
+                if (r1 >= stindex + step - 1) {
                     r1 -= step;
                 } else if (r1 >= stindex) {
                     r1 = stindex;

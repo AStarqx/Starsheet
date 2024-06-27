@@ -6,7 +6,7 @@ import {
     replaceHtml,
     mouseclickposition,
 } from '../utils/util';
-import { getSheetIndex } from '../methods/get';
+import { getSheetIndex, getluckysheetfile } from '../methods/get';
 import { isEditMode } from '../global/validate';
 import formula from '../global/formula';
 import cleargridelement from '../global/cleargridelement';
@@ -16,7 +16,7 @@ import {selectTextDom, luckysheetRangeLast } from '../global/cursorPos';
 import locale from '../locale/locale';
 import Store from '../store';
 import luckysheetConfigsetting from './luckysheetConfigsetting';
-import {pagerInit} from '../global/api'
+import {pagerInit, refreshFormula} from '../global/api'
 import method from '../global/method';
 import luckysheetsizeauto from './resize';
 import {openProtectionModal} from "./protection";
@@ -348,6 +348,16 @@ export function initialSheetBar(){
         server.saveParam("all", Store.currentSheetIndex, txt, { "k": "name" });
 
         $t.attr("contenteditable", "false").removeClass("luckysheet-mousedown-cancel");
+
+        // 更新表格中所有引用sheet名称
+        let sheets = getluckysheetfile()
+        if(sheets && sheets.length) {
+            let sheetsStr = JSON.stringify(sheets)
+            sheetsStr = sheetsStr.replaceAll(`${oldtxt}!`, `${txt}!`)
+            sheetsStr = sheetsStr.replaceAll(`'${oldtxt}'!`, `'${txt}'!`)
+            Store.luckysheetfile = JSON.parse(sheetsStr)
+            refreshFormula()
+        }
 
         if (Store.clearjfundo) {
             let redo = {};

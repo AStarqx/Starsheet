@@ -48,7 +48,6 @@ export function updateInlineStringFormat(cell, attr, value, $input){
         $textEditor = $(cac).closest("#luckysheet-rich-text-editor");
     }
     let $functionbox = $(cac).closest("#luckysheet-functionbox-cell");
-
     if($textEditor.length==0 && $functionbox.length==0 && Store.inlineStringEditRange!=null){
         range = Store.inlineStringEditRange;
         cac = range.commonAncestorContainer;

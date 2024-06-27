@@ -1295,7 +1295,11 @@ const sheetmanage = {
                 Store.currentSheetIndex,
         ).hide();
 
-        if($(`#image-tip-${Store.currentImgId}`)) $(`#image-tip-${Store.currentImgId}`).remove()
+        if($(`#image-tip-${Store.currentImgId}`)) {
+            $(`#image-tip-${Store.currentImgId}`).remove()
+        } 
+        $(`[id*='image-tip-']`).remove()
+        Store.currentImgId = null
 
         $("#luckysheet-filter-selected-sheet" + index + ", #luckysheet-filter-options-sheet" + index).show();
 

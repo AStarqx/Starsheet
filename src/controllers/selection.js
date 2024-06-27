@@ -1302,25 +1302,43 @@ const selection = {
                         }
                     }
                     if (originCell instanceof Object) {
-                        let mask = genarate(value);
-                        originCell.v = mask[2];
-                        if (originCell.ct != null && originCell.ct.fa != null) {
-                            originCell.m = update(originCell["ct"]["fa"], mask[2]);
-                        } else {
-                            originCell.m = mask[0];
+                        if(value && value.toString().substr(0, 1) === '=') {
+                            let v = formula.execfunction(value, r, c);
+                            originCell.f = v[2]
+                            originCell.v = v[1]
                         }
+                        else {
+                            let mask = genarate(value);
+                            originCell.v = mask[2];
+                            if (originCell.ct != null && originCell.ct.fa != null) {
+                                originCell.m = update(originCell["ct"]["fa"], mask[2]);
+                            } else {
+                                originCell.m = mask[0];
+                            }
 
-                        if (originCell.f != null && originCell.f.length > 0) {
-                            originCell.f = "";
-                            formula.delFunctionGroup(r + curR, c + curC, Store.currentSheetIndex);
+                            if (originCell.f != null && originCell.f.length > 0) {
+                                originCell.f = "";
+                                formula.delFunctionGroup(r + curR, c + curC, Store.currentSheetIndex);
+                            }
                         }
+                        
                     } else {
-                        let cell = {};
-                        let mask = genarate(value);
-                        cell.v = mask[2];
-                        cell.ct = mask[1];
-                        cell.m = mask[0];
-
+                        let cell = {}
+                        if(value && value.toString().substr(0, 1) === '=') {
+                            if (cell.ct != null) {
+                                cell.ct.fa = "General";
+                                cell.ct.t = "n";
+                            }
+                            let v = formula.execfunction(value, r, c);
+                            cell.f = v[2]
+                            cell.v = v[1]
+                        }
+                        else {
+                            let mask = genarate(value);
+                            cell.v = mask[2];
+                            cell.ct = mask[1];
+                            cell.m = mask[0];
+                        }
                         x[c + curC] = cell;
                     }
                 }
@@ -1374,7 +1392,7 @@ const selection = {
         );
 
         let copyh = copyData.length,
-            copyc = copyData[0].length;
+            copyc = copyData[0] ? copyData[0].length : 0
 
         //应用范围
         let last = Store.luckysheet_select_save[Store.luckysheet_select_save.length - 1];
@@ -1899,7 +1917,7 @@ const selection = {
         }
 
         let copyh = copyData.length,
-            copyc = copyData[0].length;
+            copyc = copyData[0] ? copyData[0].length : 0
 
         //应用范围
         let last = Store.luckysheet_select_save[Store.luckysheet_select_save.length - 1];
@@ -2217,7 +2235,7 @@ const selection = {
             maxc = last["column"][1]; //应用范围首尾列
 
         let copyh = copyData.length,
-            copyc = copyData[0].length;
+            copyc = copyData[0] ? copyData[0].length : 0
 
         if (minh == maxh && minc == maxc) {
             //应用范围是一个单元格，自动增加到复制范围大小 (若自动增加的范围包含部分合并单元格，则提示)

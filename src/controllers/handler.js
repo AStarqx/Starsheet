@@ -589,7 +589,6 @@ export default function luckysheetHandler() {
                                 let textRange = document.selection.createRange();
                                 formula.functionRangeIndex = textRange;
                             }
-
                             /* 在显示前重新 + 右侧的圆括号) */
                             $("#luckysheet-rich-text-editor").html(vText + ")");
 
@@ -6137,6 +6136,14 @@ export default function luckysheetHandler() {
                 }
                 const range = Store.luckysheet_select_save && Store.luckysheet_select_save.length ?
                                 Store.luckysheet_select_save[0] : undefined
+                if(range) {
+                    let d = editor.deepCopyFlowData(Store.flowdata);
+                    for (let r = range.row[0]; r <= range.row[1]; r++) {
+                        for (let c = range.column[0]; c <= range.column[1]; c++) {
+                            method.createHookFunction("cellUpdated", r, c, {}, d[r][c], false);
+                        }
+                    }
+                }
                 refreshConfig({ 
                     range: range,
                     clearjfundo: false
@@ -6365,6 +6372,14 @@ export default function luckysheetHandler() {
 
                     const range = Store.luckysheet_select_save && Store.luckysheet_select_save.length ?
                                 Store.luckysheet_select_save[0] : undefined
+                    if(range) {
+                        let d = editor.deepCopyFlowData(Store.flowdata);
+                        for (let r = range.row[0]; r <= range.row[1]; r++) {
+                            for (let c = range.column[0]; c <= range.column[1]; c++) {
+                                method.createHookFunction("cellUpdated", r, c, {}, d[r][c], false);
+                            }
+                        }
+                    }
                     refreshConfig({ 
                         range: range,
                         clearjfundo: false

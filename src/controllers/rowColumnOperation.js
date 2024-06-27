@@ -2487,8 +2487,6 @@ export function initLuckysheetConfig(options) {
         endColumn = range.column[1] + 1
     }
 
-    console.log(startRow, endRow, startColumn, endColumn)
-
     for (let r = startRow; r < endRow; r++) {
         for (let c = startColumn; c < endColumn; c++) {
             let rowIndex = r;

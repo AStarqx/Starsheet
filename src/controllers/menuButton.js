@@ -51,7 +51,7 @@ import {
 import { openProtectionModal, checkProtectionFormatCells, checkProtectionNotEnable } from "./protection";
 import Store from "../store";
 import locale from "../locale/locale";
-import { checkTheStatusOfTheSelectedCells, frozenFirstRow, frozenFirstColumn } from "../global/api";
+import { checkTheStatusOfTheSelectedCells, frozenFirstRow, frozenFirstColumn, refreshFormula } from "../global/api";
 
 const menuButton = {
     menu:
@@ -3884,18 +3884,21 @@ const menuButton = {
                     if (foucsStatus != "@" && isRealNum(value)) {
                         value = parseFloat(value);
                     }
-
-                    const dateFormatList = ['hh:mm AM/PM', 'hh:mm', 'yyyy-MM-dd hh:mm AM/PM', 'yyyy-MM-dd hh:mm', 'yyyy-MM-dd',
-                    'yyyy/MM/dd', 'yyyy"年"M"月"d"日"', 'yyyy"年"M"月"', 'MM-dd', 'M-d', 'M"月"d"日"', 'h:mm:ss', 'h:mm', 'AM/PM hh:mm', 'AM/PM h:mm',
-                    'AM/PM h:mm:ss', 'MM-dd AM/PM hh:mm']
-                    if(dateFormatList.includes(foucsStatus)) {
-                        if(!isRealNum(value)) {
-                            value = datenum_local(new Date(value))
+                    if(value !== undefined && value !== null && value !== '') {
+                        const dateFormatList = ['hh:mm AM/PM', 'hh:mm', 'yyyy-MM-dd hh:mm AM/PM', 'yyyy-MM-dd hh:mm', 'yyyy-MM-dd',
+                        'yyyy/MM/dd', 'yyyy"年"M"月"d"日"', 'yyyy"年"M"月"', 'MM-dd', 'M-d', 'M"月"d"日"', 'h:mm:ss', 'h:mm', 'AM/PM hh:mm', 'AM/PM h:mm',
+                        'AM/PM h:mm:ss', 'MM-dd AM/PM hh:mm']
+                        if(dateFormatList.includes(foucsStatus)) {
+                            if(!isRealNum(value)) {
+                                if(value) {
+                                    value = value.replaceAll('年', '-').replaceAll('月', '-').replaceAll('日', '')
+                                }
+                                value = datenum_local(new Date(value))
+                            }
                         }
                     }
                     
                     let type = "n";
-                    
                     console.log('after setting format:', foucsStatus, value)
                     
                     let mask = update(foucsStatus, value);
@@ -3939,6 +3942,7 @@ const menuButton = {
                         }
                         d[r][c]["ct"]["fa"] = foucsStatus;
                         d[r][c]["ct"]["t"] = type;
+                        d[r][c]["v"] = value
                     } else {
                         d[r][c] = { ct: { fa: foucsStatus, t: type }, v: value, m: mask };
                     }
@@ -4048,7 +4052,6 @@ const menuButton = {
             let col_st = Store.luckysheet_select_save[s]["column"][0],
                 col_ed = Store.luckysheet_select_save[s]["column"][1];
             this.updateFormatCell(d, attr, foucsStatus, row_st, row_ed, col_st, col_ed);
-
             if (attr == "tb" || attr == "tr" || attr == "fs") {
                 cfg = rowlenByRange(d, row_st, row_ed, cfg);
             }
@@ -4063,6 +4066,8 @@ const menuButton = {
         }
 
         jfrefreshgrid(d, Store.luckysheet_select_save, allParam, false);
+
+        refreshFormula()
     },
     updateFormatV2: function(d, attr, foucsStatus, r, c) {
         let _this = this;

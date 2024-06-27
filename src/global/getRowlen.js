@@ -605,6 +605,9 @@ function getCellTextInfo(cell , ctx, option){
                 'AM/PM h:mm:ss', 'MM-dd AM/PM hh:mm']
                 if(dateFormatList.includes(cell.ct.fa)) {
                     if(!isRealNum(value)) {
+                        if(value) {
+                            value = value.replaceAll('年', '-').replaceAll('月', '-').replaceAll('日', '')
+                        }
                         value = datenum_local(new Date(value))
                     }
                 }

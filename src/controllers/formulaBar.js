@@ -104,13 +104,20 @@ export function formulaBarInitial(){
         else if (!((kcode >= 112 && kcode <= 123) || kcode <= 46 || kcode == 144 || kcode == 108 || event.ctrlKey || event.altKey || (event.shiftKey && (kcode == 37 || kcode == 38 || kcode == 39 || kcode == 40))) || kcode == 8 || kcode == 32 || kcode == 46 || (event.ctrlKey && kcode == 86)) {
             formula.functionInputHanddler($("#luckysheet-rich-text-editor"), $("#luckysheet-functionbox-cell"), kcode);
         }
+
+        if (parseInt($("#luckysheet-input-box").css("top")) > 0) {
+            // $("#luckysheet-rich-text-editor").html()
+            
+            setTimeout(() => {
+                $("#luckysheet-rich-text-editor").html($("#luckysheet-functionbox-cell").html())
+            }, 10);
+        }
     }).click(function () {
         if(isEditMode()){//此模式下禁用公式栏
             return;
         }
-
         formula.rangeHightlightselected($("#luckysheet-functionbox-cell"));
-    });
+    })
 
     //公式栏 取消（X）按钮
     $("#luckysheet-wa-functionbox-cancel").click(function () {

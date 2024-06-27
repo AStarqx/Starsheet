@@ -254,6 +254,14 @@ function setcellvalue(r, c, d, v) {
                     cell.m = mask[0].toString();
                 }
             } else {
+                if(!isRealNum(vupdate)) {
+                    const regex = /^\d{4}年\d{1,2}月\d{1,2}日$/;
+                    if(vupdate && regex.test(vupdate)) {
+                        vupdate = vupdate.replaceAll('年', '-').replaceAll('月', '-').replaceAll('日', '')
+                        vupdate = datenum_local(new Date(vupdate))
+                    }
+                }
+
                 let mask = genarate(vupdate);
 
                 cell.m = mask[0].toString();
