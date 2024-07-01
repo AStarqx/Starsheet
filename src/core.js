@@ -37,6 +37,7 @@ import { initListener } from "./controllers/listener";
 import { hideloading, showloading } from "./global/loading.js";
 import { luckysheetextendData } from "./global/extend.js";
 import { initChat } from './demoData/chat.js'
+import { initialPasteOperation } from "./controllers/paste.js";
 
 let luckysheet = {};
 
@@ -194,6 +195,7 @@ function initialWorkBook() {
     initialPrintAreaHandler();
     initialFieldsHandler();
     initialMatrixOperation(); //Right click matrix initialization
+    initialPasteOperation() // 右键菜单 选择性粘贴
     initialSheetBar(); //bottom sheet bar initialization
     formulaBarInitial(); //top formula bar initialization
     rowColumnOperationInitial(); //row and coloumn operate initialization

@@ -2813,7 +2813,9 @@ const luckysheetformula = {
                 range +
                 "</span>";
             setTimeout(() => {
-                $("#luckysheet-rich-text-editor").html('<span dir="auto" class="luckysheet-formula-text-color">=</span>' + function_str);
+                // console.log($("#luckysheet-functionbox-cell").html())
+                // $("#luckysheet-rich-text-editor").html('<span dir="auto" class="luckysheet-formula-text-color">=</span>' + function_str);
+                $("#luckysheet-rich-text-editor").html($("#luckysheet-functionbox-cell").html());
             }, 30);
         }
     },

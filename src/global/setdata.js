@@ -212,6 +212,7 @@ function setcellvalue(r, c, d, v) {
             }
 
             if(['0%', '#0%', '0.00%', '#0.00%'].includes(cell.ct.fa)) {
+                if(cell.m) vupdateStr = cell.m
                 if(vupdate != undefined && vupdate != null && !Number.isNaN(Number(vupdate)) && vupdateStr.substr(-1) != '%') {
                     if(parseInt($("#luckysheet-input-box").css("top")) > 0) {
                         vupdate = vupdate / 100

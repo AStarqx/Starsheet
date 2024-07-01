@@ -6470,7 +6470,7 @@ export default function luckysheetHandler() {
     });
 }
 
-function getPasteCell($dom) {
+export function getPasteCell($dom) {
     const locale_fontjson = locale().fontjson;
     let cell = {};
     let txt = $dom.text();

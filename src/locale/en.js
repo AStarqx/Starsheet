@@ -6623,6 +6623,7 @@ export default {
     rightclick: {
         copy: "Copy",
         copyAs: "Copy as",
+        selectivePaste: "Selective Paste",
         paste: "Paste",
         insert: "Insert",
         delete: "Delete",

@@ -466,6 +466,15 @@ function rightclickHTML() {
                 };">
                     <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${rightclick.paste}</div>
                 </div>
+                <div id="luckysheetselectivepaste" class="luckysheet-cols-menuitem luckysheet-cols-submenu luckysheet-mousedown-cancel"  style="display:${
+                    config.selectivePaste ? "block" : "none"
+                };">
+                    <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">
+                        ${
+                            rightclick.selectivePaste
+                        }<span class="luckysheet-submenu-arrow iconfont-luckysheet luckysheet-iconfont-youjiantou" style="user-select: none;"></span>
+                    </div>
+                </div>
                 <div id="luckysheet-cols-rows-handleincell">
                     <div class="luckysheet-menuseparator luckysheet-mousedown-cancel" role="separator" style="display:${
                         handleincellMenuseparator ? "block" : "none"
@@ -702,7 +711,18 @@ function rightclickHTML() {
                     }</div>
                 </div>
             </div>
-            
+            <div id="luckysheetselectivepaste_sub" class="luckysheet-cols-menu luckysheet-rightgclick-menu luckysheet-rightgclick-menu-sub luckysheet-mousedown-cancel">
+                <div id="luckysheet-copy-paste-format" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel">
+                    <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
+                        rightclick.reservedSourceFormat
+                    }</div>
+                </div>
+                <div id="luckysheet-copy-paste-value" class="luckysheet-cols-menuitem luckysheet-mousedown-cancel">
+                    <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">${
+                        rightclick.pasteValueOnly
+                    }</div>
+                </div>
+            </div>
             <!-- Revision: modeled on google sheet
             
             <div id="luckysheetColsRowsHandleAdd_sub" class="luckysheet-cols-menu luckysheet-rightgclick-menu luckysheet-rightgclick-menu-sub luckysheet-mousedown-cancel">
@@ -1549,6 +1569,7 @@ function customCellRightClickConfig() {
         copy: true, // copy
         copyAs: true, // copy as
         paste: true, // paste
+        selectivePaste: true,
         insertRow: true, // insert row
         insertColumn: true, // insert column
         deleteRow: true, // delete the selected row

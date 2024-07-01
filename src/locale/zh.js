@@ -6606,6 +6606,7 @@ export default {
         copy: "复制",
         copyAs: "复制为",
         paste: "粘贴",
+        selectivePaste: "选择性粘贴",
         insert: "插入",
         delete: "删除",
         deleteCell: "删除单元格",
@@ -6664,6 +6665,8 @@ export default {
         byCol: "按列",
         generateNewMatrix: "生成新矩阵",
         more: "更多",
+        reservedSourceFormat: "保留原格式",
+        pasteValueOnly: "仅粘贴值"
     },
     comment: {
         insert: "新建批注",

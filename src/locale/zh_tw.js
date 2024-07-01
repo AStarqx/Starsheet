@@ -6318,6 +6318,7 @@ export default {
         copy             : '複製',
         copyAs           : '複製為',
         paste            : '粘貼',
+        selectivePaste   : '選择性粘貼',
         insert           : '插入',
         delete           : '删除',
         deleteCell       : '删除儲存格',
