@@ -1,4 +1,4 @@
-import { getObjType } from "../utils/util";
+import { chatatABC, getObjType } from "../utils/util";
 import { isRealNull, isRealNum, valueIsError } from "./validate";
 import { datenum_local, genarate, update } from "./format";
 import server from "../controllers/server";
@@ -78,7 +78,8 @@ function setcellvalue(r, c, d, v) {
             }
 
             if(v.v === '') {
-                delete cell.ct
+                // delete cell.ct
+                delete cell.m
             }
 
             for (const key in v) {
@@ -146,11 +147,15 @@ function setcellvalue(r, c, d, v) {
         }
         else{
             cell.v = vupdate
-            let mask = update(cell.ct.fa, vupdate);
+            
+            if(vupdate !== '' && vupdate !== undefined && vupdate !== null) {
+                let mask = update(cell.ct.fa, vupdate);
 
-            if (mask !== vupdate) {
-                cell.m = mask.toString();
+                if (mask !== vupdate) {
+                    cell.m = mask.toString();
+                }
             }
+            
         }
     } else if (valueIsError(vupdate)) {
         cell.m = vupdateStr;
@@ -213,15 +218,22 @@ function setcellvalue(r, c, d, v) {
 
             if(['0%', '#0%', '0.00%', '#0.00%'].includes(cell.ct.fa)) {
                 if(cell.m) vupdateStr = cell.m
-                if(vupdate != undefined && vupdate != null && !Number.isNaN(Number(vupdate)) && vupdateStr.substr(-1) != '%') {
+                if (parseInt($("#luckysheet-input-box").css("top")) > 0) {
+                    vupdateStr = $("#luckysheet-input-box").text()
+                }
+                if(vupdate !== '' && vupdate != undefined && vupdate != null && !Number.isNaN(Number(vupdate)) && vupdateStr.substr(-1) != '%') {
                     if(parseInt($("#luckysheet-input-box").css("top")) > 0) {
-                        vupdate = vupdate / 100
+                        let currCellIndex = chatatABC(c) + (r + 1)
+                        if(currCellIndex === $('#luckysheet-input-box-index').text()) {
+                            vupdate = vupdate / 100
+                        }
                     }
                 }
             }
+            
             let mask = update(cell.ct.fa, vupdate);
 
-            if (mask === vupdate) {
+            if (mask !== '' && mask !== null && mask !== undefined && mask === vupdate) {
                 //若原来单元格格式 应用不了 要更新的值，则获取更新值的 格式
                 mask = genarate(vupdate);
 

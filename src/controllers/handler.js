@@ -6359,6 +6359,21 @@ export default function luckysheetHandler() {
                     Store.luckysheet_selection_range = [];
                     selection.pasteHandler(data, borderInfo);
                     $("#luckysheet-copy-content").empty();
+
+                    const range = Store.luckysheet_select_save && Store.luckysheet_select_save.length ?
+                                Store.luckysheet_select_save[0] : undefined
+                    if(range) {
+                        let d = editor.deepCopyFlowData(Store.flowdata);
+                        for (let r = range.row[0]; r <= range.row[1]; r++) {
+                            for (let c = range.column[0]; c <= range.column[1]; c++) {
+                                method.createHookFunction("cellUpdated", r, c, {}, d[r][c], false);
+                            }
+                        }
+                    }
+                    refreshConfig({ 
+                        range: range,
+                        clearjfundo: false
+                    })
                 }
 
                 //复制的是图片
@@ -6549,6 +6564,15 @@ export function getPasteCell($dom) {
         cell.vt = 2;
     }
 
+    let tb = $dom.css("white-space")
+    if(tb !== '' && tb !== undefined && tb !== null) {
+        if(tb === 'nowrap') {
+            cell.tb = '1'
+        }
+        else {
+            cell.tb = '2'
+        }
+    }
     return cell
 }
 

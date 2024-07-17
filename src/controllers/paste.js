@@ -76,6 +76,8 @@ export function initialPasteOperation(){
                 txtdata = await getClipboardHtml()
             }
 
+            console.log(txtdata)
+
             //如果标示是qksheet复制的内容，判断剪贴板内容是否是当前页面复制的内容
             let isEqual = true;
             if (
@@ -208,7 +210,7 @@ export function initialPasteOperation(){
             } else if (txtdata.indexOf("luckysheet_copy_action_image") > -1) {
                 imageCtrl.pasteImgItem();
             } else {
-                const files = await getClipboardImageAsFile()
+                // const files = await getClipboardImageAsFile()
                 if (txtdata.indexOf("table") > -1) {
                     $("#luckysheet-copy-content").html(txtdata);
 
@@ -240,7 +242,7 @@ export function initialPasteOperation(){
                             let c = 0;
                             $tr.find(cellElements).each(function() {
                                 let $td = $(this);
-                                let txt = $td.text()
+                                let txt = typeof($td) === 'string' ? $td : $td.text()
                                 let cell = getPasteCell($td)
 
                                 if($td.children() && $td.children().length > 1) {
@@ -463,17 +465,24 @@ export function initialPasteOperation(){
 
     async function getClipboardHtml() {
         try {
-          const clipboardItems = await navigator.clipboard.read();
+          const clipboardItems = await window.parent.navigator.clipboard.read();
+          console.log(clipboardItems)
+          let text = ''
           for (let i = 0; i < clipboardItems.length; i++) {
             const clipboardItem = clipboardItems[i];
             if (clipboardItem.types.includes('text/html')) {
               // 处理HTML文件
               const htmlBlob = await clipboardItem.getType('text/html');
               const htmlText = await htmlBlob.text();
-              return htmlText
+              text += htmlText
             }
-            return ''
+            if (clipboardItem.types.includes('text/plain')) {
+                const TextBlob = await clipboardItem.getType('text/plain');
+                const htmlText2 = await TextBlob.text();
+                console.log(htmlText2)
+            }
           }
+          return text
         } catch (err) {
           console.error('无法访问剪贴板', err);
           return ''
@@ -482,7 +491,7 @@ export function initialPasteOperation(){
 
     async function getClipboardContent() {
         try {
-          const text = await navigator.clipboard.readText();
+          const text = await window.parent.navigator.clipboard.readText();
           return text
         } catch (err) {
           console.error('无法访问剪贴板', err);

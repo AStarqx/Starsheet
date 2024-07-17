@@ -1335,6 +1335,7 @@ const sheetmanage = {
             _this.showSheet();
 
             setTimeout(function() {
+                // todo: 性能瓶颈, 切换sheet时刷新公式导致卡顿
                 formula.execFunctionGroupForce(true);
                 luckysheetrefreshgrid();
                 server.saveParam("shs", null, Store.currentSheetIndex);

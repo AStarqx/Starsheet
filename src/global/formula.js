@@ -1572,10 +1572,10 @@ const luckysheetformula = {
                     }
 
                     curv.v = value;
-                    if(!value || value == '') {
+                    if(value == '' || value === undefined || value === null) {
                         delete curv.m
-                        delete curv.ct
-                        delete d[r][c]['ct']
+                        // delete curv.ct
+                        // delete d[r][c]['ct']
                     }
 
                     delete curv.f;
