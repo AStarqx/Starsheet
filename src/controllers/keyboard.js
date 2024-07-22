@@ -280,7 +280,7 @@ export function keyboardInitial(){
 
         const cellRightClickConfig = luckysheetConfigsetting.cellRightClickConfig;
 
-        if ($("#luckysheet-modal-dialog-mask").is(":visible") || $(event.target).hasClass("luckysheet-mousedown-cancel") || $(event.target).hasClass("sp-input") || (parseInt($("#luckysheet-input-box").css("top")) > 0 && $(event.target).closest(".luckysheet-input-box").length > 0 && kcode != keycode.ENTER && kcode != keycode.TAB && kcode != keycode.UP && kcode != keycode.DOWN && kcode != keycode.LEFT && kcode != keycode.RIGHT)) {
+        if ($("#luckysheet-modal-dialog-mask").is(":visible") || $(event.target).hasClass("luckysheet-mousedown-cancel") || $(event.target).hasClass("sp-input") || (parseInt($("#luckysheet-input-box").css("top")) > 0 && $(event.target).closest(".luckysheet-input-box").length > 0 && kcode != keycode.ESC && kcode != keycode.ENTER && kcode != keycode.TAB && kcode != keycode.UP && kcode != keycode.DOWN && kcode != keycode.LEFT && kcode != keycode.RIGHT)) {
             let anchor = $(window.getSelection().anchorNode);
             
             if(anchor.parent().is("#luckysheet-helpbox-cell") || anchor.is("#luckysheet-helpbox-cell")){
@@ -453,7 +453,24 @@ export function keyboardInitial(){
                         formula.functionInputHanddler($("#luckysheet-functionbox-cell"), $("#luckysheet-rich-text-editor"), kcode);
                     }
                 }
-                else if (kcode == 18) {//Ctrl + Alt
+                // else if (kcode == 18) {//Ctrl + Alt
+                //     const cellRightClickConfig = luckysheetConfigsetting.cellRightClickConfig;
+                //     const rowIndex = Store.luckysheet_select_save[0].row[0];
+                //     const columnIndex = Store.luckysheet_select_save[0].column[0];
+                //     if (cellRightClickConfig.customs && cellRightClickConfig.customs.filter(item => item.keyCode && item.keyCode === 18).length) {
+                //         try {
+                //             const rightclick = cellRightClickConfig.customs.find(item => item.keyCode && item.keyCode === 18)
+                //             rightclick.onClick(
+                //                 undefined,
+                //                 event,
+                //                 { rowIndex, columnIndex },
+                //             );
+                //         } catch (e) {
+                //             console.error("custom click error", e);
+                //         }
+                //     }
+                // }
+                else if (kcode == 81) {//Ctrl + Q
                     const cellRightClickConfig = luckysheetConfigsetting.cellRightClickConfig;
                     const rowIndex = Store.luckysheet_select_save[0].row[0];
                     const columnIndex = Store.luckysheet_select_save[0].column[0];

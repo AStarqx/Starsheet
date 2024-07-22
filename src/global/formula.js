@@ -1764,7 +1764,7 @@ const luckysheetformula = {
 
             refreshFormula()
 
-            if(d[r] && d[r][c] && d[r][c]['tb'] === '2') {
+            if(d[r] && d[r][c] && d[r][c]['tb'] === '2' && Store.isRefreshConfig) {
                 initLuckysheetConfig({ range: { row: [r, r], column: [c, c] }, clearjfundo: false })
             }
             // Store.luckysheetCellUpdate.length = 0; //clear array
