@@ -2560,6 +2560,7 @@ export function initLuckysheetConfig(options) {
                             continue;
                         }
                         let rows = []
+                        let mergeRows = []
                         for (let c = dataset_column_st; c <= dataset_column_ed; c++) {
                             if(cfg["colhidden"][c] != null) {
                                 continue
@@ -2571,6 +2572,7 @@ export function initLuckysheetConfig(options) {
                                 continue;
                             }
                             if(cell.mc && cell.mc.rs && cell.mc.rs > 1) {
+                                if(!mergeRows.includes(r)) mergeRows.push(r)
                                 continue;
                             }
                             let cellHeight = rowLocationByIndex(r)[1] - rowLocationByIndex(r)[0] - 2;
@@ -2603,6 +2605,12 @@ export function initLuckysheetConfig(options) {
                         }
                         if(rowlen < Store.defaultrowlen) {
                             rowlen = Store.defaultrowlen
+                        }
+
+                        if(mergeRows.length) {
+                            mergeRows.forEach(row => {
+                                rowlen = cfg["rowlen"][row]
+                            })
                         }
                         cfg["rowlen"][r] = rowlen;
                         if (cfg["customHeight"]) {

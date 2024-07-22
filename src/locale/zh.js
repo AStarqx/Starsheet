@@ -6035,8 +6035,8 @@ export default {
         },
     },
     toolbar: {
-        undo: "撤销",
-        redo: "重做",
+        undo: "撤销（Ctrl+Z）",
+        redo: "重做（Ctrl+Y）",
         paintFormat: "格式刷",
         currencyFormat: "货币格式",
         percentageFormat: "百分比格式",

@@ -289,7 +289,7 @@ function luckysheetextendtable(type, index, value, direction, sheetIndex, clearj
 
         let f_r1 = printarea_select.row[0], f_r2 = printarea_select.row[1];
         let f_c1 = printarea_select.column[0], f_c2 = printarea_select.column[1];
-
+        let direction = 'lefttop'
         if(type == "row"){
             if(f_r1 < index){
                 if(f_r2 == index && direction == "lefttop"){
@@ -1312,6 +1312,9 @@ function luckysheetdeletetable(type, st, ed, sheetIndex, clearjfundo = true) {
         let f_r1 = printarea_select.row[0], f_r2 = printarea_select.row[1];
         let f_c1 = printarea_select.column[0], f_c2 = printarea_select.column[1];
 
+        let index = 0
+        let value = 0
+        let direction = 'lefttop'
         if(type == "row"){
             if(f_r1 < index){
                 if(f_r2 == index && direction == "lefttop"){

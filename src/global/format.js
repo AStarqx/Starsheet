@@ -1997,6 +1997,41 @@ export function genarate(value) {//万 单位格式增加！！！
         ct.t = "d";
         m = SSF.format(ct.fa, v);
     }
+    else if(/^\d{4}年\d{1,2}月\d{1,2}日$/.test(value)) {
+        m = value
+        ct.fa = 'yyyy"年"M"月"d"日"'
+        ct.t = "d"
+
+        value = value.replaceAll('年', '-').replaceAll('月', '-').replaceAll('日', '')
+        v = datenum_local(new Date(value))
+    }
+    else if(/^\d{4}-\d{1,2}-\d{1,2}$/.test(value)) {
+        v = datenum_local(parseDate(value.toString().replace(/-/g, "/")))
+        if(v.toString().indexOf(".") > -1){
+            if(value.toString().length > 18){
+                ct.fa = "yyyy-MM-dd hh:mm:ss";
+            }
+            else if(value.toString().length > 11){
+                ct.fa = "yyyy-MM-dd hh:mm";
+            }
+            else{
+                ct.fa = "yyyy-MM-dd";
+            }
+        }
+        else{
+            ct.fa = "yyyy-MM-dd";
+        }
+
+        ct.t = "d";
+        m = SSF.format(ct.fa, v)
+    }
+    else if(/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(value)) {
+        m = value
+        ct.fa = 'yyyy/MM/dd'
+        ct.t = "d"
+
+        v = datenum_local(new Date(value))
+    }
     else{
         m = value;
         ct.fa = "General";

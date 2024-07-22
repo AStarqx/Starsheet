@@ -6336,7 +6336,9 @@ export default function luckysheetHandler() {
                                                 continue;
                                             }
 
-                                            data[r + rp][c + cp] = { mc: { r: r_ab, c: c_ab } };
+                                            if(data[r + rp]) {
+                                                data[r + rp][c + cp] = { mc: { r: r_ab, c: c_ab } };
+                                            }
                                         }
                                     }
 

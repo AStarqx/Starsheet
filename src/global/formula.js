@@ -1763,7 +1763,10 @@ const luckysheetformula = {
             jfrefreshgrid(d, [{ row: [r, r], column: [c, c] }], allParam, isRunExecFunction);
 
             refreshFormula()
-            initLuckysheetConfig({ range: { row: [r, r], column: [c, c] }, clearjfundo: false })
+
+            if(d[r] && d[r][c] && d[r][c]['tb'] === '2') {
+                initLuckysheetConfig({ range: { row: [r, r], column: [c, c] }, clearjfundo: false })
+            }
             // Store.luckysheetCellUpdate.length = 0; //clear array
             _this.execFunctionGlobalData = null; //销毁
         } else {

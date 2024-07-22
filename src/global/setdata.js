@@ -104,8 +104,16 @@ function setcellvalue(r, c, d, v) {
     // fix #81， vupdate = ''
     if (vupdate == null) {
         if (getObjType(cell) == "object") {
-            delete cell.m;
-            delete cell.v;
+            if(cell.ct && cell.ct.s) {
+                cell.ct.s.forEach(item => {
+                    if(!item.fc && cell.fc) item.fc = cell.fc
+                    if(!item.tb && cell.tb) item.tb = cell.tb 
+                });
+            }
+            else {
+                delete cell.m;
+                delete cell.v;
+            }
         } else {
             cell = null;
         }
@@ -270,8 +278,8 @@ function setcellvalue(r, c, d, v) {
                 if(!isRealNum(vupdate)) {
                     const regex = /^\d{4}年\d{1,2}月\d{1,2}日$/;
                     if(vupdate && regex.test(vupdate)) {
-                        vupdate = vupdate.replaceAll('年', '-').replaceAll('月', '-').replaceAll('日', '')
-                        vupdate = datenum_local(new Date(vupdate))
+                        // vupdate = vupdate.replaceAll('年', '-').replaceAll('月', '-').replaceAll('日', '')
+                        // vupdate = datenum_local(new Date(vupdate))
                     }
                 }
 
