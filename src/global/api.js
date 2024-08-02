@@ -1458,13 +1458,14 @@ export function copyRow(copyRow, row = 0, options = {}) {
     if(copyRow < 0) return
     let {
         number = 1,
-        clearjfundo = true
+        clearjfundo = true,
+        clearValue = false
     } = options
     selection.copyRow(copyRow)
     Store.luckysheet_select_save = [
       { row: [row, row], column: [0, Store.flowdata[0].length - 1] }
     ]
-    selection.pasteHandlerOfCopyPaste(Store.luckysheet_copy_save, clearjfundo);
+    selection.pasteHandlerOfCopyPaste(Store.luckysheet_copy_save, clearjfundo, clearValue);
 }
 /**
  * 在第row行的位置，插入number行空白行
@@ -1587,6 +1588,7 @@ export function hideRowOrColumn(type, startIndex, endIndex, options = {}) {
     let {
         order = curSheetOrder,
         saveParam = true,
+        clearjfundo = true,
         success
     } = {...options}
 
@@ -1602,7 +1604,7 @@ export function hideRowOrColumn(type, startIndex, endIndex, options = {}) {
     }
 
     //保存撤销
-    if(Store.clearjfundo){
+    if(Store.clearjfundo && clearjfundo){
         let redo = {};
         redo["type"] = type === 'row' ? 'showHidRows' : 'showHidCols';
         redo["sheetIndex"] = file.index;
@@ -1649,6 +1651,7 @@ export function showRowOrColumn(type, startIndex, endIndex, options = {}) {
     let {
         order = curSheetOrder,
         saveParam = true,
+        clearjfundo = true,
         success
     } = {...options}
 
@@ -1664,7 +1667,7 @@ export function showRowOrColumn(type, startIndex, endIndex, options = {}) {
     }
 
     //保存撤销
-    if(Store.clearjfundo){
+    if(Store.clearjfundo && clearjfundo){
         let redo = {};
         redo["type"] = type === 'row' ? 'showHidRows' : 'showHidCols';
         redo["sheetIndex"] = file.index;
@@ -1858,8 +1861,11 @@ export function setColumnWidth(columnInfo, options = {}) {
 /**
  * 排序
  */
-export function sortColumn(orderbyindex = 0, isAsc = true) {
-    sortColumnSeletion(orderbyindex, isAsc)
+export function sortColumn(orderbyindex = 0, isAsc = true, options) {
+    const {
+        clearjfundo = true
+    } = options
+    sortColumnSeletion(orderbyindex, isAsc, clearjfundo)
 }
 
 

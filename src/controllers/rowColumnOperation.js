@@ -1399,16 +1399,55 @@ export function rowColumnOperationInitial() {
 
     // custom right-click a cell buttton click
     $(".luckysheetColsRowsHandleAdd_custom").click(function(clickEvent) {
-        $("#luckysheet-rightclick-menu").hide();
         const cellRightClickConfig = luckysheetConfigsetting.cellRightClickConfig;
         const rowIndex = Store.luckysheet_select_save[0].row[0];
         const columnIndex = Store.luckysheet_select_save[0].column[0];
+        const data = editor.deepCopyFlowData(Store.flowdata);
+        let params = { rowIndex, columnIndex, data }
+
+        if(cellRightClickConfig.customs[Number(clickEvent.currentTarget.dataset.index)].menuType === 'input') {
+            // Click input element, don't comfirm
+            if (event.target.nodeName === "INPUT") {
+                return;
+            }
+
+            const _locale = locale();
+            const locale_info = _locale.info;
+            let $t = $(this),
+                inputNumber = $t.find("input").val();
+            if (!isRealNum(inputNumber)) {
+                if (isEditMode()) {
+                    alert(locale_info.tipInputNumber);
+                } else {
+                    tooltip.info(locale_info.tipInputNumber, "");
+                }
+
+                return;
+            }
+
+            inputNumber = parseInt(inputNumber);
+
+            if (inputNumber < 1 || inputNumber > 100) {
+                if (isEditMode()) {
+                    alert(locale_info.tipInputNumberLimit);
+                } else {
+                    tooltip.info(locale_info.tipInputNumberLimit, "");
+                }
+                return;
+            }
+
+            params = { rowIndex, columnIndex, data, inputNumber }
+        }
+
+        $("#luckysheet-rightclick-menu").hide();
+        
+        
         if (cellRightClickConfig.customs[Number(clickEvent.currentTarget.dataset.index)]) {
             try {
                 cellRightClickConfig.customs[Number(clickEvent.currentTarget.dataset.index)].onClick(
                     clickEvent,
                     event,
-                    { rowIndex, columnIndex },
+                    params,
                 );
             } catch (e) {
                 console.error("custom click error", e);

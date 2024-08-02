@@ -292,7 +292,7 @@ function sortSelection(isAsc) {
 }
 
 //排序一列数据
-function sortColumnSeletion(colIndex, isAsc) {
+function sortColumnSeletion(colIndex, isAsc, clearjfundo = true) {
     if(!checkProtectionAuthorityNormal(Store.currentSheetIndex, "sort")){
         return;
     }
@@ -382,7 +382,7 @@ function sortColumnSeletion(colIndex, isAsc) {
         }
     }
 
-    jfrefreshgrid(d, [{ "row": [str, edr], "column": [c1, c2] }], allParam);
+    jfrefreshgrid(d, [{ "row": [str, edr], "column": [c1, c2] }], allParam, true, true, clearjfundo);
 }
 
 export {

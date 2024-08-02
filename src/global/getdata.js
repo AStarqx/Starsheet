@@ -11,7 +11,7 @@ import Store from '../store';
 import { update } from './format';
 
 //Get selection range value
-export function getdatabyselection(range, sheetIndex) {
+export function getdatabyselection(range, sheetIndex, clearValue = false) {
     if(range == null){
         range = Store.luckysheet_select_save[0];
     }
@@ -45,7 +45,12 @@ export function getdatabyselection(range, sheetIndex) {
         let row = [];
 
         for (let c = range["column"][0]; c <= range["column"][1]; c++) {
-            row.push(d[r][c]);
+            const newData = $.extend(true, {}, d[r][c])
+            if(clearValue) {
+                delete newData.m
+                delete newData.v
+            }
+            row.push(newData);
         }
 
         data.push(row);

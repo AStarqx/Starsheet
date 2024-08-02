@@ -1840,7 +1840,7 @@ const selection = {
             jfrefreshgrid_pastcut(source, target, copyRowlChange);
         }
     },
-    pasteHandlerOfCopyPaste: function(copyRange, clearjfundo = true) {
+    pasteHandlerOfCopyPaste: function(copyRange, clearjfundo = true, clearValue = false) {
         if (!checkProtectionLockedRangeList(Store.luckysheet_select_save, Store.currentSheetIndex)) {
             return;
         }
@@ -1869,6 +1869,7 @@ const selection = {
             let arrData = getdatabyselection(
                 { row: copyRange["copyRange"][i].row, column: copyRange["copyRange"][i].column },
                 copySheetIndex,
+                clearValue
             );
             if (copyRange["copyRange"].length > 1) {
                 if (c_r1 == copyRange["copyRange"][1].row[0] && c_r2 == copyRange["copyRange"][1].row[1]) {

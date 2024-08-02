@@ -1894,12 +1894,22 @@
 				imageClass: "loadingAnimation"
 			}
 			options.cellRightClickConfig = {
-				customs: [{
-					title: 'test',
-					onClick: function (clickEvent, event, params) {
-						console.log('function test click', clickEvent, event, params)
+				customs: [
+					{
+						title: 'test',
+						onClick: function (clickEvent, event, params) {
+							console.log('function test click', clickEvent, event, params)
+						}
+					},
+					{
+						menuType: 'input',
+						beforeText: '向上添加',
+						afterText: '评估对象',
+						onClick: function (clickEvent, event, params) {
+							console.log('function test2 click', clickEvent, event, params)
+						}
 					}
-				}]
+				]
 			}
 			// let  customSheetconfig = { //自定义sheet demo
 			//      "name": "自定义",

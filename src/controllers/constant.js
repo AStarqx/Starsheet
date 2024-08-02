@@ -377,11 +377,22 @@ function rightclickHTML() {
             (item, index) => `
             <div data-showProp="${item.showProp}" data-sheetName="${item.sheetName}" data-index="${index}" class="luckysheetColsRowsHandleAdd_custom luckysheet-cols-menuitem luckysheet-mousedown-cancel">
                 <div class="luckysheet-cols-menuitem-content luckysheet-mousedown-cancel">
-                ${item.title}
+                    ${ item.menuType === 'input' ? `
+                        <div>
+                            <span class="luckysheet-mousedown-cancel">${item.beforeText}</span>
+                            <input type="text" class="luckysheet-mousedown-cancel" placeholder="${item.number}" value="1" style="width:40px;height:20px;box-sizing:border-box;text-align:center;margin-left:5px;"/>
+                            <span class="luckysheet-mousedown-cancel">${
+                                item.afterText
+                            }</span>
+                        </div>
+                    `: item.title}
                 </div>
             </div>`,
         )
         .join("");
+
+        
+
         // <div id="luckysheetmatrix" class="luckysheet-cols-menuitem luckysheet-cols-submenu luckysheet-mousedown-cancel" style="display:${
         //     config.matrix ? "block" : "none"
         // };">
