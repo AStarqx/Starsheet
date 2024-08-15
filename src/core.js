@@ -30,6 +30,7 @@ import { zoomInitial } from "./controllers/zoom";
 import method from "./global/method";
 
 import * as api from "./global/api";
+import * as apiData from './global/api_data.js'
 
 import flatpickr from "flatpickr";
 import Mandarin from "flatpickr/dist/l10n/zh.js";
@@ -261,5 +262,10 @@ luckysheet.locales = locales;
 
 // 获取条件格式渲染的单元格数量
 luckysheet.getConditionFormatCells = getConditionFormatCells;
+
+// 
+luckysheet.getDataApi = function () {
+    return common_extend(apiData, {});
+}
 
 export { luckysheet };

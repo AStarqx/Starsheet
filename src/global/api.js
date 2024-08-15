@@ -1344,6 +1344,7 @@ export function insertRowOrColumn(type, index = 0, options = {}) {
         number = 1,
         order = curSheetOrder,
         clearjfundo = true,
+        rowlen = -1,
         success
     } = {...options}
 
@@ -1374,6 +1375,14 @@ export function insertRowOrColumn(type, index = 0, options = {}) {
         if(Store.luckysheetfile[order]){
             sheetIndex = Store.luckysheetfile[order].index;
         }
+    }
+
+    if(rowlen > -1) {
+        let curOrder = getSheetIndex(sheetIndex)
+        let file = Store.luckysheetfile[curOrder] || {}
+        let config = file.config || {}
+        let sheetRowlen = (config && config.rowlen) || {}
+        sheetRowlen[index] = rowlen
     }
 
     luckysheetextendtable(type, index, number, "lefttop", sheetIndex, clearjfundo);

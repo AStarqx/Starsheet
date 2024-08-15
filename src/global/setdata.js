@@ -37,6 +37,10 @@ function setcellvalue(r, c, d, v) {
 
             if (v.ct != null) {
                 cell.ct = v.ct;
+                if(v.ct.s && v.ct.s.length) {
+                    delete cell.m
+                    delete cell.v
+                }
             }
 
             if(v.bg != null){

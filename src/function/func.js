@@ -3,7 +3,7 @@ import formula from '../global/formula';
 import tooltip from '../global/tooltip';
 import { isRealNum, valueIsError,error } from '../global/validate';
 import { getdatabyselectionD } from '../global/getdata';
-import { datenum_local, genarate } from '../global/format';
+import { datenum_local, genarate, update } from '../global/format';
 import { inverse } from '../function/matrix_methods';
 import { getSheetIndex, getluckysheetfile, getRangetxt } from '../methods/get';
 import { getObjType, ABCatNum } from '../utils/util';
@@ -1656,7 +1656,9 @@ function luckysheet_getcelldata(txt) {
                         }
                     }
                     if(ret && ret.ct && ret.ct.t === 'd') {
+                        cloneEf = $.extend(true, {}, ret)
                         cloneEf.v = typeof(cloneEf.v) == 'string' ? datenum_local(new Date(cloneEf.v)) : ret.v
+                        cloneEf.m = update(cloneEf.ct.fa, cloneEf.v)
                     }
 
                     ret = cloneEf;

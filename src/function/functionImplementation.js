@@ -12751,9 +12751,9 @@ const functionImplementation = {
         try {
             for (var i = 0; i < arguments.length-1; i++){
                 arguments[i] = func_methods.getCellDate(arguments[i]);
-                if(!isdatetime(arguments[i])){
-                    return formula.error.v;
-                }
+                // if(!isdatetime(arguments[i])){
+                //     return formula.error.v;
+                // }
             }
 
             var startDate = dayjs(arguments[0]);
@@ -19901,6 +19901,10 @@ const functionImplementation = {
                 return value_if_true;
             }
 
+            if(logical_test){
+                return value_if_true;
+            }
+
             //结果为 FALSE
             var value_if_false = "";
             if(arguments.length == 3){
@@ -19910,12 +19914,7 @@ const functionImplementation = {
                 }
             }
 
-            if(logical_test){
-                return value_if_true;
-            }
-            else{
-                return value_if_false;
-            }
+            return value_if_false;
         }
         catch (e) {
             var err = e;

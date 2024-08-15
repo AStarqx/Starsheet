@@ -617,7 +617,8 @@ function luckysheetextendtable(type, index, value, direction, sheetIndex, clearj
                     rowlen_new[r] = cfg["rowlen"][r];
                 } else if (r == index) {
                     if (direction == "lefttop") {
-                        rowlen_new[r + value] = cfg["rowlen"][r];
+                        // rowlen_new[r + value] = cfg["rowlen"][r];
+                        rowlen_new[r] = cfg["rowlen"][r];
                     } else if (direction == "rightbottom") {
                         rowlen_new[r] = cfg["rowlen"][r];
                     }
@@ -1881,7 +1882,6 @@ function luckysheetdeletetable(type, st, ed, sheetIndex, clearjfundo = true) {
 
 //删除单元格
 function luckysheetDeleteCell(type, str, edr, stc, edc, sheetIndex) {
-    const cellRightClickConfig = luckysheetConfigsetting.cellRightClickConfig;
     sheetIndex = sheetIndex || Store.currentSheetIndex;
     if (!checkProtectionNotEnable(sheetIndex)) {
         return;

@@ -211,6 +211,171 @@ function jfrefreshgrid(data, range, allParam, isRunExecFunction = true, isRefres
     window.luckysheet_getcelldata_cache = null;
 }
 
+function jfrefreshgrid2Data(data, range, allParam, isRunExecFunction = true, isRefreshCanvas = true, clearjfundo = true) {
+    if(data == null){
+        data = Store.flowdata;
+    }
+
+    if(range == null){
+        range = Store.luckysheet_select_save;
+    }
+    range = JSON.parse(JSON.stringify(range));
+
+    clearTimeout(refreshCanvasTimeOut);
+
+    //关联参数
+    if(allParam == null){
+        allParam = {};
+    }
+
+    let cfg = allParam["cfg"];  //config
+    let calc = allParam["calc"];
+    let RowlChange = allParam["RowlChange"];  //行高改变
+    let cdformat = allParam["cdformat"];  //条件格式
+    let dataVerification = allParam["dataVerification"];  //数据验证
+    let dynamicArray = allParam["dynamicArray"];  //动态数组
+    let hyperlink = allParam["hyperlink"];
+
+    let file = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)];
+
+    if (Store.clearjfundo && clearjfundo) {
+        Store.jfundo.length  = 0;
+
+        let curConfig;
+        if(cfg == null){
+            curConfig = $.extend(true, {}, Store.config);
+        }
+        else{
+            curConfig = $.extend(true, {}, cfg);
+        }
+
+        let curCdformat;
+        if(cdformat == null){
+            curCdformat = $.extend(true, [], file["luckysheet_conditionformat_save"]);
+        }
+        else{
+            curCdformat = cdformat;
+        }
+
+        let curDataVerification;
+        if(dataVerification == null){
+            curDataVerification = $.extend(true, {}, file["dataVerification"])
+        }
+        else{
+            curDataVerification = dataVerification;
+        }
+
+        let curDynamicArray;
+        if(dynamicArray == null){
+            curDynamicArray = $.extend(true, [], file["dynamicArray"]);
+        }
+        else{
+            curDynamicArray = dynamicArray;
+        }
+        
+        Store.jfredo.push({ 
+            "type": "datachange", 
+            "data": Store.flowdata, 
+            "curdata": data,
+            "sheetIndex": Store.currentSheetIndex, 
+            "config": $.extend(true, {}, Store.config), 
+            "curConfig": curConfig,
+            "calc": $.extend(true, [], file.calcChain),
+            "curCalc": calc,
+            "cdformat":  $.extend(true, [], file["luckysheet_conditionformat_save"]),
+            "curCdformat": curCdformat,
+            "RowlChange": RowlChange,
+            "dataVerification": $.extend(true, [], file["dataVerification"]),
+            "curDataVerification": curDataVerification,
+            "dynamicArray": $.extend(true, [], file["dynamicArray"]),
+            "curDynamicArray": curDynamicArray,
+            "hyperlink": hyperlink && $.extend(true, {}, file.hyperlink),
+            "curHyperlink": hyperlink,
+            "range": range,
+            "dataRange": [...file.luckysheet_select_save]// 保留操作时的选区
+        });
+    }
+
+    //Store.flowdata
+    Store.flowdata = data;
+    editor.webWorkerFlowDataCache(Store.flowdata);//worker存数据
+    file.data = Store.flowdata;
+
+    // 必须要处理，可能之前的config为空，则也需要清空
+    if(cfg != null) {
+        Store.config = cfg
+        file.config = Store.config
+
+        server.saveParam("all", Store.currentSheetIndex, cfg, { "k": "config" });
+
+        if(RowlChange != null){
+            // jfrefreshgrid_rhcw(Store.flowdata.length, Store.flowdata[0].length);
+        }
+    }
+
+    if(calc != null){
+        file.calcChain = calc;
+        server.saveParam("all", Store.currentSheetIndex, calc, { "k": "calcChain" });
+    }
+
+    //condition format, null or empty array are not processed
+    if(cdformat != null && cdformat.length !== 0){
+        file["luckysheet_conditionformat_save"] = cdformat;
+
+        server.saveParam("all", Store.currentSheetIndex, cdformat, { "k": "luckysheet_conditionformat_save" });
+    }
+
+    //data Verification, null or empty object are not processed
+    if(dataVerification != null && Object.keys(dataVerification).length !== 0){
+        dataVerificationCtrl.dataVerification = dataVerification;
+        file["dataVerification"] = dataVerification;
+        server.saveParam("all", Store.currentSheetIndex, dataVerification, { "k": "dataVerification" });
+    }
+
+    //动态数组
+    if(dynamicArray != null){
+        file["dynamicArray"] = dynamicArray;
+
+        server.saveParam("all", Store.currentSheetIndex, dynamicArray, { "k": "dynamicArray" });
+    }
+
+    if(hyperlink != null){
+        file["hyperlink"] = hyperlink;
+        hyperlinkCtrl.hyperlink = hyperlink;
+        server.saveParam("all", Store.currentSheetIndex, hyperlink, { "k": "hyperlink" });
+    }
+
+    //更新数据的范围
+    for(let s = 0; s < range.length; s++){
+        let r1 = range[s].row[0];
+        let c1 = range[s].column[0];
+
+        if(Store.flowdata[r1] && Store.flowdata[r1][c1] != null && Store.flowdata[r1][c1].spl != null){
+            window.luckysheetCurrentRow = r1;
+            window.luckysheetCurrentColumn = c1;
+            window.luckysheetCurrentFunction = Store.flowdata[r1][c1].f;
+
+            let fp = $.trim(formula.functionParserExe(Store.flowdata[r1][c1].f));
+            let sparklines = new Function("return " +fp)();
+            Store.flowdata[r1][c1].spl = sparklines;
+        }
+
+        if(server.allowUpdate){ //共享编辑模式
+            server.historyParam(Store.flowdata, Store.currentSheetIndex, range[s]);
+        }
+        // 刷新图表
+        if(typeof(Store.chartparam.jfrefreshchartall)=="function"){
+            Store.chartparam.jfrefreshchartall(Store.flowdata,range[s].row[0],range[s].row[1],range[s].column[0],range[s].column[1]);
+        }
+    }
+    //单元格数据更新联动
+    if (isRunExecFunction) {
+        // runExecFunction(range, Store.currentSheetIndex, data);
+    }
+    
+    window.luckysheet_getcelldata_cache = null;
+}
+
 function jfrefreshgridall(colwidth, rowheight, data, cfg, range, ctrlType, ctrlValue, cdformat, isRefreshCanvas=true, clearjfundo = true) {
     let redo = {}, isRunExecFunction=false;
     clearTimeout(refreshCanvasTimeOut);
@@ -1404,6 +1569,7 @@ function luckysheetrefreshgrid(scrollWidth, scrollHeight) {
 
 export {
     jfrefreshgrid,
+    jfrefreshgrid2Data,
     jfrefreshgridall,
     jfrefreshrange,
     jfrefreshgrid_adRC,
