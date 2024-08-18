@@ -390,6 +390,7 @@ const method = {
             sheetfile.filter = null;
             sheetfile.filter_select = null;
             sheetfile.printarea_select = null;
+            sheetfile.custom_area_select = null;
             sheetfile.celldata = [];
             sheetfile.pivotTable = {};
             sheetfile.calcChain = [];

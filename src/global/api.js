@@ -44,7 +44,8 @@ import {getRangetxt } from '../methods/get';
 import {luckysheetupdateCell} from '../controllers/updateCell';
 import luckysheetSearchReplace from "../controllers/searchReplace";
 import luckysheetPostil from "../controllers/postil";
-import { initLuckysheetConfig } from "../controllers/rowColumnOperation";
+import { initLuckysheetConfig, deleteSelectedRows } from "../controllers/rowColumnOperation";
+import { createCustomArea } from "../controllers/customArea";
 
 const IDCardReg = /^\d{6}(18|19|20)?\d{2}(0[1-9]|1[12])(0[1-9]|[12]\d|3[01])\d{3}(\d|X)$/i;
 
@@ -2075,6 +2076,14 @@ export function getRangeValuesWithFlatte(range){
         values.push(Store.flowdata[item.r][item.c]);
     });
     return values;
+}
+
+/**
+ * 设置自定义区域
+ * @param paramName 区域属性名
+ */
+export function setCustomArea() {
+    createCustomArea()
 }
 
 
@@ -6451,6 +6460,10 @@ export function getSheet(options = {}){
 
     return sheetmanage.getSheetByIndex();
 
+}
+
+export function deleteCurrSelectedRows() {
+    deleteSelectedRows()
 }
 
 /**

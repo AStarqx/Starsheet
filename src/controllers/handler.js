@@ -4944,7 +4944,7 @@ export default function luckysheetHandler() {
 
     //选区拖动替换
     $("#luckysheet-cell-main div.luckysheet-cs-draghandle").mousedown(function(event) {
-        if (isEditMode() || Store.allowEdit === false) {
+        if (isEditMode() || Store.allowEdit === false || Store.allowDrag === false) {
             //此模式下禁用选区拖动
             return;
         }

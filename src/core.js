@@ -74,6 +74,7 @@ luckysheet.create = function (setting) {
     Store.fullscreenmode = extendsetting.fullscreenmode;
     Store.lang = extendsetting.lang; //language
     Store.allowEdit = extendsetting.allowEdit;
+    Store.allowDrag = extendsetting.allowDrag;
     Store.limitSheetNameLength = extendsetting.limitSheetNameLength;
     Store.defaultSheetNameMaxLength = extendsetting.defaultSheetNameMaxLength;
     Store.fontList = extendsetting.fontList;

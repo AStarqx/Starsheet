@@ -739,6 +739,10 @@ const luckysheetDropCell = {
                             delete cell.id;
                         }
 
+                        if(cell.fn != null){
+                            delete cell.fn;
+                        }
+
                         d[i][j] = cell;
 
                         //边框
@@ -831,6 +835,10 @@ const luckysheetDropCell = {
                         // 清空id
                         if(cell.id != null){
                             delete cell.id;
+                        }
+
+                        if(cell.fn != null){
+                            delete cell.fn;
                         }
 
                         d[i][j] = cell;

@@ -1779,35 +1779,7 @@ export function rowColumnOperationInitial() {
         luckysheetdeletetable(Store.luckysheetRightHeadClickIs, st_index, ed_index);
     });
     $("#luckysheet-delRows").click(function(event) {
-        $("#luckysheet-rightclick-menu").hide();
-        luckysheetContainerFocus();
-
-        const locale_drag = locale().drag;
-
-        if (Store.luckysheet_select_save.length > 1) {
-            if (Store.luckysheetRightHeadClickIs == "row") {
-                if (isEditMode()) {
-                    alert(locale_drag.noMulti);
-                } else {
-                    tooltip.info(locale_drag.noMulti, "");
-                }
-            } else if (Store.luckysheetRightHeadClickIs == "column") {
-                if (isEditMode()) {
-                    alert(locale_drag.noMulti);
-                } else {
-                    tooltip.info(locale_drag.noMulti, "");
-                }
-            }
-            return;
-        }
-
-        let st_index = Store.luckysheet_select_save[0].row[0],
-            ed_index = Store.luckysheet_select_save[0].row[1];
-
-		if(!method.createHookFunction("rowDeleteBefore", st_index, ed_index, 'row', Store.flowdata)){
-			return; 
-		}
-        luckysheetdeletetable('row', st_index, ed_index);
+        deleteSelectedRows()
     })
     $("#luckysheet-delCols").click(function (event) {
 
@@ -2997,6 +2969,38 @@ function luckysheetcolsdbclick() {
         "resizeC",
         "columnlen",
     );
+}
+
+export function deleteSelectedRows() {
+    $("#luckysheet-rightclick-menu").hide();
+    luckysheetContainerFocus();
+
+    const locale_drag = locale().drag;
+
+    if (Store.luckysheet_select_save.length > 1) {
+        if (Store.luckysheetRightHeadClickIs == "row") {
+            if (isEditMode()) {
+                alert(locale_drag.noMulti);
+            } else {
+                tooltip.info(locale_drag.noMulti, "");
+            }
+        } else if (Store.luckysheetRightHeadClickIs == "column") {
+            if (isEditMode()) {
+                alert(locale_drag.noMulti);
+            } else {
+                tooltip.info(locale_drag.noMulti, "");
+            }
+        }
+        return;
+    }
+
+    let st_index = Store.luckysheet_select_save[0].row[0],
+        ed_index = Store.luckysheet_select_save[0].row[1];
+
+    if(!method.createHookFunction("rowDeleteBefore", st_index, ed_index, 'row', Store.flowdata)){
+        return; 
+    }
+    luckysheetdeletetable('row', st_index, ed_index);
 }
 
 /**

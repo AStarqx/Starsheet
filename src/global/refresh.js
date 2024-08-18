@@ -20,6 +20,7 @@ import { createFilterOptions } from '../controllers/filter';
 import { getSheetIndex } from '../methods/get';
 import Store from '../store';
 import { createPrintAreaOptions } from '../controllers/print';
+import { createCustomAreaOptions } from '../controllers/customArea';
 
 let refreshCanvasTimeOut = null;
 
@@ -582,7 +583,7 @@ function jfrefreshrange(data, range, cdformat) {
 }
 
 //删除、增加行列 刷新表格
-function jfrefreshgrid_adRC(data, cfg, ctrlType, ctrlValue, calc, filterObj, printareaObj, cf, af, freezen, dataVerification, hyperlink, clearjfundo = true){
+function jfrefreshgrid_adRC(data, cfg, ctrlType, ctrlValue, calc, filterObj, printareaObj, customAreaObj, cf, af, freezen, dataVerification, hyperlink, clearjfundo = true){
     let file = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)];
     collaborativeEditBox();
     //merge改变对应的单元格值改变
@@ -789,6 +790,15 @@ function jfrefreshgrid_adRC(data, cfg, ctrlType, ctrlValue, calc, filterObj, pri
     }
     createPrintAreaOptions(file.printarea_select);
     server.saveParam("all", Store.currentSheetIndex, file.printarea_select, { "k": "printarea_select" });
+
+    // 自定义区域
+    if(customAreaObj != null){
+        file.custom_area_select = customAreaObj.custom_area_select;
+    }else{
+        file.custom_area_select = null;
+    }
+    createCustomAreaOptions(file.custom_area_select);
+    server.saveParam("all", Store.currentSheetIndex, file.custom_area_select, { "k": "custom_area_select" });
 
     //条件格式配置
     file.luckysheet_conditionformat_save = cf;

@@ -339,6 +339,64 @@ function luckysheetextendtable(type, index, value, direction, sheetIndex, clearj
         newPrintareaObj.printarea_select = { "row": [f_r1, f_r2], "column": [f_c1, f_c2] };
     }
 
+    //自定义区域变动
+    let custom_area_select = file.custom_area_select;
+    let newCustomAreaObj = null;
+    if(custom_area_select != null && JSON.stringify(custom_area_select) != "{}"){
+        newCustomAreaObj = { "custom_area_select": null };
+
+        let f_r1 = custom_area_select.row[0], f_r2 = custom_area_select.row[1];
+        let f_c1 = custom_area_select.column[0], f_c2 = custom_area_select.column[1];
+        let direction = 'lefttop'
+        if(type == "row"){
+            if(f_r1 < index){
+                if(f_r2 == index && direction == "lefttop"){
+                    f_r2 += value; 
+                }
+                else if(f_r2 > index){
+                    f_r2 += value;   
+                }
+            }
+            else if(f_r1 == index){
+                if(direction == "lefttop"){
+                    f_r1 += value;
+                    f_r2 += value;
+                }
+                else if(direction == "rightbottom" && f_r2 > index){
+                    f_r2 += value;
+                }
+            }
+            else{
+                f_r1 += value;
+                f_r2 += value;
+            }
+        }
+        else if(type == "column"){
+            if(f_c1 < index){
+                if(f_c2 == index && direction == "lefttop"){
+                    f_c2 += value; 
+                }
+                else if(f_c2 > index){
+                    f_c2 += value;   
+                }
+            }
+            else if(f_c1 == index){
+                if(direction == "lefttop"){
+                    f_c1 += value;
+                    f_c2 += value;
+                }
+                else if(direction == "rightbottom" && f_c2 > index){
+                    f_c2 += value;
+                }
+            }
+            else{
+                f_c1 += value;
+                f_c2 += value;
+            }
+        }
+        newCustomAreaObj.custom_area_select = { "row": [f_r1, f_r2], "column": [f_c1, f_c2] };
+    }
+
     //条件格式配置变动
     let CFarr = file.luckysheet_conditionformat_save;
     let newCFarr = [];
@@ -935,7 +993,8 @@ function luckysheetextendtable(type, index, value, direction, sheetIndex, clearj
             { index: index, len: value, direction: direction, rc: type1, restore: false },
             newCalcChain,
             newFilterObj,
-            newPrintareaObj, 
+            newPrintareaObj,
+            newCustomAreaObj,
             newCFarr,
             newAFarr,
             newFreezen,
@@ -1314,55 +1373,114 @@ function luckysheetdeletetable(type, st, ed, sheetIndex, clearjfundo = true) {
         let f_c1 = printarea_select.column[0], f_c2 = printarea_select.column[1];
 
         let index = 0
-        let value = 0
         let direction = 'lefttop'
         if(type == "row"){
             if(f_r1 < index){
                 if(f_r2 == index && direction == "lefttop"){
-                    f_r2 += value; 
+                    f_r2 -= slen; 
                 }
                 else if(f_r2 > index){
-                    f_r2 += value;   
+                    f_r2 -= slen;   
                 }
             }
             else if(f_r1 == index){
                 if(direction == "lefttop"){
-                    f_r1 += value;
-                    f_r2 += value;
+                    f_r1 -= slen;
+                    f_r2 -= slen;
                 }
                 else if(direction == "rightbottom" && f_r2 > index){
-                    f_r2 += value;
+                    f_r2 -= slen;
                 }
             }
             else{
-                f_r1 += value;
-                f_r2 += value;
+                f_r1 -= slen;
+                f_r2 -= slen;
             }
         }
         else if(type == "column"){
             if(f_c1 < index){
                 if(f_c2 == index && direction == "lefttop"){
-                    f_c2 += value; 
+                    f_c2 -= slen; 
                 }
                 else if(f_c2 > index){
-                    f_c2 += value;   
+                    f_c2 -= slen;   
                 }
             }
             else if(f_c1 == index){
                 if(direction == "lefttop"){
-                    f_c1 += value;
-                    f_c2 += value;
+                    f_c1 -= slen;
+                    f_c2 -= slen;
                 }
                 else if(direction == "rightbottom" && f_c2 > index){
-                    f_c2 += value;
+                    f_c2 -= slen;
                 }
             }
             else{
-                f_c1 += value;
-                f_c2 += value;
+                f_c1 -= slen;
+                f_c2 -= slen;
             }
         }
         newPrintareaObj.printarea_select = { "row": [f_r1, f_r2], "column": [f_c1, f_c2] };
+    }
+
+    //自定义区域变动
+    let custom_area_select = file.custom_area_select;
+    let newCustomAreaObj = null;
+    if(custom_area_select != null && JSON.stringify(custom_area_select) != "{}"){
+        newCustomAreaObj = { "printarea_select": null };
+
+        let f_r1 = custom_area_select.row[0], f_r2 = custom_area_select.row[1];
+        let f_c1 = custom_area_select.column[0], f_c2 = custom_area_select.column[1];
+
+        let index = 0
+        let direction = 'lefttop'
+        if(type == "row"){
+            if(f_r1 < index){
+                if(f_r2 == index && direction == "lefttop"){
+                    f_r2 -= slen; 
+                }
+                else if(f_r2 > index){
+                    f_r2 -= slen;   
+                }
+            }
+            else if(f_r1 == index){
+                if(direction == "lefttop"){
+                    f_r1 -= slen;
+                    f_r2 -= slen;
+                }
+                else if(direction == "rightbottom" && f_r2 > index){
+                    f_r2 -= slen;
+                }
+            }
+            else{
+                f_r1 -= slen;
+                f_r2 -= slen;
+            }
+        }
+        else if(type == "column"){
+            if(f_c1 < index){
+                if(f_c2 == index && direction == "lefttop"){
+                    f_c2 -= slen; 
+                }
+                else if(f_c2 > index){
+                    f_c2 -= slen;   
+                }
+            }
+            else if(f_c1 == index){
+                if(direction == "lefttop"){
+                    f_c1 -= slen;
+                    f_c2 -= slen;
+                }
+                else if(direction == "rightbottom" && f_c2 > index){
+                    f_c2 -= slen;
+                }
+            }
+            else{
+                f_c1 -= slen;
+                f_c2 -= slen;
+            }
+        }
+        newCustomAreaObj.custom_area_select = { "row": [f_r1, f_r2], "column": [f_c1, f_c2] };
     }
 
     //条件格式配置变动
@@ -1859,6 +1977,7 @@ function luckysheetdeletetable(type, st, ed, sheetIndex, clearjfundo = true) {
             newCalcChain,
             newFilterObj,
             newPrintareaObj,
+            newCustomAreaObj,
             newCFarr,
             newAFarr,
             newFreezen,
