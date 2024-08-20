@@ -278,7 +278,7 @@ export function getOrigincell(r, c, i) {
     }
     else{
         let sheet = sheetmanage.getSheetByIndex(i);
-        data = sheet.data;
+        data = sheet && sheet.data;
     }
 
     if(!data || !data[r] || !data[r][c]){

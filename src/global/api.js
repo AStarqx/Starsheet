@@ -6087,6 +6087,27 @@ export function refresh(options = {}) {
     }
 }
 
+export function refreshSheet(options = {}) {
+    const {
+        file,
+        order = getSheetIndex(Store.currentSheetIndex)
+    } = options
+
+    if(!file) return
+    
+    Store.luckysheetfile = $.extend(true, [], file)
+    const currSheet = Store.luckysheetfile[order]
+    if(!currSheet) return
+    let allParam = {
+        "cfg": currSheet.config,
+        "RowlChange": false,
+        "cdformat": currSheet.luckysheet_conditionformat_save,
+        "dataVerification": currSheet.dataVerification,
+        "dynamicArray": currSheet.dynamicArray,
+        "hyperlink": currSheet.hyperlink,
+    }
+    jfrefreshgrid(currSheet.data, null, allParam)
+}
 
 /**
  * 滚动当前工作表位置
