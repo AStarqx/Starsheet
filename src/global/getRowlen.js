@@ -7,6 +7,7 @@ import {isInlineStringCell} from '../controllers/inlineString';
 
 import Store from '../store';
 import { datenum_local, update } from './format';
+import locale from '../locale/locale';
 
 /**
  * 计算范围行高
@@ -598,12 +599,9 @@ function getCellTextInfo(cell , ctx, option){
             if(value == null){
                 value = cell.v;
             }
-
             if(cell.ct && cell.ct.fa) {
-                const dateFormatList = ['hh:mm AM/PM', 'hh:mm', 'yyyy-MM-dd hh:mm AM/PM', 'yyyy-MM-dd hh:mm', 'yyyy-MM-dd',
-                'yyyy/MM/dd', 'yyyy"年"M"月"d"日"', 'yyyy"年"M"月"', 'MM-dd', 'M-d', 'M"月"d"日"', 'h:mm:ss', 'h:mm', 'AM/PM hh:mm', 'AM/PM h:mm',
-                'AM/PM h:mm:ss', 'MM-dd AM/PM hh:mm']
-                if(dateFormatList.includes(cell.ct.fa)) {
+                if(locale().dateFmtList.map(d => d.value).includes(cell.ct.fa)) {
+                    value = cell.v
                     if(!isRealNum(value)) {
                         if(value) {
                             value = value.replaceAll('年', '-').replaceAll('月', '-').replaceAll('日', '')

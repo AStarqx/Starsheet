@@ -6399,6 +6399,22 @@ export default {
             value: "h:mm",
         },
         {
+            name: "3:00 PM",
+            value: "hh:mm AM/PM"
+        },
+        {
+            name: "15:00",
+            value: "hh:mm"
+        },
+        {
+            name: "2017-11-29 3:00 PM",
+            value: "yyyy-MM-dd hh:mm AM/PM"
+        },
+        {
+            name: "2017-11-29 15:00",
+            value: "yyyy-MM-dd hh:mm"
+        },
+        {
             name: "下午01:30",
             value: "上午/下午 hh:mm",
         },
@@ -6414,6 +6430,10 @@ export default {
             name: "08-05 下午01:30",
             value: "MM-dd 上午/下午 hh:mm",
         },
+        {
+            name: "二〇二四一月一日",
+            value: '[DBnum1]yyyy"年"M"月"d"日"'
+        }
         // {
         //     "name": "1930年8月5日星期二",
         //     "value": ''

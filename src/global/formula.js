@@ -1559,16 +1559,15 @@ const luckysheetformula = {
                     //     curv.v = gd.v;
                     // }
 
-                    const dateFormatList = ['hh:mm AM/PM', 'hh:mm', 'yyyy-MM-dd hh:mm AM/PM', 'yyyy-MM-dd hh:mm', 'yyyy-MM-dd',
-                    'yyyy/MM/dd', 'yyyy"年"M"月"d"日"', 'yyyy"年"M"月"', 'MM-dd', 'M-d', 'M"月"d"日"', 'h:mm:ss', 'h:mm', 'AM/PM hh:mm', 'AM/PM h:mm',
-                    'AM/PM h:mm:ss', 'MM-dd AM/PM hh:mm']
-                    if(curv && curv.ct && curv.ct.fa && dateFormatList.includes(curv.ct.fa)) {
-                        if(value) {
-                            value = value.toString().replaceAll('年', '-').replaceAll('月', '-').replaceAll('日', '')
+                    if(value !== '' && value !== undefined && value !== null) {
+                        if(curv && curv.ct && curv.ct.fa && locale().dateFmtList.map(d => d.value).includes(curv.ct.fa)) {
+                            if(value) {
+                                value = value.toString().replaceAll('年', '-').replaceAll('月', '-').replaceAll('日', '')
+                            }
+                            curv.m = value
+                            value = datenum_local(new Date(value))
+                            delete curv.qp
                         }
-                        curv.m = value
-                        value = datenum_local(new Date(value))
-                        delete curv.qp
                     }
 
                     curv.v = value;
@@ -4499,7 +4498,13 @@ const luckysheetformula = {
             index: index,
             func: func,
         };
-        file.calcChain.push(cc);
+        if(file.calcChain.find(calc => calc.r == r && calc.c == c)) {
+            let currCalc = file.calcChain.find(calc => calc.r == r && calc.c == c)
+            currCalc = Object.assign({}, cc)
+        }
+        else {
+            file.calcChain.push(cc);
+        }
 
         server.saveParam("fc", index, JSON.stringify(cc), {
             op: "add",
@@ -4518,10 +4523,16 @@ const luckysheetformula = {
             if (calcChain) {
                 let tempCalcChain = [];
                 calcChain.forEach((item, idx) => {
+                    let calc = item
                     if (typeof item === "string") {
-                        tempCalcChain.push(JSON.parse(item));
-                    } else {
-                        tempCalcChain.push(item);
+                        calc = JSON.parse(item)
+                    }
+                    if(tempCalcChain.find(temp => temp.r == calc.r && temp.c == calc.c && temp.index == calc.index)){
+                        let currTemp = tempCalcChain.find(temp => temp.r == calc.r && temp.c == calc.c && temp.index == calc.index)
+                        currTemp = Object.assign({}, calc)
+                    }
+                    else {
+                        tempCalcChain.push(calc)
                     }
                 });
                 calcChain = file.calcChain = tempCalcChain;
@@ -4623,7 +4634,15 @@ const luckysheetformula = {
             c: c,
             index: index,
         };
-        calcChain.push(cc);
+
+        if(calcChain.find(calc => calc.r == r && calc.c == c)) {
+            let currCalc = calcChain.find(calc => calc.r == r && calc.c == c)
+            currCalc = Object.assign({}, cc)
+        }
+        else {
+            calcChain.push(cc);
+        }
+
         file.calcChain = calcChain;
 
         server.saveParam("fc", index, JSON.stringify(cc), {
@@ -6045,14 +6064,14 @@ const luckysheetformula = {
         if (calcChain != null) {
             for (let i = 0; i < calcChain.length; i++) {
                 let calc = calcChain[i];
-                if (calc.r == r && calc.c == c && calc.index == index) {
-                    calcChain.splice(i, 1);
-                    server.saveParam("fc", index, null, {
-                        op: "del",
-                        pos: i,
-                    });
-                    break;
+                if (calc.r !== r && calc.c !== c && calc.index !== index) {
+                    continue    
                 }
+                calcChain.splice(i, 1);
+                server.saveParam("fc", index, null, {
+                    op: "del",
+                    pos: i,
+                });
             }
         }
 

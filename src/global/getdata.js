@@ -138,7 +138,7 @@ export function getdatabyselectionNoCopy(range) {
 }
 
 //Get the value of the cell
-export function getcellvalue(r, c, data, type) {
+export function getcellvalue(r, c, data, type, isDraw = false) {
     if (type == null) {
         type = "v";
     }
@@ -181,6 +181,15 @@ export function getcellvalue(r, c, data, type) {
         else if(type == "f") {
             retv = d_value["v"];
         }
+
+        if(!isDraw) {
+            let dateFmtList = locale().dateFmtList.map(d => d.value) || []
+            if(d_value.ct && dateFmtList.includes(d_value.ct.fa)) {
+                retv = update('yyyy/MM/dd', d_value["v"])
+            }
+        }
+        
+
         // fix conditionalFormat "occurrenceDate" => "2023-05-17 to 2023-05-19"
         // else if(d_value && d_value.ct && d_value.ct.t == 'd') {
         //     retv = d_value.m;
@@ -291,7 +300,7 @@ export function getOrigincell(r, c, i) {
 }
 
 export function getRealCellValue(r, c){
-    let value = getcellvalue(r, c, null, "m");
+    let value = getcellvalue(r, c, null, "m", true);
     if(value == null){
         value = getcellvalue(r, c);
         if(value==null){
@@ -335,7 +344,6 @@ export function getInlineStringStyle(r, c, data){
     if (data == null) {
         data = Store.flowdata;
     }
-    let cell = data[r][c];
     if(isInlineStringCT(ct)){
         let strings = ct.s, value="";
         for(let i=0;i<strings.length;i++){

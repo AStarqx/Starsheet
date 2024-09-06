@@ -6,6 +6,7 @@ import luckysheetConfigsetting from "../controllers/luckysheetConfigsetting";
 import Store from "../store/index";
 import formula from '../global/formula';
 import menuButton from '../controllers/menuButton';
+import locale from "../locale/locale";
 
 
 //Set cell value
@@ -16,7 +17,6 @@ function setcellvalue(r, c, d, v) {
     // 若采用深拷贝，初始化时的单元格属性丢失
     // let cell = $.extend(true, {}, d[r][c]);
     let cell = d[r] ? d[r][c] : {};
-
     let vupdate;
     let dateValue = ''
     if (getObjType(v) == "object") {
@@ -41,6 +41,7 @@ function setcellvalue(r, c, d, v) {
                     delete cell.m
                     delete cell.v
                 }
+                
             }
 
             if(v.bg != null){
@@ -64,10 +65,7 @@ function setcellvalue(r, c, d, v) {
             }
 
             if(v.ct && v.ct.t === 'd' && v.m) {
-                const dateFormatList = ['hh:mm AM/PM', 'hh:mm', 'yyyy-MM-dd hh:mm AM/PM', 'yyyy-MM-dd hh:mm', 'yyyy-MM-dd',
-                'yyyy/MM/dd', 'yyyy"年"M"月"d"日"', 'yyyy"年"M"月"', 'MM-dd', 'M-d', 'M"月"d"日"', 'h:mm:ss', 'h:mm', 'AM/PM hh:mm', 'AM/PM h:mm',
-                'AM/PM h:mm:ss', 'MM-dd AM/PM hh:mm']
-                if(v.ct.fa && dateFormatList.includes(v.ct.fa)) {
+                if(v.ct.fa && locale().dateFmtList.map(d => d.value).includes(v.ct.fa)) {
                     
                     let mm = isRealNum(v.v) ? v.m : v.v
                     dateValue = mm

@@ -1063,6 +1063,14 @@ var make_ssf = function make_ssf(SSF) {
                     break;
                 case '[':
                     o = c;
+                    if(fmt === '[DBnum1]yyyy"年"M"月"d"日"') {
+                        out[out.length] = {
+                            t: 'T',
+                            v: '[DBnum1]yyyy"年"M"月"d"日"'
+                        }
+                        i += fmt.length
+                        break
+                    }
                     while (fmt.charAt(i++) !== ']' && i < fmt.length) o += fmt.charAt(i);
                     if (o.slice(-1) !== ']') throw 'unterminated "[" block: |' + o + '|';
                     if (o.match(abstime)) {
@@ -1154,6 +1162,18 @@ var make_ssf = function make_ssf(SSF) {
                         v: '$'
                     };
                     ++i;
+                    break;
+                case '年':
+                    var q = {
+                        t: c,
+                        v: c
+                    };
+                    if (fmt.substr(i, 3).toUpperCase() === '年月日') {
+                        q.t = 'T';
+                        q.v = '年月日'
+                        i += 3;
+                    }
+                    out[out.length] = q;
                     break;
                 default:
                     // if ("¤฿BsBr₵₡₫ƒFtRs.₭kr£₤Lm₥₦₱PQRSkRp৲৳R$S/.〒₮₩¥NT￥zł₴₪៛руб€＄,$-+/():!^&'~{}<>=€acfijklopqrtuvwxzP".indexOf(c) === -1) throw new Error('unrecognized character ' + c + ' in ' + fmt);
@@ -1350,6 +1370,10 @@ var make_ssf = function make_ssf(SSF) {
                 out[i].v = write_num(out[i].t, out[i].v, myv);
                 out[i].t = 't';
             }
+            else if(out[i] != null && out[i].v === '[DBnum1]yyyy"年"M"月"d"日"') {
+                out[i].v = convertChineseDate(numdate(parseInt(v)))
+                out[i].t = 't';
+            }
         var retval = "";
         for (i = 0; i !== out.length; ++i)
             if (out[i] != null) retval += out[i].v;
@@ -1359,6 +1383,48 @@ var make_ssf = function make_ssf(SSF) {
     SSF._eval = eval_fmt;
     var cfregex = /\[[=<>]/;
     var cfregex2 = /\[(=|>[=]?|<[>=]?)(-?\d+(?:\.\d*)?)\]/;
+
+    // 日期转中文
+    function convertChineseDate(dateStr) {
+        let date = new Date(dateStr);
+        let chinese = ['〇', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+        let y = date.getFullYear().toString();
+        let m = (date.getMonth() + 1).toString();
+        let d = date.getDate().toString();
+        let result = '';
+        //年
+        for (let i = 0; i < y.length; i++) {
+            result += chinese[y.charAt(i)];
+        }
+        result += '年';
+        //月
+        if (m.length == 2) {
+            let temp = '十';
+            if (m.charAt(1) != '0') {
+                temp += chinese[m.charAt(1)];
+            }
+            result += temp;
+        } else {
+            result += (chinese[m]);
+        }
+        result += '月';
+        //日
+        if (d.length == 2) {
+            let temp = '';
+            if (d.charAt(0) != '1') {
+                temp += chinese[d.charAt(0)];
+            }
+            temp += '十';
+            if (d.charAt(1) != '0') {
+                temp += chinese[d.charAt(1)];
+            }
+            result += temp;
+        } else {
+            result += (chinese[d]);
+        }
+        result += '日';
+        return result;
+    }
 
     function chkcond(v, rr) {
         if (rr == null) return false;
@@ -1556,7 +1622,6 @@ var make_ssf = function make_ssf(SSF) {
             }
             
         }
-
 
         if (isgeneral(sfmt, 0)) return general_fmt(v, o);
         if (v instanceof Date) v = datenum_local(v, o.date1904);

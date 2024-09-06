@@ -3848,6 +3848,13 @@ const menuButton = {
         let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         return diffDays + 1
     },
+    hasYear(str) {
+        // 定义一个正则表达式，用于匹配四位数字的年份
+        var yearRegex = /^\d{4}[-\/年]\d{1,2}[-\/月]\d{1,2}$/;
+      
+        // 使用正则表达式测试字符串是否符合年份格式
+        return yearRegex.test(str);
+    },
     updateFormatCell: function(d, attr, foucsStatus, row_st, row_ed, col_st, col_ed) {
         if (d == null || attr == null) {
             return;
@@ -3885,15 +3892,19 @@ const menuButton = {
                         value = parseFloat(value);
                     }
                     if(value !== undefined && value !== null && value !== '') {
-                        const dateFormatList = ['hh:mm AM/PM', 'hh:mm', 'yyyy-MM-dd hh:mm AM/PM', 'yyyy-MM-dd hh:mm', 'yyyy-MM-dd',
-                        'yyyy/MM/dd', 'yyyy"年"M"月"d"日"', 'yyyy"年"M"月"', 'MM-dd', 'M-d', 'M"月"d"日"', 'h:mm:ss', 'h:mm', 'AM/PM hh:mm', 'AM/PM h:mm',
-                        'AM/PM h:mm:ss', 'MM-dd AM/PM hh:mm']
-                        if(dateFormatList.includes(foucsStatus)) {
+                        // const dateFormatList = ['hh:mm AM/PM', 'hh:mm', 'yyyy-MM-dd hh:mm AM/PM', 'yyyy-MM-dd hh:mm', 'yyyy-MM-dd',
+                        // 'yyyy/MM/dd', 'yyyy"年"M"月"d"日"', 'yyyy"年"M"月"', 'MM-dd', 'M-d', 'M"月"d"日"', 'h:mm:ss', 'h:mm']
+                        if(locale().dateFmtList.map(d => d.value).includes(foucsStatus)) {
                             if(!isRealNum(value)) {
                                 if(value) {
                                     value = value.replaceAll('年', '-').replaceAll('月', '-').replaceAll('日', '')
                                 }
-                                value = datenum_local(new Date(value))
+                                let nowDate = new Date(value)
+                                if(!this.hasYear(value)) {
+                                    nowDate.setFullYear(new Date().getFullYear())
+                                }
+
+                                value = datenum_local(nowDate)
                             }
                         }
                     }
@@ -3934,7 +3945,6 @@ const menuButton = {
                         // type = "g";
                         type = isRealNum(value) ? "n" : "g";
                     }
-
                     if (getObjType(cell) == "object") {
                         d[r][c]["m"] = mask;
                         if (d[r][c]["ct"] == null) {
