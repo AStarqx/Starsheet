@@ -5004,7 +5004,8 @@ const functionImplementation = {
                 var number = dataArr[i];
 
                 if(!isRealNum(number)){
-                    return formula.error.v;
+                    continue
+                    // return formula.error.v;
                 }
 
                 number = parseFloat(number);

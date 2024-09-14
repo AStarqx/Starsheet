@@ -3505,7 +3505,6 @@ const luckysheetformula = {
                     pfri[0] = pfri[0] + vlen - vplen;
                     if (v_a.length > vp_a.length) {
                         let len = [')', '）'].indexOf(vp_a[vp_a.length - 1]) > -1 ? 1 : vp_a.length + 1
-                        console.log(len)
                         pfri[1] = len
                     } else {
                         pfri[1] = 1;
@@ -4498,9 +4497,10 @@ const luckysheetformula = {
             index: index,
             func: func,
         };
-        if(file.calcChain.find(calc => calc.r == r && calc.c == c)) {
+        if(file.calcChain.find(calc => calc.r == r && calc.c == c && calc.index == index)) {
             let currCalc = file.calcChain.find(calc => calc.r == r && calc.c == c)
-            currCalc = Object.assign({}, cc)
+            // currCalc = Object.assign({}, cc)
+            currCalc = $.extend(true, {}, cc)
         }
         else {
             file.calcChain.push(cc);
@@ -4529,7 +4529,8 @@ const luckysheetformula = {
                     }
                     if(tempCalcChain.find(temp => temp.r == calc.r && temp.c == calc.c && temp.index == calc.index)){
                         let currTemp = tempCalcChain.find(temp => temp.r == calc.r && temp.c == calc.c && temp.index == calc.index)
-                        currTemp = Object.assign({}, calc)
+                        // currTemp = Object.assign({}, calc)
+                        currTemp = $.extend(true, {}, calc)
                     }
                     else {
                         tempCalcChain.push(calc)
@@ -4635,7 +4636,7 @@ const luckysheetformula = {
             index: index,
         };
 
-        if(calcChain.find(calc => calc.r == r && calc.c == c)) {
+        if(calcChain.find(calc => calc.r == r && calc.c == c && calc.index == index)) {
             let currCalc = calcChain.find(calc => calc.r == r && calc.c == c)
             currCalc = Object.assign({}, cc)
         }
@@ -6064,14 +6065,14 @@ const luckysheetformula = {
         if (calcChain != null) {
             for (let i = 0; i < calcChain.length; i++) {
                 let calc = calcChain[i];
-                if (calc.r !== r && calc.c !== c && calc.index !== index) {
-                    continue    
+                if (calc.r == r && calc.c == c && calc.index == index) {
+                    calcChain.splice(i, 1);
+                    server.saveParam("fc", index, null, {
+                        op: "del",
+                        pos: i,
+                    });
                 }
-                calcChain.splice(i, 1);
-                server.saveParam("fc", index, null, {
-                    op: "del",
-                    pos: i,
-                });
+                
             }
         }
 
@@ -6156,7 +6157,6 @@ const luckysheetformula = {
                 newTxt = newTxt.replace(num, value)
             })
         }
-
         let fp = $.trim(_this.functionParserExe(newTxt));
         fp = fp.replaceAll('FALSE', 'false')
             .replaceAll('TRUE', 'true')

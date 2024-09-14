@@ -15,7 +15,6 @@ function luckysheet_compareWith() {
     //第一个参数和第三个参数，返回比较结果的布尔值或者运算值
     //formula.operatorjson; 存储运算符和比较符
     let sp = arguments[1]; //操作符
-
     //参数一
     let data_fp = arguments[0];
     let fp;
@@ -1629,7 +1628,7 @@ function luckysheet_getcelldata(txt) {
         sheetIndex = luckysheetfile[index].index;
         // sheetdata = Store.flowdata;
         sheetdata = luckysheetfile[index].data;
-        rangetxt = val[0];
+        rangetxt = val[0].replaceAll('$', '')
 
         // 取消execFunctionGroupData，改用execFunctionGlobalData
         // if (formula.execFunctionGroupData != null) {
