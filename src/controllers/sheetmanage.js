@@ -1079,7 +1079,7 @@ const sheetmanage = {
     },
     storeSheetParam: function() {
         let index = this.getSheetIndex(Store.currentSheetIndex);
-        let file = Store.luckysheetfile[index];
+        let file = Store.luckysheetfile[index] || {}
         file["config"] = Store.config;
         file["visibledatarow"] = Store.visibledatarow;
         file["visibledatacolumn"] = Store.visibledatacolumn;
@@ -1172,7 +1172,8 @@ const sheetmanage = {
         let _this = this;
 
         _this.storeSheetParam();
-        let index = _this.getSheetIndex(Store.currentSheetIndex);
+        let index = _this.getSheetIndex(Store.currentSheetIndex)
+        if(!Store.luckysheetfile[index]) Store.luckysheetfile[index] = {}
         Store.luckysheetfile[index]["data"] = Store.flowdata;
         Store.luckysheetfile[index]["config"] = $.extend(true, {}, Store.config);
     },
