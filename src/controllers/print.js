@@ -226,6 +226,15 @@ export function createPrintAreaOptions(luckysheet_printarea_save, filterObj){
     }
     let sheetFile = sheetmanage.getSheetByIndex();
     if(Store.luckysheet_select_save != null && Store.luckysheet_select_save.length > 0){
+        let file = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)];
+
+        if(luckysheet_printarea_save.row[0] < 0 || luckysheet_printarea_save.row[1] < 0 || luckysheet_printarea_save.column[0] < 0 || luckysheet_printarea_save.column[1] < 0){
+            delete file.printarea_select
+            delete file.printArea
+            $('.luckysheet-printarea-selected').remove()
+            return
+        }
+
         let startCell = chatatABC(luckysheet_printarea_save.column[0]) + (luckysheet_printarea_save.row[0] + 1);
         let endCell = chatatABC(luckysheet_printarea_save.column[1]) + (luckysheet_printarea_save.row[1] + 1);
         sheetFile.printArea = [ startCell + ':' + endCell ];
@@ -238,13 +247,15 @@ export function createPrintAreaOptions(luckysheet_printarea_save, filterObj){
         let row = Store.visibledatarow[r2], 
             row_pre = r1 - 1 == -1 ? 0 : Store.visibledatarow[r1 - 1];
         let col = Store.visibledatacolumn[c2], 
-            col_pre = c1 - 1 == -1 ? 0 : Store.visibledatacolumn[c1 - 1];
-
-        let newSelectedHTML = '<div id="luckysheet-printarea-selected-sheet'+ Store.currentSheetIndex +'" class="luckysheet-cell-selected luckysheet-printarea-selected"  style="left:'+ col_pre +'px;width:'+ (col - col_pre - 1) +'px;top:'+ row_pre +'px;height:'+ (row - row_pre - 1) +'px;display:block;border-color:#909399;z-index:20;background:none;"></div>';
-        $("#luckysheet-cell-main").append(newSelectedHTML);
-
-        let file = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)];
+            col_pre = c1 - 1 == -1 ? 0 : Store.visibledatacolumn[c1 - 1]
+        
+        
         file.printarea_select = luckysheet_printarea_save;
+        
+        setTimeout(() => {
+            let newSelectedHTML = '<div id="luckysheet-printarea-selected-sheet'+ Store.currentSheetIndex +'" class="luckysheet-printarea-selected"  style="left:'+ col_pre +'px;width:'+ (col - col_pre - 1) +'px;top:'+ row_pre +'px;height:'+ (row - row_pre - 1) +'px;display:block;border-color:#909399;z-index:20;background:none;"></div>';
+            $("#luckysheet-cell-main").append(newSelectedHTML);
+        }, 1);
         
     }
 
