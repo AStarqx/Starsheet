@@ -6047,6 +6047,7 @@ const luckysheetformula = {
                     r: item.r,
                     c: item.c,
                 });
+                method.createHookFunction("cellUpdated", item.r, item.c, data[item.r][item.c], cell, false);
             }
 
             editor.webWorkerFlowDataCache(Store.flowdata); //worker存数据
