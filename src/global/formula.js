@@ -370,7 +370,7 @@ const luckysheetformula = {
                 }
             } 
             // 日期格式
-            else if (cell.ct && cell.ct.t == 'd') {
+            else if (!cell.f && cell.ct && cell.ct.t == 'd') {
                 let vupdate = valueShowEs(r, c, d);
                 value = update(cell.ct.fa, vupdate)
             }

@@ -1173,6 +1173,9 @@ var make_ssf = function make_ssf(SSF) {
                         q.v = '年月日'
                         i += 3;
                     }
+                    else {
+                        ++i;
+                    }
                     out[out.length] = q;
                     break;
                 default:
