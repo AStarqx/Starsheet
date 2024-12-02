@@ -386,7 +386,7 @@ const func_methods = {
             }
 
             if(isRealNull(data.data.v)) {
-                return '1900-1-0'
+                return '1900-1-1'
             }
 
             date_text = data.data.v;

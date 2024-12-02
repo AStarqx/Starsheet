@@ -6161,21 +6161,23 @@ const luckysheetformula = {
         }
 
         // 处理公式中包含名称管理器的情况
-        let currSheet = sheets[getSheetIndex(Store.currentSheetIndex)];
-        let rangeNames = currSheet.rangeNames || []
-        rangeNames.sort((a, b) => b.name.length - a.name.length);
-        rangeNames.forEach(item => {
-            if(item.name && item.range && newTxt.indexOf(item.name) > -1) {
-                let range = item.range
-                if(range.indexOf(':') > -1) {
-                    range = range.split(':')[0]
+        sheets.forEach(sheet => {
+            let rangeNames = sheet.rangeNames || []
+
+            rangeNames.sort((a, b) => b.name.length - a.name.length)
+            rangeNames.forEach(item => {
+                if(item.name && item.range && newTxt.indexOf(item.name) > -1) {
+                    let range = item.range
+                    if(range.indexOf(':') > -1) {
+                        range = range.split(':')[0]
+                    }
+                    let replaceTxt = sheet.name + '!' + item.range
+                    newTxt = newTxt.replaceAll(item.name, replaceTxt)
                 }
-                if(newTxt.indexOf('=YEAR(价值时点)') > -1) {
-                    console.log(item, newTxt, newTxt.replaceAll(item.name, item.range))
-                }
-                newTxt = newTxt.replaceAll(item.name, item.range)
-            }
+            })
         })
+        
+        
 
         let fp = $.trim(_this.functionParserExe(newTxt));
         fp = fp.replaceAll('FALSE', 'false')
