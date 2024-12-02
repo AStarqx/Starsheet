@@ -6171,7 +6171,7 @@ const luckysheetformula = {
                     if(range.indexOf(':') > -1) {
                         range = range.split(':')[0]
                     }
-                    let replaceTxt = sheet.name + '!' + item.range
+                    let replaceTxt = sheet.name + '!' + range
                     newTxt = newTxt.replaceAll(item.name, replaceTxt)
                 }
             })
