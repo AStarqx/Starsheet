@@ -381,8 +381,12 @@ const func_methods = {
             }
         }
         else if(getObjType(data) == "object" && data.startCell != null){
-            if(data.data == null || getObjType(data.data) == "array" || isRealNull(data.data.v)){
+            if(data.data == null || getObjType(data.data) == "array"){
                 return error.v;
+            }
+
+            if(isRealNull(data.data.v)) {
+                return '1900-1-0'
             }
 
             date_text = data.data.v;
