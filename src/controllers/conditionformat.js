@@ -2053,6 +2053,8 @@ const conditionformat = {
                 let cellrange = ruleArr[i]["cellrange"];  //规则应用范围
 
                 if(Store.luckysheet_select_save && Store.luckysheet_select_save.length) {
+                    if(!cellrange[0]) continue
+
                     const r1 = cellrange[0].row
                     const r2 = Store.luckysheet_select_save[0].row
                     const c1 = cellrange[0].column

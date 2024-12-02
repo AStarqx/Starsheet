@@ -1178,6 +1178,22 @@ var make_ssf = function make_ssf(SSF) {
                     }
                     out[out.length] = q;
                     break;
+                case '月':
+                    var q = {
+                        t: c,
+                        v: c
+                    };
+                    ++i;
+                    out[out.length] = q;
+                    break;
+                case '日':
+                    var q = {
+                        t: c,
+                        v: c
+                    };
+                    ++i;
+                    out[out.length] = q;
+                    break;
                 default:
                     // if ("¤฿BsBr₵₡₫ƒFtRs.₭kr£₤Lm₥₦₱PQRSkRp৲৳R$S/.〒₮₩¥NT￥zł₴₪៛руб€＄,$-+/():!^&'~{}<>=€acfijklopqrtuvwxzP".indexOf(c) === -1) throw new Error('unrecognized character ' + c + ' in ' + fmt);
                     if ("¤฿BsBr₵₡₫ƒFtRs.₭kr£₤Lm₥₦₱PQRSkRp৲৳R$S/.〒₮₩¥NT￥zł₴₪៛руб€＄,$-+/():!^&'~{}<>=€acfijklopqrtuvwxzP$￥LekdinAf$dhAflRial?￡BirrKzMOPPGKRsGsB/R$ррlevkrKMzBsPNuFBuKPkrRD$NfkCFA?CVEGMDFrCDHTGNAfLFdjKGSFGGHSRielKCFknKshLSLL￡LtRFRONArRfMWKRMMURsMROS/KMDLMTnRC$kr€GELCHFSLLSCRDbSZLSDGSOSSomFCFPTShT$VUVQUGXгрнsomWSTNT$FtDramRpZMWFCFA".indexOf(c) === -1) throw new Error('unrecognized character ' + c + ' in ' + fmt);
