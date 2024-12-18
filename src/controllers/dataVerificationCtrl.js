@@ -1310,6 +1310,14 @@ const dataVerificationCtrl = {
         if(type == 'dropdown'){
             let list = _this.getDropdownList(r, c, value1);
 
+            if(typeof(cellValue) !== 'string') {
+                cellValue = cellValue.join(',')
+            }
+
+            if(!cellValue) {
+                return true;
+            }
+
             // 多选的情况 检查每个都在下拉列表中
             if(type2 && cellValue){
                 return cellValue.split(',').every(function (i) {
@@ -1754,6 +1762,10 @@ function validateIdCard(idCard) {
     } else {
         return false;
     }
+}
+
+export function validateCellData(r, c, cellValue, item) {
+    return dataVerificationCtrl.validateCellData(r, c, cellValue, item)
 }
 
 export default dataVerificationCtrl;

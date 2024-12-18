@@ -26,6 +26,7 @@ import { getcellvalue, getdatabyselection } from "./global/getdata";
 import { setcellvalue } from "./global/setdata";
 import { selectHightlightShow } from "./controllers/select";
 import { zoomInitial } from "./controllers/zoom";
+import { validateCellData } from "./controllers/dataVerificationCtrl";
 // import { printInitial } from "./controllers/print";
 import method from "./global/method";
 
@@ -238,6 +239,8 @@ luckysheet.getcellvalue = getcellvalue;
 
 // Set cell value
 luckysheet.setcellvalue = setcellvalue;
+
+luckysheet.validateCellData = validateCellData
 
 // Get selection range value
 luckysheet.getdatabyselection = getdatabyselection;
