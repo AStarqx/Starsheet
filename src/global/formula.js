@@ -6161,24 +6161,9 @@ const luckysheetformula = {
         }
 
         // 处理公式中包含名称管理器的情况
-        const currSheet = sheets[getSheetIndex(Store.luckysheetCurrentIndex)]
-        if(currSheet) {
-            let rangeNames = currSheet.rangeNames || []
-            rangeNames.sort((a, b) => b.name.length - a.name.length)
-            rangeNames.forEach(item => {
-                if(item.name && item.range && newTxt.indexOf(item.name) > -1) {
-                    let range = item.range
-                    if(range.indexOf(':') > -1) {
-                        range = range.split(':')[0]
-                    }
-                    let replaceTxt = sheet.name + '!' + range
-                    newTxt = newTxt.replaceAll(item.name, replaceTxt)
-                }
-            })
-        }
-        // sheets.forEach((sheet, index) => {
-        //     let rangeNames = sheet.rangeNames || []
-
+        // const currSheet = sheets[getSheetIndex(Store.luckysheetCurrentIndex)]
+        // if(currSheet) {
+        //     let rangeNames = currSheet.rangeNames || []
         //     rangeNames.sort((a, b) => b.name.length - a.name.length)
         //     rangeNames.forEach(item => {
         //         if(item.name && item.range && newTxt.indexOf(item.name) > -1) {
@@ -6190,7 +6175,23 @@ const luckysheetformula = {
         //             newTxt = newTxt.replaceAll(item.name, replaceTxt)
         //         }
         //     })
-        // })
+        // }
+        const rangeNameRegex = /^[A-Z]+[0-9]+$/;
+        sheets.forEach((sheet, index) => {
+            let rangeNames = sheet.rangeNames || []
+
+            rangeNames.sort((a, b) => b.name.length - a.name.length)
+            rangeNames.forEach(item => {
+                if(item.name && item.range && newTxt.indexOf(item.name) > -1 && !rangeNameRegex.test(item.name)) {
+                    let range = item.range
+                    if(range.indexOf(':') > -1) {
+                        range = range.split(':')[0]
+                    }
+                    let replaceTxt = sheet.name + '!' + range
+                    newTxt = newTxt.replaceAll(item.name, replaceTxt)
+                }
+            })
+        })
         
         
 
