@@ -250,7 +250,7 @@ export function luckysheetupdateCell(row_index1, col_index1, d, cover, isnotfocu
     $("#luckysheet-rich-text-editor").css(inputContentScale);
 
     //日期
-    if(d[row_index1][col_index1] && d[row_index1][col_index1].ct && d[row_index1][col_index1].ct.t == 'd'){
+    if(d && d[row_index1] && d[row_index1][col_index1] && d[row_index1][col_index1].ct && d[row_index1][col_index1].ct.t == 'd'){
         cellDatePickerCtrl.cellFocus(row_index1, col_index1, d[row_index1][col_index1]);
     }
 
