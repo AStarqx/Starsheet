@@ -2834,6 +2834,8 @@ const conditionformat = {
         });
     },
     CFSplitRange: function(range1, range2, range3, type){
+        if(!range1 || !range2 || !range3) return
+
         let range = [];
 
         let offset_r = range3["row"][0] - range2["row"][0];
