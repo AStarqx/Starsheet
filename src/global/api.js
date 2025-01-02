@@ -556,6 +556,9 @@ export function setCellFormat(row, column, attr, value, options = {}) {
         targetSheetData = sheetmanage.buildGridData(file);
     }
 
+    if(!targetSheetData[row]) return
+    if(!targetSheetData[row][column]) return
+
     let cellData = targetSheetData[row][column] || {};
     let cfg = $.extend(true, {}, file.config);
 
