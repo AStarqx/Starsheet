@@ -897,7 +897,7 @@ const luckysheetDropCell = {
 
                 for(let j = 0; j < cdformat_cellrange.length; j++){
                     let range = conditionformat.CFSplitRange(cdformat_cellrange[j], {"row": copyRange["row"], "column": copyRange["column"]}, {"row": applyRange["row"], "column": applyRange["column"]}, "operatePart");
-                    if(range.length > 0){
+                    if(range && range.length > 0){
                         emptyRange = emptyRange.concat(range);
                     }
                 }

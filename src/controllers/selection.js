@@ -1695,7 +1695,7 @@ const selection = {
                             "operatePart",
                         );
 
-                        if (range2.length > 0) {
+                        if (range2 && range2.length > 0) {
                             emptyRange2 = emptyRange2.concat(range2);
                         }
                     }
@@ -2152,7 +2152,7 @@ const selection = {
                                     "operatePart",
                                 );
 
-                                if (range.length > 0) {
+                                if (range && range.length > 0) {
                                     emptyRange = emptyRange.concat(range);
                                 }
                             }
@@ -2471,7 +2471,7 @@ const selection = {
                         "operatePart",
                     );
 
-                    if (range.length > 0) {
+                    if (range && range.length > 0) {
                         emptyRange = emptyRange.concat(range);
                     }
                 }
