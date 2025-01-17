@@ -835,7 +835,7 @@ export function createToolbarHtml() {
             </div>
         </div>`, // 'print'
         importXlsx: `<div class="luckysheet-toolbar-button-split-left luckysheet-toolbar-button luckysheet-inline-block"
-        data-tips="${toolbar.importXlsx}" id="luckysheet-importXlsx-btn-title" role="button" style="user-select: none;">
+        data-tips="${toolbar.importXlsxTips}" id="luckysheet-importXlsx-btn-title" role="button" style="user-select: none;">
             <div class="luckysheet-toolbar-button-outer-box luckysheet-inline-block"
             style="user-select: none;">
                 <div class="luckysheet-toolbar-menu-button-inner-box luckysheet-inline-block"

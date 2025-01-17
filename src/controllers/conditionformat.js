@@ -16,6 +16,7 @@ import {checkProtectionFormatCells} from './protection';
 import Store from '../store';
 import dayjs from 'dayjs'
 import imageCtrl from './imageCtrl';
+import method from '../global/method';
 
 //条件格式
 const conditionformat = {
@@ -203,6 +204,8 @@ const conditionformat = {
                 }
             }
             Store.currentImgId = undefined
+
+            method.createHookFunction('updatedRangeNames', Store.luckysheetfile)
         });
 
         $(document).off("click.CFadministerRuleConfirm").on("click.CFadministerRuleConfirm", "#luckysheet-administerRule-dialog-confirm", function(){

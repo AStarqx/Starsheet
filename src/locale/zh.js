@@ -6084,6 +6084,7 @@ export default {
         insertImage: "插入图片",
         changeImage: "更换图片",
         importXlsx: '导入Xlsx',
+        importXlsxTips: '导入Xlsx，导入将清除现有表格数据',
         exportXlsx: "导出Xlsx",
         insertLink: "插入链接",
         dataVerification: "数据验证",
