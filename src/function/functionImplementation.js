@@ -10,7 +10,7 @@ import editor from '../global/editor';
 import { isdatetime, diff, isdatatype } from '../global/datecontroll';
 import { isRealNum, isRealNull, valueIsError,error } from '../global/validate';
 import { jfrefreshgrid,jfrefreshgridall } from '../global/refresh';
-import { genarate, update } from '../global/format';
+import { genarate, update, datenum_local } from '../global/format';
 import { orderbydata } from '../global/sort';
 import { getcellvalue,datagridgrowth } from '../global/getdata';
 import { getObjType, ABCatNum, chatatABC, numFormat } from '../utils/util';
@@ -12682,7 +12682,7 @@ const functionImplementation = {
                 year = year + 1900;
             }
 
-            var date = dayjs().set({ 'year': year, 'month': month - 1, "date": day });
+            var date = dayjs().set('year', year).set('month', month - 1).set("date", day);
 
             if(dayjs(date).year() < 1900){
                 return formula.error.nm;
@@ -21817,6 +21817,10 @@ const functionImplementation = {
 
         //参数类型错误检测
         for (var i = 0; i < arguments.length; i++) {
+            if(menuButton.celldataIsDate(arguments[i]) && (arguments[i].toString().indexOf('-') > -1 || menuButton.endsWithNoPunctuation(arguments[i]))) {
+                arguments[i] = datenum_local(new Date(arguments[i]))
+            }
+
             var p = formula.errorParamCheck(this.p, arguments[i], i);
 
             if (!p[0]) {

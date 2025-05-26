@@ -1579,6 +1579,9 @@ function luckysheet_calcADPMM(fp, sp, tp){
     }
     else if(sp=="/"){
         value = numeral(fp).divide(tp).value();
+        if(isNaN(value)) {
+            value = fp / tp
+        }
     }
     else if(sp=="*"){
         value = numeral(fp).multiply(tp).value();
