@@ -1659,7 +1659,14 @@ function luckysheet_getcelldata(txt) {
                     }
                     if(ret && ret.ct && ret.ct.t === 'd') {
                         cloneEf = $.extend(true, {}, ret)
-                        cloneEf.v = typeof(cloneEf.v) == 'string' ? datenum_local(new Date(cloneEf.v)) : ret.v
+
+                        if(!isNaN(ef.v)) {
+                            cloneEf.v = ef.v
+                        }
+                        else {
+                            cloneEf.v = typeof(cloneEf.v) == 'string' ? datenum_local(new Date(cloneEf.v)) : ret.v
+                        }
+
                         cloneEf.m = update(cloneEf.ct.fa, cloneEf.v)
                     }
 

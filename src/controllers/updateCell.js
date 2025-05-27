@@ -111,7 +111,7 @@ export function luckysheetupdateCell(row_index1, col_index1, d, cover, isnotfocu
     if(luckysheetFreezen.freezenverticaldata != null || luckysheetFreezen.freezenhorizontaldata != null){
         $("#luckysheet-input-box").css("z-index", 10002);
     }
-    $("#luckysheet-input-box-index").html(chatatABC(col_index) + (row_index + 1)).hide();
+    $("#luckysheet-input-box-index").attr('sheet-index', Store.currentSheetIndex).html(chatatABC(col_index) + (row_index + 1)).hide();
     $("#luckysheet-wa-functionbox-cancel, #luckysheet-wa-functionbox-confirm").addClass("luckysheet-wa-calculate-active");
     
     let value = "", isCenter=false;

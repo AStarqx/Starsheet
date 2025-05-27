@@ -6332,7 +6332,19 @@ const luckysheetformula = {
             return [true, result, txt, { type: "dynamicArrayItem", data: dynamicArrayItem }];
         }
 
-        // console.log(result, txt);
+        // 解决获取不到输入框输入值的问题
+        if (isNaN(result) && parseInt($("#luckysheet-input-box").css("top")) > 0) {
+            let boxIndex = $('#luckysheet-input-box-index').text()
+            let boxSheetIndex = $('#luckysheet-input-box-index').attr('sheet-index')
+
+            if('=' + boxIndex === txt && boxSheetIndex === index) {
+                let inputV = $("#luckysheet-input-box").text();
+                if(menuButton.celldataIsDate(inputV) && (inputV.toString().indexOf('-') > -1 || inputV.toString().indexOf('/') > -1 || menuButton.endsWithNoPunctuation(inputV))) {
+                    inputV = datenum_local(new Date(inputV))
+                }
+                result = inputV
+            }
+        }
 
         return [true, result, txt];
     },
