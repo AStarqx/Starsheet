@@ -8,7 +8,7 @@ export  async function exportSheetExcel(luckysheet,name="file") { // 参数为lu
         if (table.data.length === 0) return true;
         const worksheet = workbook.addWorksheet(table.name, getWorksheetOptions(table));
         // 3.设置单元格合并,设置单元格边框,设置单元格样式,设置值
-        setStyleAndValue(table, worksheet);
+        setStyleAndValue(table, worksheet, workbook);
         setBorder(table, worksheet);
         setMerge(table, worksheet);
         setImages(table, worksheet, workbook);
@@ -28,7 +28,7 @@ export async function getSheetExcel(luckysheet,name="file"){
         if (table.data.length === 0) return true;
         const worksheet = workbook.addWorksheet(table.name, getWorksheetOptions(table));
         // 3.设置单元格合并,设置单元格边框,设置单元格样式,设置值
-        setStyleAndValue(table, worksheet);
+        setStyleAndValue(table, worksheet, workbook);
         setBorder(table, worksheet);
         setMerge(table, worksheet);
         setImages(table, worksheet, workbook);
@@ -1356,7 +1356,7 @@ var getColumnHidden = function (columnInfo, cfg) {
     return hidden === 0;
 }
  
-var setStyleAndValue = function (table, worksheet) {
+var setStyleAndValue = function (table, worksheet, workbook) {
     // 设置冻结视图
     if(table.frozen && table.frozen.range) {
         let xSplit = table.frozen.type == 'rangeRow' ? 0 : table.frozen.range.column_focus + 1
@@ -1409,7 +1409,14 @@ var setStyleAndValue = function (table, worksheet) {
                 v = cell.v;
             }
             if (cell.f) {
-                value = { formula: cell.f, result: v };
+                let f = cell.f
+                workbook.worksheets.forEach(item => {
+                    if(item.name.indexOf('-') > -1 && f.indexOf(item.name) > -1) {
+                        f = f.replaceAll(item.name, `'${item.name}'`)
+                    }
+                })
+
+                value = { formula: f, result: v };
             } else {
                 value = v;
             }
