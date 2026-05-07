@@ -1692,7 +1692,7 @@ export function showRowOrColumn(type, startIndex, endIndex, options = {}) {
     }
 
     //config
-    Store.luckysheetfile[order].config = Store.config;
+    Store.luckysheetfile[order].config = cfg;
 
     if (saveParam) {
         server.saveParam("cg", file.index, cfg[cfgKey], { "k": cfgKey });

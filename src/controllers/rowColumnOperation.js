@@ -1918,6 +1918,32 @@ export function rowColumnOperationInitial() {
         }
     });
 
+    const getHiddenIndexListInSelection = function(hiddenConfig, startIndex, endIndex) {
+        const hiddenIndexMap = {};
+
+        for (let index = startIndex; index <= endIndex; index++) {
+            if (hiddenConfig[index] != null) {
+                hiddenIndexMap[index] = true;
+            }
+        }
+
+        let beforeIndex = startIndex - 1;
+        while (hiddenConfig[beforeIndex] != null) {
+            hiddenIndexMap[beforeIndex] = true;
+            beforeIndex -= 1;
+        }
+
+        let afterIndex = endIndex + 1;
+        while (hiddenConfig[afterIndex] != null) {
+            hiddenIndexMap[afterIndex] = true;
+            afterIndex += 1;
+        }
+
+        return Object.keys(hiddenIndexMap).map(function(index) {
+            return parseInt(index, 10);
+        });
+    };
+
     //取消隐藏选中行列
     $("#luckysheet-show-selected").click(function(event) {
         $("#luckysheet-rightclick-menu").hide();
@@ -1957,9 +1983,14 @@ export function rowColumnOperationInitial() {
                 let r1 = Store.luckysheet_select_save[s].row[0],
                     r2 = Store.luckysheet_select_save[s].row[1];
 
-                for (let r = r1; r <= r2; r++) {
-                    delete cfg["rowhidden"][r];
+                let hiddenRows = getHiddenIndexListInSelection(cfg["rowhidden"], r1, r2);
+                for (let i = 0; i < hiddenRows.length; i++) {
+                    delete cfg["rowhidden"][hiddenRows[i]];
                 }
+            }
+
+            if (JSON.stringify(cfg["rowhidden"]) === JSON.stringify(Store.config["rowhidden"])) {
+                return;
             }
 
             //保存撤销
@@ -1996,9 +2027,14 @@ export function rowColumnOperationInitial() {
                 let c1 = Store.luckysheet_select_save[s].column[0],
                     c2 = Store.luckysheet_select_save[s].column[1];
 
-                for (let c = c1; c <= c2; c++) {
-                    delete cfg["colhidden"][c];
+                let hiddenCols = getHiddenIndexListInSelection(cfg["colhidden"], c1, c2);
+                for (let i = 0; i < hiddenCols.length; i++) {
+                    delete cfg["colhidden"][hiddenCols[i]];
                 }
+            }
+
+            if (JSON.stringify(cfg["colhidden"]) === JSON.stringify(Store.config["colhidden"])) {
+                return;
             }
 
             //保存撤销
