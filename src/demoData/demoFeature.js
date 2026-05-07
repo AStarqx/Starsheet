@@ -20,7 +20,7 @@
         document.querySelector("body").insertAdjacentHTML('beforeend', '<a id="container" href="' + link + '" target="_blank" style="z-index:2;width:50px;height:50px;line-height:50px;position:fixed;right:40px;bottom:86px;border-radius:50px;cursor:pointer;background:rgb(71,133,249);color:#fff;text-align:center;text-decoration:none;font-size: 12px;">' + text + '</a>');
     }
 
-    supportButton()
+    // supportButton()
 
     /**
      * Get url parameters
