@@ -300,51 +300,177 @@ function initialFilterHandler(){
     const locale_filter = _locale.filter;
     const locale_button= _locale.button;
     $("#luckysheetfilter").click(createFilter);
+    const rightClickSubmenuHideDelay = 420;
+    const rightClickSubmenuOverlap = 12;
+    const rightClickSubmenuHideMap = {};
+
+    const clearRightClickSubmenuHide = function($menu) {
+        if ($menu == null || $menu.length === 0) {
+            return;
+        }
+
+        const menuId = $menu.attr("id");
+        clearTimeout(rightClickSubmenuHideMap[menuId]);
+        delete rightClickSubmenuHideMap[menuId];
+    };
+
+    const hideRightClickSubmenuBranch = function($menu) {
+        if ($menu == null || $menu.length === 0) {
+            return;
+        }
+
+        const menuId = $menu.attr("id");
+        clearRightClickSubmenuHide($menu);
+
+        $(".luckysheet-rightgclick-menu-sub").each(function() {
+            const $subMenu = $(this);
+
+            if ($subMenu.data("parentMenuId") === menuId) {
+                hideRightClickSubmenuBranch($subMenu);
+            }
+        });
+
+        const triggerId = $menu.data("parentTriggerId");
+        if (triggerId != null) {
+            $("#" + triggerId).removeClass("luckysheet-cols-menuitem-hover");
+        }
+
+        $menu.hide();
+    };
+
+    const scheduleRightClickSubmenuHide = function($menu) {
+        if ($menu == null || $menu.length === 0) {
+            return;
+        }
+
+        const menuId = $menu.attr("id");
+        clearRightClickSubmenuHide($menu);
+        rightClickSubmenuHideMap[menuId] = setTimeout(function () {
+            hideRightClickSubmenuBranch($menu);
+        }, rightClickSubmenuHideDelay);
+    };
+
+    const getRightClickParentMenu = function($menuItem) {
+        return $menuItem.parent().closest(".luckysheet-rightgclick-menu-sub, .luckysheet-cols-menu");
+    };
+
+    const clearAllRightClickTriggerHover = function() {
+        $("#luckysheet-rightclick-menu .luckysheet-cols-menuitem-hover, .luckysheet-rightgclick-menu-sub .luckysheet-cols-menuitem-hover").removeClass("luckysheet-cols-menuitem-hover");
+    };
+
+    const getSameLevelRightClickSubmenuTriggers = function($menuItem) {
+        const parentMenuId = getRightClickParentMenu($menuItem).attr("id");
+
+        return $("#luckysheet-rightclick-menu .luckysheet-cols-submenu, .luckysheet-rightgclick-menu-sub .luckysheet-cols-submenu").filter(function() {
+            return getRightClickParentMenu($(this)).attr("id") === parentMenuId;
+        });
+    };
+
+    const clearSiblingRightClickTriggerHover = function($menuItem) {
+        getSameLevelRightClickSubmenuTriggers($menuItem)
+            .not($menuItem)
+            .removeClass("luckysheet-cols-menuitem-hover");
+    };
+
+    const hideSiblingRightClickSubmenus = function($menuItem, currentSubmenuId) {
+        const $parentMenu = getRightClickParentMenu($menuItem);
+        const parentMenuId = $parentMenu.attr("id");
+
+        $(".luckysheet-rightgclick-menu-sub").each(function() {
+            const $subMenu = $(this);
+
+            if ($subMenu.attr("id") !== currentSubmenuId && $subMenu.data("parentMenuId") === parentMenuId) {
+                hideRightClickSubmenuBranch($subMenu);
+            }
+        });
+
+        clearSiblingRightClickTriggerHover($menuItem);
+    };
+
+    const hideRightClickChildSubmenus = function($menuItem) {
+        const parentMenuId = getRightClickParentMenu($menuItem).attr("id");
+
+        $(".luckysheet-rightgclick-menu-sub").each(function() {
+            const $subMenu = $(this);
+
+            if ($subMenu.data("parentMenuId") === parentMenuId) {
+                hideRightClickSubmenuBranch($subMenu);
+            }
+        });
+    };
+
+    $(".luckysheet-rightgclick-menu .luckysheet-cols-submenu, .luckysheet-rightgclick-menu-sub .luckysheet-cols-submenu").on("mouseenter", function () {
+        const $t = $(this);
+
+        clearSiblingRightClickTriggerHover($t);
+
+        if ($("#" + $t.attr("id") + "_sub").length === 0) {
+            hideRightClickChildSubmenus($t);
+        }
+    });
+
+    $(".luckysheet-rightgclick-menu .luckysheet-cols-menuitem:not(.luckysheet-cols-submenu):not(:has(> .luckysheet-cols-submenu)), .luckysheet-rightgclick-menu-sub .luckysheet-cols-menuitem:not(.luckysheet-cols-submenu):not(:has(> .luckysheet-cols-submenu))").on("mouseenter", function () {
+        const $t = $(this);
+
+        clearSiblingRightClickTriggerHover($t);
+        hideRightClickChildSubmenus($t);
+    });
+
+    $("#luckysheet-rightclick-menu, .luckysheet-rightgclick-menu-sub").on("mouseleave", function (event) {
+        if ($(event.relatedTarget).closest("#luckysheet-rightclick-menu, .luckysheet-rightgclick-menu-sub").length === 0) {
+            clearAllRightClickTriggerHover();
+        }
+    });
 
     //右键菜单 菜单项hover
-    let submenuhide = null, rightclickmenu = null;
     $(".luckysheet-cols-menu .luckysheet-cols-submenu").hover(
         function () {
-            let $t = $(this), attrid = $t.attr("id"), $attr = $("#" + attrid + "_sub"), $con = $t.parent();
+            let $t = $(this), attrid = $t.attr("id"), $attr = $("#" + attrid + "_sub"), $con = getRightClickParentMenu($t);
             let winW = $(window).width(), winH = $(window).height();
-            let menuW = $con.width(), attrH = $attr.height() + 25, attrW = $attr.width() + 5;
+            let triggerW = $t.outerWidth(), attrH = $attr.height() + 25, attrW = $attr.width() + 5;
             let offset = $t.offset();
-            let top = offset.top, left = offset.left + menuW;
+            let top = offset.top, left = offset.left + triggerW - rightClickSubmenuOverlap;
 
             if (left + attrW > winW) {
-                left = offset.left - attrW;
+                left = offset.left - attrW + rightClickSubmenuOverlap;
             }
 
             if (top + attrH > winH) {
                 top = winH - attrH;
             }
 
-            $attr.css({ "top": top, "left": left }).show();
-            rightclickmenu = $t;
+            hideSiblingRightClickSubmenus($t, $attr.attr("id"));
+            clearRightClickSubmenuHide($attr);
+            $attr
+                .data("parentMenuId", $con.attr("id"))
+                .data("parentTriggerId", attrid)
+                .css({ "top": top, "left": left })
+                .show();
+            $t.addClass("luckysheet-cols-menuitem-hover");
         },
         function () {
             let $t = $(this), attrid = $t.attr("id"), $attr = $("#" + attrid + "_sub");
-            submenuhide = setTimeout(function () {
-                $attr.hide();
-            }, 200);
+            scheduleRightClickSubmenuHide($attr);
         }
     );
 
     $(".luckysheet-rightgclick-menu-sub").hover(
         function () {
-            let $t = $(this), attrid = $t.attr("id"), $attr = $("#" + attrid + "_sub");
-            if(!$attr) {
-                rightclickmenu.addClass("luckysheet-cols-menuitem-hover");
+            const triggerId = $(this).data("parentTriggerId");
+            if (triggerId != null) {
+                $("#" + triggerId).addClass("luckysheet-cols-menuitem-hover");
             }
-            clearTimeout(submenuhide);
+            clearRightClickSubmenuHide($(this));
         },
-        function () {
-            let $t = $(this), attrid = $t.attr("id"), $attr = $("#" + attrid + "_sub");
-            
-            if(!$attr) {
-                rightclickmenu.removeClass("luckysheet-cols-menuitem-hover");
-                $(this).hide();
+        function (event) {
+            const $currentMenu = $(this);
+            const $relatedMenu = $(event.relatedTarget).closest(".luckysheet-rightgclick-menu-sub");
+
+            if ($relatedMenu.length > 0 && $relatedMenu.data("parentMenuId") === $currentMenu.attr("id")) {
+                return;
             }
+
+            scheduleRightClickSubmenuHide($currentMenu);
         }
     );
 

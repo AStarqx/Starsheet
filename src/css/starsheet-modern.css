@@ -1,0 +1,689 @@
+:root {
+    --starsheet-bg: #ecf7f4;
+    --starsheet-bg-accent: #e9f4ff;
+    --starsheet-surface: rgba(255, 255, 255, 0.88);
+    --starsheet-surface-strong: #ffffff;
+    --starsheet-surface-muted: #f4fbf9;
+    --starsheet-border: rgba(15, 118, 110, 0.12);
+    --starsheet-border-strong: rgba(14, 165, 233, 0.18);
+    --starsheet-text: #112033;
+    --starsheet-muted: #667788;
+    --starsheet-primary: #0f766e;
+    --starsheet-primary-soft: rgba(15, 118, 110, 0.12);
+    --starsheet-secondary: #0ea5e9;
+    --starsheet-shadow: 0 28px 80px rgba(15, 23, 42, 0.14), 0 10px 24px rgba(15, 23, 42, 0.08);
+    --starsheet-shadow-soft: 0 10px 20px rgba(15, 23, 42, 0.08);
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at top left, rgba(15, 118, 110, 0.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 24%),
+        linear-gradient(180deg, #f8fffd 0%, var(--starsheet-bg) 52%, #eef5fb 100%);
+    font-family: "Avenir Next", "Segoe UI Variable", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    color: var(--starsheet-text);
+}
+
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+    background-size: 26px 26px;
+    mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.5), transparent 88%);
+}
+
+.luckysheet {
+    border: 1px solid var(--starsheet-border) !important;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.78);
+    box-shadow: var(--starsheet-shadow);
+    backdrop-filter: blur(18px);
+    color: var(--starsheet-text);
+}
+
+.luckysheet * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.luckysheet-work-area {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(245, 251, 249, 0.94) 100%);
+}
+
+.luckysheet_info_detail {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-height: 64px;
+    padding: 0 22px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(245, 251, 249, 0.84) 100%);
+    border-bottom: 1px solid var(--starsheet-border);
+    box-shadow: none;
+}
+
+.luckysheet_info_detail div.luckysheet_info_detail_back {
+    width: 38px;
+    height: 38px;
+    padding: 0;
+    margin-right: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    color: var(--starsheet-muted);
+    background: rgba(255, 255, 255, 0.68);
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.luckysheet_info_detail div.luckysheet_info_detail_back:hover {
+    background: var(--starsheet-surface-strong);
+    border-color: var(--starsheet-border);
+    color: var(--starsheet-text);
+    transform: translateX(-1px);
+}
+
+.sheet-name {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+}
+
+.sheet-name::before {
+    content: "Workspace";
+    margin-right: 12px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(15, 118, 110, 0.08);
+    color: var(--starsheet-primary);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.luckysheet_info_detail .luckysheet_info_detail_input {
+    height: 38px;
+    min-width: 180px;
+    max-width: min(36vw, 480px);
+    padding: 4px 14px;
+    border-radius: 14px !important;
+    border: 1px solid transparent;
+    background: rgba(255, 255, 255, 0.82);
+    color: var(--starsheet-text);
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    text-align: center;
+}
+
+.luckysheet_info_detail .luckysheet_info_detail_input:hover {
+    border-color: var(--starsheet-border-strong);
+    background: var(--starsheet-surface-strong);
+}
+
+.luckysheet_info_detail .luckysheet_info_detail_input:focus {
+    border-color: rgba(14, 165, 233, 0.32) !important;
+    box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.12);
+}
+
+.luckysheet_info_detail_update,
+.luckysheet_info_detail_save,
+.luckysheet_info_detail_user {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--starsheet-muted);
+    font-size: 12px;
+}
+
+.luckysheet_info_detail_update::before,
+.luckysheet_info_detail_save::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, var(--starsheet-primary) 0%, var(--starsheet-secondary) 100%);
+    box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.08);
+}
+
+.luckysheet-wa-editor {
+    padding: 8px 14px 7px;
+    background: rgba(255, 255, 255, 0.34);
+    border-bottom: 1px solid var(--starsheet-border);
+    white-space: nowrap;
+}
+
+.luckysheet-toolbar-button,
+.luckysheet-toolbar-menu-button {
+    height: 32px;
+    line-height: 32px;
+    border-radius: 8px;
+    color: var(--starsheet-text);
+    transition: background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.luckysheet-toolbar-button-outer-box,
+.luckysheet-toolbar-menu-button-outer-box {
+    border-radius: inherit;
+}
+
+.luckysheet-toolbar-button-inner-box,
+.luckysheet-toolbar-menu-button-inner-box {
+    height: 32px;
+    min-width: 32px;
+    padding: 0 4px;
+}
+
+.luckysheet-toolbar-select .luckysheet-toolbar-menu-button-inner-box {
+    padding: 0 8px;
+}
+
+.luckysheet-icon {
+    width: 32px;
+    height: 32px;
+    margin: 0;
+    color: var(--starsheet-text);
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.luckysheet-toolbar-button:hover,
+.luckysheet-toolbar-menu-button:hover,
+.luckysheet-toolbar-button-hover,
+.luckysheet-toolbar-button-split-right-hover {
+    border-color: transparent !important;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: var(--starsheet-shadow-soft);
+}
+
+.luckysheet-toolbar-button:active,
+.luckysheet-toolbar-menu-button:active {
+    background: var(--starsheet-primary-soft);
+    transform: none;
+}
+
+.luckysheet-toolbar-button-split-right.luckysheet-toolbar-menu-button:hover {
+    border-left-color: transparent !important;
+}
+
+.luckysheet-toolbar-button.disabled,
+.luckysheet-toolbar-menu-button.disabled {
+    opacity: 0.42;
+}
+
+.luckysheet-toolbar-menu-button-caption {
+    color: inherit;
+    font-weight: 600;
+}
+
+.luckysheet-toolbar-menu-button-dropdown {
+    opacity: 0.52;
+}
+
+#luckysheet-icon-redo,
+#luckysheet-icon-font-family,
+#luckysheet-icon-underline,
+#luckysheet-icon-rotation-menu {
+    margin-right: 10px;
+}
+
+#luckysheet-icon-morebtn .luckysheet-toolbar-menu-button-caption {
+    color: var(--starsheet-primary);
+}
+
+#luckysheet-icon-morebtn-div {
+    padding: 10px !important;
+    border: 1px solid var(--starsheet-border) !important;
+    border-radius: 18px;
+    box-shadow: var(--starsheet-shadow);
+    backdrop-filter: blur(16px);
+}
+
+#luckysheet-icon-morebtn-div .luckysheet-toolbar-button,
+#luckysheet-icon-morebtn-div .luckysheet-toolbar-menu-button {
+    margin: 4px;
+}
+
+.luckysheet-cols-menu,
+.luckysheet-filter-menu,
+.luckysheet-filter-submenu,
+#luckysheet-dataVerification-dropdown-List,
+#luckysheet-dataVerification-showHintBox {
+    padding: 8px 0 !important;
+    border-radius: 12px;
+    box-shadow: var(--starsheet-shadow);
+    border: 1px solid var(--starsheet-border) !important;
+}
+
+.luckysheet-cols-menu .luckysheet-cols-menuitem,
+#luckysheet-dataVerification-dropdown-List .dropdown-List-item,
+#luckysheet-filter-orderby-color-submenu .item {
+    margin: 2px 8px;
+    padding: 0 !important;
+    border-radius: 8px;
+    color: var(--starsheet-text);
+}
+
+.luckysheet-cols-menu .luckysheet-cols-menuitem .luckysheet-cols-menuitem-content,
+.luckysheet-rightgclick-menu .luckysheet-cols-menuitem .luckysheet-cols-menuitem-content,
+#luckysheet-cols-menu .luckysheet-cols-menuitem-content,
+.luckysheet-filter-menu .luckysheet-cols-menuitem .luckysheet-cols-menuitem-content,
+#luckysheet-sheet-list .luckysheet-cols-menuitem .luckysheet-cols-menuitem-content,
+#luckysheet-dataVerification-dropdown-List .dropdown-List-item,
+#luckysheet-filter-orderby-color-submenu .item {
+    min-height: 24px;
+    padding: 9px 14px !important;
+    display: flex;
+    align-items: center;
+    border-radius: 8px;
+    color: inherit;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.luckysheet-cols-menu .luckysheet-cols-menuitem:hover,
+.luckysheet-cols-menu .luckysheet-cols-menuitem-hover,
+#luckysheet-dataVerification-dropdown-List .dropdown-List-item:hover,
+#luckysheet-filter-orderby-color-submenu .item:hover {
+    background: rgba(15, 118, 110, 0.08) !important;
+}
+
+.luckysheet-menuseparator {
+    margin: 8px 12px;
+    border-top: 1px solid rgba(102, 119, 136, 0.14);
+}
+
+.luckysheet-submenu-arrow {
+    color: var(--starsheet-primary);
+    opacity: 0.7;
+    margin-left: auto;
+}
+
+.luckysheet-rightgclick-menu-sub {
+    transform-origin: top left;
+}
+
+.luckysheet-filter-menu .luckysheet-filter-byvalue .luckysheet-cols-menuitem,
+.luckysheet-filter-menu .luckysheet-pivotTableFilter-byvalue .luckysheet-cols-menuitem,
+.luckysheet-filter-menu div.luckysheet-cols-menuitem,
+.luckysheet-filter-submenu div.luckysheet-cols-menuitem {
+    margin-bottom: 3px;
+}
+
+.luckysheet-filter-menu .luckysheet-filter-byvalue .luckysheet-cols-menuitem:hover,
+.luckysheet-filter-menu .luckysheet-pivotTableFilter-byvalue .luckysheet-cols-menuitem:hover,
+.luckysheet-filter-menu .luckysheet-cols-menuitem:last-child:hover {
+    background: transparent !important;
+}
+
+.luckysheet-filter-menu .luckysheet-filter-byvalue .luckysheet-cols-menuitem-content,
+.luckysheet-filter-menu .luckysheet-pivotTableFilter-byvalue .luckysheet-cols-menuitem-content {
+    min-height: auto;
+    padding-top: 6px !important;
+    padding-bottom: 4px !important;
+}
+
+.luckysheet-filter-menu .luckysheet-filter-byvalue .luckysheet-cols-menuitem-content input,
+.luckysheet-filter-menu .luckysheet-pivotTableFilter-byvalue .luckysheet-cols-menuitem-content input,
+.luckysheet-filter-menu .luckysheet-filter-bycondition .luckysheet-filter-selected-input input,
+.luckysheet-filter-menu .luckysheet-pivotTableFilter-bycondition .luckysheet-pivotTableFilter-selected-input input,
+.luckysheet-filter-menu .luckysheet-filter-bycondition .luckysheet-filter-selected-input2 input,
+.luckysheet-filter-menu .luckysheet-pivotTableFilter-bycondition .luckysheet-pivotTableFilter-selected-input2 input,
+#luckysheet-dataVerificationRange-dialog input {
+    height: 34px;
+    border-radius: 10px;
+    border: 1px solid rgba(102, 119, 136, 0.18);
+    background: rgba(248, 255, 253, 0.95);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+}
+
+.luckysheet-filter-menu .luckysheet-filter-byvalue .luckysheet-cols-menuitem-content input:focus,
+.luckysheet-filter-menu .luckysheet-pivotTableFilter-byvalue .luckysheet-cols-menuitem-content input:focus,
+.luckysheet-filter-menu .luckysheet-filter-bycondition .luckysheet-filter-selected-input input:focus,
+.luckysheet-filter-menu .luckysheet-pivotTableFilter-bycondition .luckysheet-pivotTableFilter-selected-input input:focus,
+.luckysheet-filter-menu .luckysheet-filter-bycondition .luckysheet-filter-selected-input2 input:focus,
+.luckysheet-filter-menu .luckysheet-pivotTableFilter-bycondition .luckysheet-pivotTableFilter-selected-input2 input:focus,
+#luckysheet-dataVerificationRange-dialog input:focus {
+    border-color: rgba(14, 165, 233, 0.32);
+    box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.12);
+    outline: none;
+}
+
+.luckysheet-filter-menu .luckysheet-mousedown-filter-byvalue-btn span,
+.luckysheet-filter-menu .luckysheet-mousedown-pivotTableFilter-byvalue-btn span {
+    color: var(--starsheet-primary);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.luckysheet-filter-menu .luckysheet-mousedown-filter-byvalue-btn div,
+.luckysheet-filter-menu .luckysheet-mousedown-pivotTableFilter-byvalue-btn div {
+    right: 16px;
+    top: 4px;
+    color: var(--starsheet-muted);
+}
+
+#luckysheet-filter-byvalue-select tr td,
+#luckysheet-pivotTableFilter-byvalue-select tr td {
+    padding: 4px 6px;
+    border-radius: 8px;
+}
+
+#luckysheet-filter-byvalue-select tr:hover td,
+#luckysheet-pivotTableFilter-byvalue-select tr:hover td {
+    background: rgba(15, 118, 110, 0.08);
+}
+
+#luckysheet-filter-orderby-color-submenu {
+    min-width: 180px;
+}
+
+#luckysheet-filter-orderby-color-submenu .title {
+    margin: 4px 8px 8px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    color: var(--starsheet-text);
+    background: rgba(15, 118, 110, 0.08);
+    text-align: left;
+}
+
+#luckysheet-filter-orderby-color-submenu .item label {
+    border-radius: 8px;
+    border-color: rgba(102, 119, 136, 0.18);
+}
+
+#luckysheet-filter-orderby-color-submenu .item input[type="checkbox"] {
+    right: 14px;
+    top: 10px;
+}
+
+#luckysheet-dataVerification-dropdown-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+#luckysheet-dataVerification-dropdown-List .dropdown-List-item.multi:before {
+    width: 18px;
+    color: var(--starsheet-primary);
+    text-align: center;
+}
+
+#luckysheet-dataVerification-showHintBox {
+    max-width: 260px;
+    color: var(--starsheet-text);
+    line-height: 1.5;
+}
+
+.jfk-tooltip {
+    padding: 10px 12px;
+    border-radius: 8px;
+}
+
+.jfk-tooltip-arrow .jfk-tooltip-arrowimplbefore,
+.jfk-tooltip-arrow .jfk-tooltip-arrowimplafter,
+.jfk-tooltip-arrowdown .jfk-tooltip-arrowimplbefore,
+.jfk-tooltip-arrowdown .jfk-tooltip-arrowimplafter,
+.jfk-tooltip-arrowup .jfk-tooltip-arrowimplbefore,
+.jfk-tooltip-arrowup .jfk-tooltip-arrowimplafter {
+    border-top-color: rgba(255, 255, 255, 0.96) !important;
+    border-bottom-color: rgba(255, 255, 255, 0.96) !important;
+}
+
+.luckysheet-rightgclick-menu-sub .sp-container,
+.sp-container {
+    padding: 10px;
+}
+
+.luckysheet-wa-calculate {
+    height: 40px;
+    padding: 0 14px 0 0;
+    background: rgba(255, 255, 255, 0.46);
+    border-bottom: 1px solid var(--starsheet-border);
+}
+
+.luckysheet-wa-calculate-help {
+    width: 116px;
+    border-right: 1px solid var(--starsheet-border);
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.luckysheet-wa-calculate-help-box {
+    left: 10px;
+    width: 92px;
+    border-radius: 12px;
+}
+
+#luckysheet-helpbox {
+    padding: 8px 8px;
+    font-size: 13px;
+    line-height: 18px;
+    color: var(--starsheet-muted);
+    background: transparent;
+}
+
+.luckysheet-wa-calculate-help-tool {
+    left: 98px;
+    width: 20px;
+    border-radius: 8px;
+}
+
+.luckysheet-wa-calculate-help-tool:hover {
+    border-color: transparent;
+    background: rgba(14, 165, 233, 0.1);
+}
+
+.luckysheet-wa-functionbox {
+    left: 162px;
+    color: #8aa0b0;
+}
+
+.luckysheet-wa-calculate-active {
+    color: var(--starsheet-primary);
+}
+
+.luckysheet-grid-window,
+.luckysheet-grid-window-1 {
+    background: transparent;
+}
+
+.luckysheet-left-top,
+.luckysheet-cols-h-c,
+.luckysheet-rows-h,
+.luckysheet-cols-h-cells-clip,
+.luckysheet-rows-h-cells-clip {
+    background: linear-gradient(180deg, #f8fffd 0%, #edf7f4 100%);
+}
+
+.luckysheet-left-top,
+.luckysheet-cols-h-cells-clip,
+.luckysheet-rows-h-cells-clip {
+    border-color: var(--starsheet-border-strong);
+}
+
+.luckysheet-cols-h-cell-sel,
+.luckysheet-rows-h-cell-sel {
+    background: rgba(15, 118, 110, 0.12);
+    color: var(--starsheet-primary);
+    border-color: rgba(15, 118, 110, 0.28);
+}
+
+body:not(.ewa-ipad) .luckysheet-cols-h-cell-nosel:hover,
+body:not(.ewa-ipad) .luckysheet-cols-h-cell-sel:hover,
+body:not(.ewa-ipad) .luckysheet-rows-h-cell-nosel:hover,
+body:not(.ewa-ipad) .luckysheet-rows-h-cell-sel:hover {
+    background: rgba(15, 118, 110, 0.07);
+}
+
+.luckysheet-sta-c {
+    height: 26px;
+    background: rgba(255, 255, 255, 0.84);
+    border-top: 1px solid var(--starsheet-border);
+}
+
+.luckysheet-sta-c .luckysheet-sta-content {
+    height: 26px;
+    line-height: 26px;
+    color: var(--starsheet-muted);
+}
+
+.luckysheet-stat-area {
+    background: transparent;
+}
+
+.luckysheet-sheet-area {
+    height: 40px;
+    padding: 0 12px 0 14px;
+    background: linear-gradient(180deg, rgba(245, 251, 249, 0.92) 0%, rgba(255, 255, 255, 0.98) 100%);
+    border-top: 1px solid var(--starsheet-border);
+    color: var(--starsheet-text);
+}
+
+#luckysheet-sheet-content,
+#luckysheet-bottom-pager {
+    background: transparent;
+    gap: 6px;
+}
+
+.docs-sheet-fade div {
+    background-color: rgba(102, 119, 136, 0.2);
+}
+
+.luckysheet-sheet-area div.luckysheet-sheet-container,
+.luckysheet-sheet-area div.luckysheet-sheet-container div.luckysheet-sheet-container-c {
+    max-width: 100%;
+}
+
+.luckysheet-sheet-area div.luckysheet-sheets-item {
+    height: 30px;
+    line-height: 30px;
+    padding: 0 26px 0 12px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--starsheet-muted);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.luckysheet-sheet-area div.luckysheet-sheets-item:hover {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--starsheet-text);
+}
+
+.luckysheet-sheet-area div.luckysheet-sheets-item-active,
+.luckysheet-sheet-area div.luckysheet-sheets-item-active:hover {
+    background: var(--starsheet-surface-strong);
+    color: var(--starsheet-text);
+    box-shadow: var(--starsheet-shadow-soft);
+}
+
+.luckysheet-sheet-area div.luckysheet-sheets-item .luckysheet-sheets-item-menu {
+    right: 5px;
+    color: #8aa0b0;
+}
+
+div.luckysheet-sheets-add,
+div.luckysheet-sheets-m,
+div.luckysheet-sheets-scroll,
+#luckysheet-bottom-controll-row .luckysheet-mousedown-cancel,
+#luckysheet-bottom-pager .luckysheet-mousedown-cancel {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    color: var(--starsheet-muted);
+    transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+div.luckysheet-sheets-add:hover,
+div.luckysheet-sheets-m:hover,
+div.luckysheet-sheets-scroll:hover,
+#luckysheet-bottom-controll-row .luckysheet-mousedown-cancel:hover,
+#luckysheet-bottom-pager .luckysheet-mousedown-cancel:hover {
+    background: rgba(255, 255, 255, 0.95);
+    color: var(--starsheet-text);
+}
+
+@media (max-width: 1200px) {
+    .luckysheet-share-logo {
+        width: 168px;
+    }
+
+    .luckysheet-share-logo::after {
+        font-size: 23px;
+    }
+
+    .sheet-name::before {
+        display: none;
+    }
+}
+
+@media (max-width: 960px) {
+    #luckysheet {
+        top: 10px !important;
+        left: 10px !important;
+        width: calc(100vw - 20px) !important;
+        height: calc(100vh - 20px) !important;
+    }
+
+    .luckysheet {
+        border-radius: 20px;
+    }
+
+    .luckysheet_info_detail {
+        padding: 0 14px;
+        gap: 10px;
+    }
+
+    .luckysheet-share-logo {
+        width: 56px;
+    }
+
+    .luckysheet-share-logo::after {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    body::before {
+        display: none;
+    }
+
+    #luckysheet {
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+    }
+
+    .luckysheet {
+        border-radius: 0;
+        box-shadow: none;
+        border-left: 0 !important;
+        border-right: 0 !important;
+    }
+
+    .luckysheet_info_detail {
+        min-height: 58px;
+    }
+
+    .luckysheet_info_detail_update,
+    .luckysheet_info_detail_save {
+        display: none;
+    }
+}

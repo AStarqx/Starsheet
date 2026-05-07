@@ -159,6 +159,25 @@ export default function luckysheetsizeauto(isRefreshCanvas=true) {
 
     }
 
+    const compactToolbarSelectors = [
+        "#luckysheet-importXlsx-btn-title",
+        "#luckysheet-exportXlsx-btn-title",
+        "#luckysheet-insertImg-btn-title",
+        "#luckysheet-insertLink-btn-title",
+        "#luckysheet-chart-btn-title",
+        "#luckysheet-icon-postil",
+        "#luckysheet-pivot-btn-title",
+    ];
+
+    for (const selector of compactToolbarSelectors) {
+        const $item = $("#luckysheet-wa-editor").find(selector).first();
+
+        if ($item.length > 0) {
+            $("#luckysheet-icon-morebtn-div").append($item);
+            ismore = true;
+        }
+    }
+
     if(ismore){
 
         $("#luckysheet-wa-editor").append(morebtn);
