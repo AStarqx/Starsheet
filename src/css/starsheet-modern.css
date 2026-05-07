@@ -251,11 +251,6 @@ body::before {
     backdrop-filter: blur(16px);
 }
 
-#luckysheet-icon-morebtn-div .luckysheet-toolbar-button,
-#luckysheet-icon-morebtn-div .luckysheet-toolbar-menu-button {
-    margin: 4px;
-}
-
 .luckysheet-cols-menu,
 .luckysheet-filter-menu,
 .luckysheet-filter-submenu,
@@ -501,6 +496,10 @@ body::before {
     background: transparent;
 }
 
+.luckysheet-grid-window-1 {
+    bottom: 40px;
+}
+
 .luckysheet-left-top,
 .luckysheet-cols-h-c,
 .luckysheet-rows-h,
@@ -546,6 +545,7 @@ body:not(.ewa-ipad) .luckysheet-rows-h-cell-sel:hover {
 }
 
 .luckysheet-sheet-area {
+    box-sizing: border-box;
     height: 40px;
     padding: 0 12px 0 14px;
     background: linear-gradient(180deg, rgba(245, 251, 249, 0.92) 0%, rgba(255, 255, 255, 0.98) 100%);
@@ -556,7 +556,12 @@ body:not(.ewa-ipad) .luckysheet-rows-h-cell-sel:hover {
 #luckysheet-sheet-content,
 #luckysheet-bottom-pager {
     background: transparent;
+    min-width: 0;
     gap: 6px;
+}
+
+#luckysheet-sheet-content {
+    flex: 1 1 auto;
 }
 
 .docs-sheet-fade div {
@@ -565,7 +570,17 @@ body:not(.ewa-ipad) .luckysheet-rows-h-cell-sel:hover {
 
 .luckysheet-sheet-area div.luckysheet-sheet-container,
 .luckysheet-sheet-area div.luckysheet-sheet-container div.luckysheet-sheet-container-c {
-    max-width: 100%;
+    min-width: 0;
+    max-width: none;
+}
+
+.luckysheet-sheet-area div.luckysheet-sheet-container {
+    flex: 1 1 auto;
+}
+
+.luckysheet-sheet-area div.luckysheet-sheet-container div.luckysheet-sheet-container-c {
+    display: block;
+    width: 100%;
 }
 
 .luckysheet-sheet-area div.luckysheet-sheets-item {
@@ -634,13 +649,6 @@ div.luckysheet-sheets-scroll:hover,
 }
 
 @media (max-width: 960px) {
-    #luckysheet {
-        top: 10px !important;
-        left: 10px !important;
-        width: calc(100vw - 20px) !important;
-        height: calc(100vh - 20px) !important;
-    }
-
     .luckysheet {
         border-radius: 20px;
     }
@@ -662,13 +670,6 @@ div.luckysheet-sheets-scroll:hover,
 @media (max-width: 768px) {
     body::before {
         display: none;
-    }
-
-    #luckysheet {
-        top: 0 !important;
-        left: 0 !important;
-        width: 100vw !important;
-        height: 100vh !important;
     }
 
     .luckysheet {

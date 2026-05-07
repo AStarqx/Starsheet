@@ -40,7 +40,7 @@ const defaultConfig = {
         rowHeaderWidth: 46,
         columnHeaderHeight: 20,
         cellMainSrollBarSize: 12,
-        sheetBarHeight: 31,
+        sheetBarHeight: 40,
         statisticBarHeight: 23,
         luckysheetTableContentHW: [0, 0], 
     

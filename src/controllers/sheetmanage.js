@@ -486,8 +486,8 @@ const sheetmanage = {
     },
     // *控制sheet栏的左右滚动按钮是否显示
     locationSheet: function() {
-        let $c = $("#luckysheet-sheet-container-c"),
-            winW = $("#" + Store.container).width();
+        let $c = $("#luckysheet-sheet-container-c");
+        let availableWidth = this.syncSheetContainerWidth();
         let $cursheet = $("#luckysheet-sheet-container-c > div.luckysheet-sheets-item-active").eq(0);
 
         let scrollLeftpx = 0;
@@ -504,7 +504,7 @@ const sheetmanage = {
             $c.scrollLeft(scrollLeftpx - 10);
 
             if (luckysheetConfigsetting.showsheetbarConfig.sheet) {
-                if (c_width >= winW * 0.7) {
+                if (c_width > availableWidth) {
                     $("#luckysheet-sheet-area .luckysheet-sheets-scroll").css("display", "inline-block");
                     $("#luckysheet-sheet-container .docs-sheet-fade-left").show();
                 } else {
@@ -513,6 +513,28 @@ const sheetmanage = {
                 }
             }
         }, 1);
+    },
+    getSheetContainerAvailableWidth() {
+        let $sheetContent = $("#luckysheet-sheet-content");
+
+        if (!$sheetContent.length) {
+            return 0;
+        }
+
+        let availableWidth = $sheetContent.innerWidth();
+
+        $sheetContent.children(":visible").not("#luckysheet-sheet-container").each(function() {
+            availableWidth -= $(this).outerWidth(true);
+        });
+
+        return Math.max(Math.floor(availableWidth), 0);
+    },
+    syncSheetContainerWidth() {
+        let availableWidth = this.getSheetContainerAvailableWidth();
+
+        $("#luckysheet-sheet-container").css("width", availableWidth);
+
+        return availableWidth;
     },
     copySheet: function(copyindex, e) {
         if (isEditMode() || Store.allowEdit === false) {
@@ -1724,6 +1746,7 @@ const sheetmanage = {
         this.sheetBarShowAndHide(index);
     },
     sheetArrowShowAndHide() {
+        this.syncSheetContainerWidth();
         const $wrap = $("#luckysheet-sheet-container-c");
         if (!$wrap.length) return;
         var sw = $wrap[0].scrollWidth;
@@ -1741,6 +1764,7 @@ const sheetmanage = {
     },
     // *显示sheet栏左右的灰色
     sheetBarShowAndHide(index) {
+        this.syncSheetContainerWidth();
         let $c = $("#luckysheet-sheet-container-c");
 
         if (index != null) {

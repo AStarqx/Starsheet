@@ -557,7 +557,7 @@ function customSheetbarConfig() {
     }
     else {
         $("#" + Store.container).find("#luckysheet-sheet-area").show();
-        Store.sheetBarHeight = 31;
+        Store.sheetBarHeight = 40;
     }
 }
 
