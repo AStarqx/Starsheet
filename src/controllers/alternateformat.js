@@ -11,6 +11,7 @@ import server from './server';
 import { selectHightlightShow } from './select';
 import Store from '../store';
 import locale from '../locale/locale';
+import { getSheetCache, ensureSheetVersionState, bumpSheetFormatVersion } from '../global/perf';
 
 //交替颜色
 const alternateformat = {
@@ -1078,7 +1079,17 @@ const alternateformat = {
         let file = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)] || {}
         let ruleArr = file["luckysheet_alternateformat_save"] || []
 
+        let versionState = ensureSheetVersionState(file.index == null ? Store.currentSheetIndex : file.index);
+        let cache = getSheetCache('alternateFormat', file.index == null ? Store.currentSheetIndex : file.index);
+        let cacheKey = versionState.formatVersion + '_' + versionState.layoutVersion;
+
+        if (cache.key === cacheKey && cache.map != null) {
+            return cache.map;
+        }
+
         let computeMap = this.compute(ruleArr)
+        cache.key = cacheKey;
+        cache.map = computeMap;
 
         return computeMap;
     },
@@ -1215,6 +1226,7 @@ const alternateformat = {
 
         let index = getSheetIndex(Store.currentSheetIndex);
         Store.luckysheetfile[index]["luckysheet_alternateformat_save"] = currentRules;
+        bumpSheetFormatVersion(Store.currentSheetIndex);
 
         setTimeout(function () {
             luckysheetrefreshgrid();

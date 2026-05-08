@@ -7339,13 +7339,73 @@ export function pagerInit (config) {
  * @param {Function} success 回调函数
  */
 export function refreshFormula (success) {
-    formula.execFunctionGroupForce(true);
-    luckysheetrefreshgrid()
-    setTimeout(() => {
-      if (success && typeof success === 'function') {
-          success();
-      }
-    })
+    let currentFile = sheetmanage.getSheetByIndex(Store.currentSheetIndex);
+    let shouldRunCurrentSheetFirst =
+        formula.shouldDeferLargeWorkbookForceCalculation() &&
+        luckysheetConfigsetting.largeWorkbookBackgroundCalculation;
+
+    let runRefresh = function() {
+        let formulaRunList = null;
+        let hasImportedCache = xlsxCtrl.hasImportedSheetCache();
+        let execOptions = {};
+
+        let runForceRefresh = function(runList, complete, shouldRefreshGrid = true) {
+            formula.execFunctionGroupForceAsync({
+                ...execOptions,
+                formulaRunList: runList,
+                taskLabel: "manual-refresh-formula",
+                prioritizeSheetIndexes:
+                    !Array.isArray(runList) && shouldRunCurrentSheetFirst ? [Store.currentSheetIndex] : null,
+                refreshGridOnPriorityComplete:
+                    shouldRefreshGrid && !Array.isArray(runList) && shouldRunCurrentSheetFirst,
+                refreshGridOnComplete: shouldRefreshGrid,
+                onComplete: function() {
+                    if (typeof complete === 'function') {
+                        complete();
+                    }
+                },
+            });
+        };
+
+        if (currentFile != null) {
+            if (hasImportedCache) {
+                let viewportRange = formula.getCurrentViewportFormulaRange(currentFile);
+
+                formulaRunList = formula.getSimpleFormulaRunListByRange(
+                    Store.currentSheetIndex,
+                    viewportRange.rowRange,
+                    viewportRange.columnRange,
+                );
+            } else if (shouldRunCurrentSheetFirst) {
+                let sheetIndexes = [Store.currentSheetIndex];
+                sheetIndexes = sheetIndexes.concat(sheetmanage.getFormulaDependencySheetIndexes(currentFile));
+                formulaRunList = formula.getForceFormulaRunList(sheetIndexes);
+            }
+        }
+
+        if (hasImportedCache) {
+            execOptions.batchSize = 20;
+            execOptions.maxDurationMs = 6;
+            execOptions.skipServerSave = true;
+            execOptions.skipCellUpdatedHook = true;
+            execOptions.resultCommitBatchSize = Array.isArray(formulaRunList)
+                ? Math.max(formulaRunList.length, 200)
+                : 1000;
+        }
+
+        runForceRefresh(formulaRunList, function() {
+            if (success && typeof success === 'function') {
+                success();
+            }
+        });
+    };
+
+    if (currentFile == null) {
+        runRefresh();
+        return;
+    }
+
+    sheetmanage.ensureFormulaDependencySheetsLoaded(currentFile, runRefresh);
 }
 
 /**

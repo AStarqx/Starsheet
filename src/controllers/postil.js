@@ -24,6 +24,11 @@ const luckysheetPostil = {
     resizeXY: null,
     move: false,
     moveXY: null,
+    overshowCellKey: null,
+    clearOvershow: function() {
+        this.overshowCellKey = null;
+        $("#luckysheet-postil-overshow").remove();
+    },
     init: function(){
         let _this = this;
 
@@ -152,9 +157,8 @@ const luckysheetPostil = {
     overshow: function(event){
         let _this = this;
 
-        $("#luckysheet-postil-overshow").remove();
-
         if($(event.target).closest("#luckysheet-cell-main").length == 0){
+            _this.clearOvershow();
             return;
         }
 
@@ -187,15 +191,26 @@ const luckysheetPostil = {
             col_index = margeset.column[2];
         }
 
+        let hoverKey = row_index + "_" + col_index;
+
         if(Store.flowdata[row_index] == null || Store.flowdata[row_index][col_index] == null || Store.flowdata[row_index][col_index].ps == null){
+            _this.clearOvershow();
             return;
         }
 
         let postil = Store.flowdata[row_index][col_index].ps;
 
         if(postil["isshow"] || $("#luckysheet-postil-show_"+ row_index +"_"+ col_index).length > 0){
+            _this.clearOvershow();
             return;
         }
+
+        if (_this.overshowCellKey === hoverKey && $("#luckysheet-postil-overshow").length > 0) {
+            return;
+        }
+
+        _this.clearOvershow();
+        _this.overshowCellKey = hoverKey;
 
         let value = postil["value"] == null ? "" : postil["value"].toString()
 

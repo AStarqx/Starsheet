@@ -168,6 +168,16 @@ const Store = {
     conditionFormatCells: {}, // 条件格式高亮的单元格
     currentImgId: null,
 
+    deferDrawFormulaCompute: false,
+    performanceState: {
+        sheetVersions: {},
+        caches: {
+            conditionFormat: {},
+            alternateFormat: {},
+            overflow: {},
+        },
+    },
+
 }
 
 export default Store;

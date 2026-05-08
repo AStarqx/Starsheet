@@ -20,6 +20,7 @@ import Store from "../store";
 import locale from "../locale/locale";
 import sheetmanage from "../controllers/sheetmanage";
 import { colLocationByIndex, rowLocationByIndex } from "./location";
+import { getSheetCache, ensureSheetVersionState } from './perf';
 
 function luckysheetDrawgridRowTitle(scrollHeight, drawHeight, offsetTop) {
     if (scrollHeight == null) {
@@ -383,6 +384,7 @@ function luckysheetDrawMain(
     columnOffsetCell,
     rowOffsetCell,
     mycanvas,
+    renderOptions,
 ) {
     if (Store.flowdata == null) {
         return;
@@ -445,8 +447,6 @@ function luckysheetDrawMain(
     luckysheetTableContent.save();
     luckysheetTableContent.scale(Store.devicePixelRatio, Store.devicePixelRatio);
 
-    luckysheetTableContent.clearRect(0, 0, Store.luckysheetTableContentHW[0], Store.luckysheetTableContentHW[1]);
-
     //表格渲染区域 起止行列下标
     let dataset_row_st, dataset_row_ed, dataset_col_st, dataset_col_ed;
 
@@ -507,14 +507,80 @@ function luckysheetDrawMain(
 
     fill_col_ed = Store.visibledatacolumn[dataset_col_ed];
 
+    let dirtyRanges = null;
+    if (renderOptions != null && Array.isArray(renderOptions.dirtyRanges) && renderOptions.dirtyRanges.length > 0) {
+        dirtyRanges = renderOptions.dirtyRanges
+            .filter(function(range) {
+                return range != null && Array.isArray(range.row) && Array.isArray(range.column);
+            })
+            .map(function(range) {
+                let expandedRowStart = Math.max(dataset_row_st, range.row[0] - 1);
+                let expandedRowEnd = Math.min(dataset_row_ed, range.row[1] + 1);
+                let expandedColumnStart = Math.max(dataset_col_st, range.column[0] - 4);
+                let expandedColumnEnd = Math.min(dataset_col_ed, range.column[1] + 4);
+
+                return {
+                    row: [expandedRowStart, expandedRowEnd],
+                    column: [expandedColumnStart, expandedColumnEnd],
+                };
+            })
+            .filter(function(range) {
+                return range.row[0] <= range.row[1] && range.column[0] <= range.column[1];
+            });
+    }
+
+    let isPartialRender = dirtyRanges != null && dirtyRanges.length > 0;
+
+    if (isPartialRender) {
+        dirtyRanges.forEach(function(range) {
+            let rectStartRow = range.row[0];
+            let rectEndRow = range.row[1];
+            let rectStartColumn = range.column[0];
+            let rectEndColumn = range.column[1];
+            let startY = rectStartRow === 0 ? 0 : Store.visibledatarow[rectStartRow - 1];
+            let endY = Store.visibledatarow[rectEndRow];
+            let startX = rectStartColumn === 0 ? 0 : Store.visibledatacolumn[rectStartColumn - 1];
+            let endX = Store.visibledatacolumn[rectEndColumn];
+
+            luckysheetTableContent.clearRect(
+                startX - scrollWidth + offsetLeft - 1,
+                startY - scrollHeight + offsetTop - 1,
+                endX - startX + 2,
+                endY - startY + 2,
+            );
+        });
+    } else {
+        luckysheetTableContent.clearRect(0, 0, Store.luckysheetTableContentHW[0], Store.luckysheetTableContentHW[1]);
+    }
+
     //表格canvas 初始化处理
     luckysheetTableContent.fillStyle = "#ffffff";
-    luckysheetTableContent.fillRect(
-        offsetLeft - 1,
-        offsetTop - 1,
-        fill_col_ed - scrollWidth,
-        fill_row_ed - scrollHeight,
-    );
+    if (isPartialRender) {
+        dirtyRanges.forEach(function(range) {
+            let rectStartRow = range.row[0];
+            let rectEndRow = range.row[1];
+            let rectStartColumn = range.column[0];
+            let rectEndColumn = range.column[1];
+            let startY = rectStartRow === 0 ? 0 : Store.visibledatarow[rectStartRow - 1];
+            let endY = Store.visibledatarow[rectEndRow];
+            let startX = rectStartColumn === 0 ? 0 : Store.visibledatacolumn[rectStartColumn - 1];
+            let endX = Store.visibledatacolumn[rectEndColumn];
+
+            luckysheetTableContent.fillRect(
+                startX - scrollWidth + offsetLeft - 1,
+                startY - scrollHeight + offsetTop - 1,
+                endX - startX + 2,
+                endY - startY + 2,
+            );
+        });
+    } else {
+        luckysheetTableContent.fillRect(
+            offsetLeft - 1,
+            offsetTop - 1,
+            fill_col_ed - scrollWidth,
+            fill_row_ed - scrollHeight,
+        );
+    }
     luckysheetTableContent.font = luckysheetdefaultFont();
     // luckysheetTableContent.textBaseline = "top";
     luckysheetTableContent.fillStyle = luckysheetdefaultstyle.fillStyle;
@@ -544,6 +610,15 @@ function luckysheetDrawMain(
         }
 
         for (let c = dataset_col_st; c <= dataset_col_ed; c++) {
+            if (
+                isPartialRender &&
+                !dirtyRanges.some(function(range) {
+                    return r >= range.row[0] && r <= range.row[1] && c >= range.column[0] && c <= range.column[1];
+                })
+            ) {
+                continue;
+            }
+
             let start_c;
             if (c == 0) {
                 start_c = -scrollWidth;
@@ -1145,7 +1220,7 @@ function luckysheetDrawMain(
     }
 
     //渲染表格时有尾列时，清除右边灰色区域，防止表格有值溢出
-    if (dataset_col_ed == Store.visibledatacolumn.length - 1) {
+    if (!isPartialRender && dataset_col_ed == Store.visibledatacolumn.length - 1) {
         luckysheetTableContent.clearRect(
             fill_col_ed - scrollWidth + offsetLeft - 1,
             offsetTop - 1,
@@ -1156,11 +1231,6 @@ function luckysheetDrawMain(
 
     luckysheetTableContent.restore();
 
-    Store.measureTextCacheTimeOut = setTimeout(() => {
-        Store.measureTextCache = {};
-        Store.measureTextCellInfoCache = {};
-        Store.cellOverflowMapCache = {};
-    }, 100);
 }
 
 //sparklines渲染
@@ -1954,14 +2024,26 @@ function getCellOverflowMap(canvas, col_st, col_ed, row_st, row_end) {
     let map = {};
 
     let data = Store.flowdata;
+    let versionState = ensureSheetVersionState(Store.currentSheetIndex);
+    let overflowCache = getSheetCache('overflow', Store.currentSheetIndex);
+    let cacheKey = versionState.dataVersion + '_' + versionState.layoutVersion + '_' + Store.zoomRatio;
+
+    if (overflowCache.key !== cacheKey) {
+        overflowCache.key = cacheKey;
+        overflowCache.rows = {};
+    }
+
+    let rowCache = overflowCache.rows || {};
 
     for (let r = row_st; r <= row_end; r++) {
         if (data[r] == null) {
             continue;
         }
 
-        if (Store.cellOverflowMapCache[r] != null) {
-            map[r] = Store.cellOverflowMapCache[r];
+        if (Object.prototype.hasOwnProperty.call(rowCache, r)) {
+            if (rowCache[r] != null) {
+                map[r] = rowCache[r];
+            }
             continue;
         }
 
@@ -2066,9 +2148,7 @@ function getCellOverflowMap(canvas, col_st, col_ed, row_st, row_end) {
             }
         }
 
-        if (hasCellOver) {
-            Store.cellOverflowMapCache[r] = map[r];
-        }
+        rowCache[r] = hasCellOver ? map[r] : null;
     }
 
     return map;

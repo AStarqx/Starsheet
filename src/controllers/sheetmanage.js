@@ -23,6 +23,7 @@ import hyperlinkCtrl from "./hyperlinkCtrl";
 import luckysheetFreezen from "./freezen";
 import { createFilterOptions, labelFilterOptionState } from "./filter";
 import { selectHightlightShow, selectionCopyShow } from "./select";
+import xlsxCtrl from "./xlsxCtrl";
 import Store from "../store";
 import locale from "../locale/locale";
 import { renderChartShow } from "../expendPlugins/chart/plugin";
@@ -735,18 +736,39 @@ const sheetmanage = {
 
         return ret;
     },
+    shouldVirtualizeInactiveSheets: function(file = null) {
+        return (
+            (file != null && file._virtualizedMaterialization === true) ||
+            xlsxCtrl.hasImportedSheetCache(file) ||
+            xlsxCtrl.hasImportedSheetCache()
+        );
+    },
+    createSparseGridData: function(rowCount, columnCount) {
+        let safeRowCount = rowCount == null || rowCount < 0 ? 0 : rowCount;
+        let safeColumnCount = columnCount == null || columnCount < 0 ? 0 : columnCount;
+        let data = new Array(safeRowCount);
+
+        for (let rowIndex = 0; rowIndex < safeRowCount; rowIndex++) {
+            data[rowIndex] = new Array(safeColumnCount);
+        }
+
+        return data;
+    },
     buildGridData: function(file) {
         // 如果已经存在二维数据data,那么直接返回data；如果只有celldata，那么就转化成二维数组data，再返回
+        xlsxCtrl.hydrateImportedSheet(file);
+
         let row = file.row == null ? Store.defaultrowNum : file.row,
             column = file.column == null ? Store.defaultcolumnNum : file.column,
-            data = file.data && file.data.length > 0 ? file.data : datagridgrowth([], row, column),
+            data =
+                file.data && file.data.length > 0
+                    ? file.data
+                    : this.shouldVirtualizeInactiveSheets(file)
+                      ? this.createSparseGridData(row, column)
+                      : datagridgrowth([], row, column),
             celldata = file.celldata;
         if (file.data && file.data.length > 0) {
-            for (let i = 0; i < data.length; i++) {
-                for (let j = 0; j < data[0].length; j++) {
-                    setcellvalue(i, j, data, data[i][j]);
-                }
-            }
+            return data;
         } else {
             if (celldata && celldata.length > 0) {
                 for (let i = 0; i < celldata.length; i++) {
@@ -756,11 +778,34 @@ const sheetmanage = {
                     let v = item.v;
 
                     if (r >= data.length) {
-                        data = datagridgrowth(data, r - data.length + 1, 0);
+                        if (this.shouldVirtualizeInactiveSheets(file)) {
+                            let currentLength = data.length;
+                            data.length = r + 1;
+                            for (let rowIndex = currentLength; rowIndex <= r; rowIndex++) {
+                                data[rowIndex] = new Array(column);
+                            }
+                        } else {
+                            data = datagridgrowth(data, r - data.length + 1, 0);
+                        }
                     }
-                    if (c >= data[0].length) {
-                        data = datagridgrowth(data, 0, c - data[0].length + 1);
+
+                    if (data[r] == null) {
+                        data[r] = new Array(Math.max(column, c + 1));
                     }
+
+                    if (c >= data[r].length) {
+                        if (this.shouldVirtualizeInactiveSheets(file)) {
+                            data[r].length = c + 1;
+                            if (data[0] == null) {
+                                data[0] = new Array(c + 1);
+                            } else if (data[0].length < c + 1) {
+                                data[0].length = c + 1;
+                            }
+                        } else {
+                            data = datagridgrowth(data, 0, c - data[0].length + 1);
+                        }
+                    }
+
                     setcellvalue(r, c, data, v);
                 }
             }
@@ -961,6 +1006,8 @@ const sheetmanage = {
                 _this.createSheet();
 
                 let execF = function() {
+                    let shouldDeferForceCalculation = formula.shouldDeferLargeWorkbookForceCalculation();
+
                     _this.mergeCalculation(file["index"]);
                     _this.setSheetParam(false);
                     // editor.webWorkerFlowDataCache(Store.flowdata);//worker存数据
@@ -968,7 +1015,32 @@ const sheetmanage = {
                     _this.restoreselect();
                     _this.CacheNotLoadControll = [];
                     _this.restoreCache();
-                    formula.execFunctionGroupForce(luckysheetConfigsetting.forceCalculation);
+
+                    if (shouldDeferForceCalculation) {
+                        if (xlsxCtrl.hasImportedSheetCache()) {
+                            luckysheetrefreshgrid();
+                            setTimeout(function() {
+                                _this.runDeferredCurrentSheetFormula(file["index"], function() {
+                                    if (Store.currentSheetIndex === file["index"]) {
+                                        luckysheetrefreshgrid();
+                                    }
+                                });
+                            }, 0);
+                        } else {
+                            _this.runDeferredCurrentSheetFormula(file["index"], function() {
+                                if (Store.currentSheetIndex === file["index"]) {
+                                    luckysheetrefreshgrid();
+                                }
+                            });
+                        }
+                    } else {
+                        formula.execFunctionGroupForceAsync({
+                            onComplete: function() {
+                                luckysheetrefreshgrid();
+                            },
+                        });
+                    }
+
                     _this.restoreSheetAll(Store.currentSheetIndex);
 
                     // luckysheetrefreshgrid(0, 0);
@@ -1024,6 +1096,7 @@ const sheetmanage = {
                 };
 
                 let loadSheetUrl = server.loadSheetUrl;
+                let shouldDeferForceCalculation = formula.shouldDeferLargeWorkbookForceCalculation();
 
                 if (loadSheetUrl == "") {
                     //     execF();
@@ -1041,10 +1114,16 @@ const sheetmanage = {
                     //     }
                     // }
 
-                    _this.loadOtherFile(file);
-                    execF();
+                    if (!shouldDeferForceCalculation) {
+                        _this.loadOtherFile(file);
+                        execF();
+                    } else {
+                        _this.ensureFormulaDependencySheetsLoaded(file, execF);
+                    }
                 } else {
-                    let sheetindexset = _this.checkLoadSheetIndex(file);
+                    let sheetindexset = shouldDeferForceCalculation
+                        ? [file.index].concat(_this.getFormulaDependencySheetIndexes(file))
+                        : _this.checkLoadSheetIndex(file);
                     let sheetindex = [];
 
                     for (let i = 0; i < sheetindexset.length; i++) {
@@ -1247,6 +1326,10 @@ const sheetmanage = {
     },
     loadOtherFile: function(file) {
         let _this = this;
+        if (_this.shouldVirtualizeInactiveSheets(file)) {
+            return;
+        }
+
         // let sheetindexset = _this.checkLoadSheetIndex(file);
         // let sheetindex = [];
 
@@ -1280,6 +1363,202 @@ const sheetmanage = {
                 otherfile["load"] = "1";
             }
         }
+    },
+    getFormulaDependencySheetIndexes: function(file) {
+        if (file == null || file.index == null) {
+            return [];
+        }
+
+        let rootIndex = file.index.toString();
+        let queue = [file.index];
+        let visited = {};
+        let dependencyIndexes = {};
+
+        visited[rootIndex] = 1;
+
+        while (queue.length > 0) {
+            let currentIndex = queue.shift();
+            let referencedSheetIndexes = formula.getFormulaReferencedSheetIndexes(currentIndex);
+
+            for (let i = 0; i < referencedSheetIndexes.length; i++) {
+                let referencedIndex = referencedSheetIndexes[i];
+
+                if (referencedIndex == null) {
+                    continue;
+                }
+
+                let referencedKey = referencedIndex.toString();
+
+                if (referencedKey !== rootIndex) {
+                    dependencyIndexes[referencedKey] = referencedIndex;
+                }
+
+                if (visited[referencedKey]) {
+                    continue;
+                }
+
+                visited[referencedKey] = 1;
+                queue.push(referencedIndex);
+            }
+        }
+
+        return Object.keys(dependencyIndexes).map((key) => dependencyIndexes[key]);
+    },
+    ensureFormulaDependencySheetsLoaded: function(file, success) {
+        if (xlsxCtrl.hasImportedSheetCache()) {
+            if (typeof success === "function") {
+                success();
+            }
+            return;
+        }
+
+        let dependencyIndexes = this.getFormulaDependencySheetIndexes(file);
+        let pendingIndexes = [];
+
+        for (let i = 0; i < dependencyIndexes.length; i++) {
+            let dependencyIndex = dependencyIndexes[i];
+            let dependencyFile = Store.luckysheetfile[this.getSheetIndex(dependencyIndex)];
+
+            if (dependencyFile == null || dependencyFile.index == file.index) {
+                continue;
+            }
+
+            if (dependencyFile.load == null || dependencyFile.load == "0" || dependencyFile.data == null) {
+                pendingIndexes.push(dependencyIndex);
+            }
+        }
+
+        if (pendingIndexes.length == 0) {
+            if (typeof success === "function") {
+                success();
+            }
+            return;
+        }
+
+        let complete = () => {
+            if (typeof success === "function") {
+                success();
+            }
+        };
+
+        if (server.loadSheetUrl == "" || Store.luckysheetcurrentisPivotTable) {
+            for (let i = 0; i < pendingIndexes.length; i++) {
+                let dependencyIndex = pendingIndexes[i];
+                let dependencyFile = Store.luckysheetfile[this.getSheetIndex(dependencyIndex)];
+
+                if (dependencyFile == null) {
+                    continue;
+                }
+
+                dependencyFile.data = this.buildGridData(dependencyFile);
+                dependencyFile.load = "1";
+            }
+
+            complete();
+            return;
+        }
+
+        $.post(server.loadSheetUrl, { gridKey: server.gridKey, index: pendingIndexes.join(",") }, (d) => {
+            let dataset = new Function("return " + d)();
+
+            for (let i = 0; i < pendingIndexes.length; i++) {
+                let dependencyIndex = pendingIndexes[i];
+                let dependencyFile = Store.luckysheetfile[this.getSheetIndex(dependencyIndex)];
+
+                if (dependencyFile == null) {
+                    continue;
+                }
+
+                if (dataset != null && dataset[dependencyIndex.toString()] != null) {
+                    dependencyFile.celldata = dataset[dependencyIndex.toString()];
+                }
+
+                dependencyFile.data = this.buildGridData(dependencyFile);
+                dependencyFile.load = "1";
+            }
+
+            complete();
+        });
+    },
+    runDeferredCurrentSheetFormula: function(sheetIndex, onPriorityComplete, onComplete) {
+        let currentFile = this.getSheetByIndex(sheetIndex);
+        let execOptions = {
+            restartIfRunning: true,
+            taskLabel: "deferred-current-sheet-formula",
+            onPriorityComplete: function() {
+                if (typeof onPriorityComplete === "function") {
+                    onPriorityComplete();
+                }
+            },
+            onComplete: function() {
+                if (typeof onComplete === "function") {
+                    onComplete();
+                }
+            },
+        };
+
+        if (currentFile != null && formula.shouldUseLazyFormulaEngine()) {
+            let viewportRange = formula.getCurrentViewportFormulaRange(currentFile);
+            let backgroundRunList = [];
+
+            if (!xlsxCtrl.hasImportedSheetCache()) {
+                let prioritizeSheetIndexes = [sheetIndex].concat(this.getFormulaDependencySheetIndexes(currentFile));
+                backgroundRunList = formula.getForceFormulaRunList(prioritizeSheetIndexes);
+            }
+
+            let queuedViewportCount = formula.enqueueViewportFormulaCompute(sheetIndex, viewportRange, {
+                priority: "high",
+            });
+
+            let runBackgroundQueue = function() {
+                if (!Array.isArray(backgroundRunList) || backgroundRunList.length === 0) {
+                    execOptions.onComplete();
+                    return;
+                }
+
+                formula.enqueueFormulaRunListCompute(backgroundRunList, {
+                    priority: "normal",
+                });
+                formula.whenLazyFormulaQueueIdle(function() {
+                    execOptions.onComplete();
+                });
+            };
+
+            if (queuedViewportCount === 0) {
+                execOptions.onPriorityComplete();
+                runBackgroundQueue();
+                return;
+            }
+
+            formula.whenLazyFormulaQueueIdle(function() {
+                execOptions.onPriorityComplete();
+                runBackgroundQueue();
+            });
+            return;
+        }
+
+        if (currentFile != null && xlsxCtrl.hasImportedSheetCache()) {
+            let viewportRange = formula.getCurrentViewportFormulaRange(currentFile);
+
+            execOptions.formulaRunList = formula.getSimpleFormulaRunListByRange(
+                sheetIndex,
+                viewportRange.rowRange,
+                viewportRange.columnRange,
+            );
+            execOptions.batchSize = 20;
+            execOptions.maxDurationMs = 6;
+            execOptions.skipServerSave = true;
+            execOptions.skipCellUpdatedHook = true;
+            execOptions.resultCommitBatchSize = Array.isArray(execOptions.formulaRunList)
+                ? Math.max(execOptions.formulaRunList.length, 200)
+                : 1000;
+        } else if (currentFile != null) {
+            prioritizeSheetIndexes = prioritizeSheetIndexes.concat(this.getFormulaDependencySheetIndexes(currentFile));
+            execOptions.formulaRunList = formula.getForceFormulaRunList(prioritizeSheetIndexes);
+            execOptions.prioritizeSheetIndexes = [sheetIndex];
+        }
+
+        formula.execFunctionGroupForceAsync(execOptions);
     },
     changeSheet: function(index, isPivotInitial, isNewSheet, isCopySheet) {
         if (isEditMode()) {
@@ -1348,8 +1627,10 @@ const sheetmanage = {
         }
 
         let load = file["load"];
+        let shouldDeferForceCalculation = formula.shouldDeferLargeWorkbookForceCalculation();
+
         if (load != null) {
-            let data = _this.buildGridData(file);
+            let data = file.data && file.data.length > 0 ? file.data : _this.buildGridData(file);
             file.data = data;
             // _this.loadOtherFile(file);
 
@@ -1358,10 +1639,55 @@ const sheetmanage = {
             _this.showSheet();
 
             setTimeout(function() {
-                // todo: 性能瓶颈, 切换sheet时刷新公式导致卡顿
-                formula.execFunctionGroupForce(true);
-                luckysheetrefreshgrid();
-                server.saveParam("shs", null, Store.currentSheetIndex);
+                if (shouldDeferForceCalculation) {
+                    _this.ensureFormulaDependencySheetsLoaded(file, function() {
+                        if (xlsxCtrl.hasImportedSheetCache()) {
+                            luckysheetrefreshgrid();
+                            setTimeout(function() {
+                                _this.runDeferredCurrentSheetFormula(index, function() {
+                                    if (Store.currentSheetIndex === index) {
+                                        luckysheetrefreshgrid();
+                                        server.saveParam("shs", null, Store.currentSheetIndex);
+                                    }
+                                });
+                            }, 0);
+                        } else {
+                            _this.runDeferredCurrentSheetFormula(index, function() {
+                                if (Store.currentSheetIndex === index) {
+                                    luckysheetrefreshgrid();
+                                    server.saveParam("shs", null, Store.currentSheetIndex);
+                                }
+                            });
+                        }
+                    });
+                    return;
+                }
+
+                if (luckysheetConfigsetting.forceCalculation || !formula.forceFormulaRecalcReady) {
+                    if (formula.forceFormulaTaskRunning) {
+                        formula.execFunctionGroupForceAsync({
+                            onComplete: function() {
+                                if (Store.currentSheetIndex === index) {
+                                    luckysheetrefreshgrid();
+                                    server.saveParam("shs", null, Store.currentSheetIndex);
+                                }
+                            },
+                        });
+                        luckysheetrefreshgrid();
+                        server.saveParam("shs", null, Store.currentSheetIndex);
+                        return;
+                    }
+
+                    formula.execFunctionGroupForceAsync({
+                        onComplete: function() {
+                            luckysheetrefreshgrid();
+                            server.saveParam("shs", null, Store.currentSheetIndex);
+                        },
+                    });
+                } else {
+                    luckysheetrefreshgrid();
+                    server.saveParam("shs", null, Store.currentSheetIndex);
+                }
             }, 1);
         } else {
             let loadSheetUrl = server.loadSheetUrl;
@@ -1404,9 +1730,50 @@ const sheetmanage = {
 
                 setTimeout(function() {
                     _this.restoreCache();
-                    formula.execFunctionGroupForce(luckysheetConfigsetting.forceCalculation);
+                    if (shouldDeferForceCalculation) {
+                        _this.ensureFormulaDependencySheetsLoaded(file, function() {
+                            if (xlsxCtrl.hasImportedSheetCache()) {
+                                _this.restoreSheetAll(Store.currentSheetIndex);
+                                luckysheetrefreshgrid();
+                                setTimeout(function() {
+                                    _this.runDeferredCurrentSheetFormula(index, function() {
+                                        if (Store.currentSheetIndex === index) {
+                                            _this.restoreSheetAll(Store.currentSheetIndex);
+                                            luckysheetrefreshgrid();
+                                        }
+                                    });
+                                }, 0);
+                            } else {
+                                _this.runDeferredCurrentSheetFormula(index, function() {
+                                    if (Store.currentSheetIndex === index) {
+                                        _this.restoreSheetAll(Store.currentSheetIndex);
+                                        luckysheetrefreshgrid();
+                                    }
+                                });
+                            }
+                        });
+                        return;
+                    }
+
+                    if (formula.forceFormulaTaskRunning) {
+                        formula.execFunctionGroupForceAsync({
+                            onComplete: function() {
+                                if (Store.currentSheetIndex === index) {
+                                    luckysheetrefreshgrid();
+                                }
+                            },
+                        });
+                        _this.restoreSheetAll(Store.currentSheetIndex);
+                        luckysheetrefreshgrid();
+                        return;
+                    }
+
+                    formula.execFunctionGroupForceAsync({
+                        onComplete: function() {
+                            luckysheetrefreshgrid();
+                        },
+                    });
                     _this.restoreSheetAll(Store.currentSheetIndex);
-                    luckysheetrefreshgrid();
                 }, 1);
 
                 server.saveParam("shs", null, Store.currentSheetIndex);
@@ -1433,8 +1800,18 @@ const sheetmanage = {
 
                         if (otherfile["load"] == null || otherfile["load"] == "0") {
                             otherfile.celldata = dataset[item.toString()];
-                            otherfile["data"] = _this.buildGridData(otherfile);
-                            otherfile["load"] = "1";
+
+                            if (_this.shouldVirtualizeInactiveSheets(otherfile)) {
+                                if (Array.isArray(otherfile.data) && otherfile.data.length > 0) {
+                                    delete otherfile.data;
+                                }
+
+                                xlsxCtrl.cacheImportedSheetCelldata(otherfile);
+                                otherfile["load"] = "0";
+                            } else {
+                                otherfile["data"] = _this.buildGridData(otherfile);
+                                otherfile["load"] = "1";
+                            }
                         }
                     }
 
@@ -1446,9 +1823,50 @@ const sheetmanage = {
 
                     setTimeout(function() {
                         _this.restoreCache();
-                        formula.execFunctionGroupForce(luckysheetConfigsetting.forceCalculation);
+                        if (shouldDeferForceCalculation) {
+                            _this.ensureFormulaDependencySheetsLoaded(file, function() {
+                                if (xlsxCtrl.hasImportedSheetCache()) {
+                                    _this.restoreSheetAll(Store.currentSheetIndex);
+                                    luckysheetrefreshgrid();
+                                    setTimeout(function() {
+                                        _this.runDeferredCurrentSheetFormula(index, function() {
+                                            if (Store.currentSheetIndex === index) {
+                                                _this.restoreSheetAll(Store.currentSheetIndex);
+                                                luckysheetrefreshgrid();
+                                            }
+                                        });
+                                    }, 0);
+                                } else {
+                                    _this.runDeferredCurrentSheetFormula(index, function() {
+                                        if (Store.currentSheetIndex === index) {
+                                            _this.restoreSheetAll(Store.currentSheetIndex);
+                                            luckysheetrefreshgrid();
+                                        }
+                                    });
+                                }
+                            });
+                            return;
+                        }
+
+                        if (formula.forceFormulaTaskRunning) {
+                            formula.execFunctionGroupForceAsync({
+                                onComplete: function() {
+                                    if (Store.currentSheetIndex === index) {
+                                        luckysheetrefreshgrid();
+                                    }
+                                },
+                            });
+                            _this.restoreSheetAll(Store.currentSheetIndex);
+                            luckysheetrefreshgrid();
+                            return;
+                        }
+
+                        formula.execFunctionGroupForceAsync({
+                            onComplete: function() {
+                                luckysheetrefreshgrid();
+                            },
+                        });
                         _this.restoreSheetAll(Store.currentSheetIndex);
-                        luckysheetrefreshgrid();
                     }, 1);
 
                     server.saveParam("shs", null, Store.currentSheetIndex);

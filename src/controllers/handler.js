@@ -78,6 +78,7 @@ export default function luckysheetHandler() {
     const os = browser.detectOS(),
         isMobile = browser.mobilecheck();
     let imgType = 1; // 1: insert,  2: change
+    let lastDocumentMousemoveTargetInsideGrid = false;
     //移动端
     if (isMobile) {
         mobileinit();
@@ -1831,6 +1832,40 @@ export default function luckysheetHandler() {
 
     //表格mousemove
     $(document).on("mousemove.luckysheetEvent", function(event) {
+        let hasActivePointerState =
+            formula.functionResizeStatus ||
+            !!luckysheetFreezen.horizontalmovestate ||
+            !!luckysheetFreezen.verticalmovestate ||
+            (!!pivotTable && pivotTable.movestate) ||
+            !!Store.luckysheet_sheet_move_status ||
+            !!Store.luckysheet_scroll_status ||
+            !!Store.luckysheet_select_status ||
+            !!Store.luckysheet_rows_selected_status ||
+            !!Store.luckysheet_cols_selected_status ||
+            !!Store.luckysheet_cell_selected_move ||
+            !!Store.luckysheet_cell_selected_extend ||
+            !!Store.luckysheet_cols_change_size ||
+            !!Store.luckysheet_rows_change_size ||
+            !!Store.chartparam.luckysheetCurrentChartMove ||
+            !!Store.chartparam.luckysheetCurrentChartResize ||
+            !!formula.rangeResize ||
+            !!formula.rangeMove;
+        let isInsideGrid =
+            $(event.target).closest(
+                "#luckysheet-cell-main, #luckysheetTableContent, #luckysheet-freezebar-horizontal, #luckysheet-freezebar-vertical, #luckysheet-postil-showBoxs",
+            ).length > 0;
+
+        if (!isInsideGrid && !hasActivePointerState) {
+            if (lastDocumentMousemoveTargetInsideGrid) {
+                luckysheetPostil.clearOvershow();
+                hyperlinkCtrl.clearOvershow();
+                lastDocumentMousemoveTargetInsideGrid = false;
+            }
+            return;
+        }
+
+        lastDocumentMousemoveTargetInsideGrid = isInsideGrid;
+
         luckysheetPostil.overshow(event); //有批注显示
         hyperlinkCtrl.overshow(event); //链接提示显示
 
@@ -5682,7 +5717,9 @@ export default function luckysheetHandler() {
             return;
         }
         let file = e.currentTarget.files[0];
-        xlsxCtrl.uploadExcel(file)
+        window.setTimeout(function() {
+            xlsxCtrl.uploadExcel(file)
+        }, 0);
     });
 
     //菜单栏 导出按钮

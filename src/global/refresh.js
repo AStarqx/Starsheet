@@ -21,10 +21,411 @@ import { getSheetIndex } from '../methods/get';
 import Store from '../store';
 import { createPrintAreaOptions } from '../controllers/print';
 import { createCustomAreaOptions } from '../controllers/customArea';
+import { bumpSheetDataVersion, bumpSheetFormatVersion, bumpSheetLayoutVersion } from './perf';
 
 let refreshCanvasTimeOut = null;
+let refreshGridRequestId = null;
+let refreshGridFallbackTimeOut = null;
+let pendingRenderScrollWidth = null;
+let pendingRenderScrollHeight = null;
+let pendingRenderRanges = [];
+let pendingForceFullRender = false;
+let activeViewportFormulaWarmupKey = null;
+let completedViewportFormulaWarmupKey = null;
+
+function normalizeRenderRanges(ranges) {
+    if (ranges == null) {
+        return [];
+    }
+
+    if (!Array.isArray(ranges)) {
+        return [ranges];
+    }
+
+    return ranges.filter(function(range) {
+        return range != null && Array.isArray(range.row) && Array.isArray(range.column);
+    });
+}
+
+function mergePendingRenderRanges(ranges) {
+    let normalizedRanges = normalizeRenderRanges(ranges);
+
+    if (normalizedRanges.length === 0) {
+        return;
+    }
+
+    pendingRenderRanges = pendingRenderRanges.concat(normalizedRanges);
+
+    if (pendingRenderRanges.length > 12) {
+        pendingForceFullRender = true;
+        pendingRenderRanges = [];
+    }
+}
+
+function consumePendingRenderState() {
+    let renderState = {
+        forceFullRender: pendingForceFullRender,
+        dirtyRanges: pendingForceFullRender ? null : pendingRenderRanges.slice(),
+    };
+
+    pendingForceFullRender = false;
+    pendingRenderRanges = [];
+    return renderState;
+}
+
+function getRenderScrollPosition(scrollWidth, scrollHeight) {
+    let resolvedScrollWidth = scrollWidth;
+    let resolvedScrollHeight = scrollHeight;
+
+    if (resolvedScrollWidth == null) {
+        resolvedScrollWidth = $("#luckysheet-cell-main").scrollLeft();
+    }
+
+    if (resolvedScrollHeight == null) {
+        resolvedScrollHeight = $("#luckysheet-cell-main").scrollTop();
+    }
+
+    return {
+        scrollWidth: resolvedScrollWidth,
+        scrollHeight: resolvedScrollHeight,
+    };
+}
+
+function cancelScheduledGridRender() {
+    if (refreshGridRequestId != null && window.cancelAnimationFrame) {
+        window.cancelAnimationFrame(refreshGridRequestId);
+    }
+
+    if (refreshGridFallbackTimeOut != null) {
+        clearTimeout(refreshGridFallbackTimeOut);
+    }
+
+    refreshGridRequestId = null;
+    refreshGridFallbackTimeOut = null;
+}
+
+function getViewportFormulaWarmupKey(scrollWidth, scrollHeight) {
+    let currentFile = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)];
+
+    if (currentFile == null) {
+        return null;
+    }
+
+    let viewportRange = formula.getCurrentViewportFormulaRange(currentFile);
+    return {
+        key: [
+            Store.currentSheetIndex,
+            viewportRange.rowRange[0],
+            viewportRange.rowRange[1],
+            viewportRange.columnRange[0],
+            viewportRange.columnRange[1],
+            formula.getFormulaRenderVersion(),
+        ].join("_"),
+        viewportRange: viewportRange,
+    };
+}
+
+function scheduleViewportFormulaWarmup(scrollWidth, scrollHeight) {
+    if (!formula.shouldUseLazyFormulaEngine()) {
+        Store.deferDrawFormulaCompute = false;
+        activeViewportFormulaWarmupKey = null;
+        completedViewportFormulaWarmupKey = null;
+        return;
+    }
+
+    let currentFile = Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)];
+
+    if (currentFile == null || !Array.isArray(currentFile.calcChain) || currentFile.calcChain.length === 0) {
+        Store.deferDrawFormulaCompute = false;
+        activeViewportFormulaWarmupKey = null;
+        completedViewportFormulaWarmupKey = null;
+        return;
+    }
+
+    let warmupState = getViewportFormulaWarmupKey(scrollWidth, scrollHeight);
+
+    if (warmupState == null) {
+        Store.deferDrawFormulaCompute = false;
+        return;
+    }
+
+    if (completedViewportFormulaWarmupKey === warmupState.key && !formula.hasPendingLazyFormulaCompute()) {
+        Store.deferDrawFormulaCompute = false;
+        return;
+    }
+
+    if (activeViewportFormulaWarmupKey === warmupState.key && formula.hasPendingLazyFormulaCompute()) {
+        Store.deferDrawFormulaCompute = true;
+        return;
+    }
+
+    activeViewportFormulaWarmupKey = warmupState.key;
+    Store.deferDrawFormulaCompute = true;
+
+    if (
+        formula.enqueueViewportFormulaCompute(Store.currentSheetIndex, warmupState.viewportRange, {
+            priority: "high",
+        }) === 0
+    ) {
+        completedViewportFormulaWarmupKey = warmupState.key;
+        Store.deferDrawFormulaCompute = false;
+        activeViewportFormulaWarmupKey = null;
+        return;
+    }
+
+    formula.whenLazyFormulaQueueIdle(function() {
+        if (activeViewportFormulaWarmupKey !== warmupState.key) {
+            return;
+        }
+
+        activeViewportFormulaWarmupKey = null;
+        completedViewportFormulaWarmupKey = warmupState.key;
+        Store.deferDrawFormulaCompute = false;
+        scheduleGridRender();
+    });
+}
+
+function performGridRender(scrollWidth, scrollHeight) {
+    formula.groupValuesRefresh();
+    let renderState = consumePendingRenderState();
+    let dirtyRanges = renderState.forceFullRender ? null : renderState.dirtyRanges;
+
+    if (scrollWidth == null) {
+        scrollWidth = $("#luckysheet-cell-main").scrollLeft();
+    }
+    if (scrollHeight == null) {
+        scrollHeight = $("#luckysheet-cell-main").scrollTop();
+    }
+
+    if (luckysheetFreezen.freezenverticaldata != null || luckysheetFreezen.freezenhorizontaldata != null) {
+        let freezen_horizon_px, freezen_horizon_ed, freezen_horizon_scrollTop;
+        let freezen_vertical_px, freezen_vertical_ed, freezen_vertical_scrollTop;
+        let drawWidth = Store.luckysheetTableContentHW[0], drawHeight = Store.luckysheetTableContentHW[1];
+        
+        if (luckysheetFreezen.freezenverticaldata != null && luckysheetFreezen.freezenhorizontaldata != null) {
+            freezen_horizon_px = luckysheetFreezen.freezenhorizontaldata[0];
+            freezen_horizon_ed = luckysheetFreezen.freezenhorizontaldata[1];
+            freezen_horizon_scrollTop = luckysheetFreezen.freezenhorizontaldata[2];
+
+            freezen_vertical_px = luckysheetFreezen.freezenverticaldata[0];
+            freezen_vertical_ed = luckysheetFreezen.freezenverticaldata[1];
+            freezen_vertical_scrollTop = luckysheetFreezen.freezenverticaldata[2];
+
+            luckysheetDrawMain(
+                freezen_vertical_scrollTop, 
+                freezen_horizon_scrollTop, 
+                freezen_vertical_px, 
+                freezen_horizon_px, 
+                1, 
+                1, 
+                null, 
+                null, 
+                "freezen_3"
+            );
+
+            luckysheetDrawMain(
+                scrollWidth + freezen_vertical_px - freezen_vertical_scrollTop, 
+                freezen_horizon_scrollTop, 
+                drawWidth - freezen_vertical_px + freezen_vertical_scrollTop, 
+                freezen_horizon_px, 
+                1, 
+                1, 
+                null, 
+                null, 
+                "freezen_4"
+            );
+
+            luckysheetDrawMain(
+                freezen_vertical_scrollTop, 
+                scrollHeight + freezen_horizon_px - freezen_horizon_scrollTop, 
+                freezen_vertical_px, 
+                drawHeight - freezen_horizon_px + freezen_horizon_scrollTop, 
+                1, 
+                1, 
+                null, 
+                null, 
+                "freezen_7"
+            );
+
+            luckysheetDrawMain(
+                scrollWidth + freezen_vertical_px - freezen_vertical_scrollTop, 
+                scrollHeight + freezen_horizon_px - freezen_horizon_scrollTop, 
+                drawWidth - freezen_vertical_px + freezen_vertical_scrollTop, 
+                drawHeight - freezen_horizon_px + freezen_horizon_scrollTop, 
+                freezen_vertical_px - freezen_vertical_scrollTop + Store.rowHeaderWidth, 
+                freezen_horizon_px - freezen_horizon_scrollTop + Store.columnHeaderHeight
+            );
+
+            luckysheetDrawgridColumnTitle(freezen_vertical_scrollTop, freezen_vertical_px, Store.rowHeaderWidth);
+            luckysheetDrawgridColumnTitle(
+                scrollWidth + freezen_vertical_px - freezen_vertical_scrollTop, 
+                drawWidth - freezen_vertical_px + freezen_vertical_scrollTop, 
+                freezen_vertical_px - freezen_vertical_scrollTop + Store.rowHeaderWidth
+            );
+            
+            luckysheetDrawgridRowTitle(freezen_horizon_scrollTop, freezen_horizon_px, Store.columnHeaderHeight);
+            luckysheetDrawgridRowTitle(
+                scrollHeight + freezen_horizon_px - freezen_horizon_scrollTop, 
+                drawHeight - freezen_horizon_px + freezen_horizon_scrollTop, 
+                freezen_horizon_px - freezen_horizon_scrollTop + Store.columnHeaderHeight
+            );
+           
+        }
+        else if (luckysheetFreezen.freezenhorizontaldata != null) {
+            freezen_horizon_px = luckysheetFreezen.freezenhorizontaldata[0];
+            freezen_horizon_ed = luckysheetFreezen.freezenhorizontaldata[1];
+            freezen_horizon_scrollTop = luckysheetFreezen.freezenhorizontaldata[2];
+
+            luckysheetDrawMain(
+                scrollWidth, 
+                freezen_horizon_scrollTop, 
+                drawWidth, 
+                freezen_horizon_px, 
+                1, 
+                1, 
+                null, 
+                null, 
+                "freezen_h"
+            );
+            luckysheetDrawMain(
+                scrollWidth, 
+                scrollHeight + freezen_horizon_px - freezen_horizon_scrollTop, 
+                drawWidth, 
+                drawHeight - freezen_horizon_px + freezen_horizon_scrollTop, 
+                null, 
+                freezen_horizon_px - freezen_horizon_scrollTop + Store.columnHeaderHeight
+            );
+        
+            luckysheetDrawgridColumnTitle(scrollWidth, drawWidth, null);
+            
+            luckysheetDrawgridRowTitle(freezen_horizon_scrollTop, freezen_horizon_px, Store.columnHeaderHeight);
+            luckysheetDrawgridRowTitle(
+                scrollHeight + freezen_horizon_px - freezen_horizon_scrollTop, 
+                drawHeight - freezen_horizon_px + freezen_horizon_scrollTop, 
+                freezen_horizon_px - freezen_horizon_scrollTop + Store.columnHeaderHeight
+            );
+            
+        }
+        else if (luckysheetFreezen.freezenverticaldata != null) {
+            freezen_vertical_px = luckysheetFreezen.freezenverticaldata[0];
+            freezen_vertical_ed = luckysheetFreezen.freezenverticaldata[1];
+            freezen_vertical_scrollTop = luckysheetFreezen.freezenverticaldata[2];
+            
+            luckysheetDrawMain(
+                freezen_vertical_scrollTop, 
+                scrollHeight, 
+                freezen_vertical_px, 
+                drawHeight, 
+                1, 
+                1, 
+                null, 
+                null, 
+                "freezen_v"
+            );
+            luckysheetDrawMain(
+                scrollWidth + freezen_vertical_px - freezen_vertical_scrollTop, 
+                scrollHeight, 
+                drawWidth - freezen_vertical_px + freezen_vertical_scrollTop, 
+                drawHeight, 
+                freezen_vertical_px - freezen_vertical_scrollTop + Store.rowHeaderWidth, 
+                null
+            );
+            
+            luckysheetDrawgridRowTitle(scrollHeight, drawHeight, null);
+            
+            luckysheetDrawgridColumnTitle(freezen_vertical_scrollTop, freezen_vertical_px, Store.rowHeaderWidth);
+            luckysheetDrawgridColumnTitle(
+                scrollWidth + freezen_vertical_px - freezen_vertical_scrollTop, 
+                drawWidth - freezen_vertical_px + freezen_vertical_scrollTop, 
+                freezen_vertical_px - freezen_vertical_scrollTop + Store.rowHeaderWidth
+            );
+            
+        }
+    }
+    else {
+        if($("#luckysheetTableContent").length == 0){
+            return;
+        }
+        let luckysheetTableContent = $("#luckysheetTableContent").get(0).getContext("2d");
+        luckysheetDrawMain(scrollWidth, scrollHeight, null, null, null, null, null, null, null, {
+            dirtyRanges: dirtyRanges,
+        });
+        
+        if (dirtyRanges == null || dirtyRanges.length === 0) {
+            luckysheetDrawgridColumnTitle(scrollWidth);
+            luckysheetDrawgridRowTitle(scrollHeight);
+        }
+        
+        if (dirtyRanges == null || dirtyRanges.length === 0) {
+            luckysheetTableContent.clearRect(0, 0, (Store.rowHeaderWidth* Store.devicePixelRatio-1) , (Store.columnHeaderHeight* Store.devicePixelRatio-1) );
+        }
+    }
+}
+
+function scheduleGridRender(scrollWidth, scrollHeight, options = {}) {
+    let position = getRenderScrollPosition(scrollWidth, scrollHeight);
+    pendingRenderScrollWidth = position.scrollWidth;
+    pendingRenderScrollHeight = position.scrollHeight;
+
+    if (options.resetViewportWarmupCache) {
+        activeViewportFormulaWarmupKey = null;
+        completedViewportFormulaWarmupKey = null;
+    }
+
+    if (options.forceFullRender) {
+        pendingForceFullRender = true;
+        pendingRenderRanges = [];
+    } else if (!pendingForceFullRender) {
+        mergePendingRenderRanges(options.ranges);
+    }
+
+    scheduleViewportFormulaWarmup(position.scrollWidth, position.scrollHeight);
+
+    if (options.immediate) {
+        cancelScheduledGridRender();
+        performGridRender(position.scrollWidth, position.scrollHeight);
+        return;
+    }
+
+    if (refreshGridRequestId != null || refreshGridFallbackTimeOut != null) {
+        return;
+    }
+
+    let flushRender = function() {
+        refreshGridRequestId = null;
+        refreshGridFallbackTimeOut = null;
+        performGridRender(pendingRenderScrollWidth, pendingRenderScrollHeight);
+    };
+
+    if (window.requestAnimationFrame) {
+        refreshGridRequestId = window.requestAnimationFrame(flushRender);
+        return;
+    }
+
+    refreshGridFallbackTimeOut = setTimeout(flushRender, 16);
+}
+
+function cacheFlowDataAfterRefresh(flowData, options = {}) {
+    let targetFlowData = flowData == null ? Store.flowdata : flowData;
+
+    if (formula.shouldUseLazyFormulaEngine()) {
+        setTimeout(function() {
+            editor.webWorkerFlowDataCache(targetFlowData, options);
+        }, 0);
+        return;
+    }
+
+    editor.webWorkerFlowDataCache(targetFlowData, options);
+}
 
 function runExecFunction(range, index, data){
+    if (formula.shouldUseLazyFormulaEngine()) {
+        formula.execFunctionExist = null;
+        formula.execFunctionGroup(null, null, null, index, data, true);
+        formula.execFunctionGlobalData = null;
+        return;
+    }
+
     formula.execFunctionExist = [];
     for(let s = 0; s < range.length; s++){
         for(let r = range[s].row[0]; r <= range[s].row[1]; r++){
@@ -125,13 +526,15 @@ function jfrefreshgrid(data, range, allParam, isRunExecFunction = true, isRefres
 
     //Store.flowdata
     Store.flowdata = data;
-    editor.webWorkerFlowDataCache(Store.flowdata);//worker存数据
+    bumpSheetDataVersion(Store.currentSheetIndex);
+    cacheFlowDataAfterRefresh(Store.flowdata, { mode: 'patch', ranges: range });//worker存数据
     file.data = Store.flowdata;
 
     // 必须要处理，可能之前的config为空，则也需要清空
     if(cfg != null) {
         Store.config = cfg
         file.config = Store.config
+        bumpSheetLayoutVersion(Store.currentSheetIndex);
 
         server.saveParam("all", Store.currentSheetIndex, cfg, { "k": "config" });
 
@@ -148,6 +551,7 @@ function jfrefreshgrid(data, range, allParam, isRunExecFunction = true, isRefres
     //condition format, null or empty array are not processed
     if(cdformat != null && cdformat.length !== 0){
         file["luckysheet_conditionformat_save"] = cdformat;
+        bumpSheetFormatVersion(Store.currentSheetIndex);
 
         server.saveParam("all", Store.currentSheetIndex, cdformat, { "k": "luckysheet_conditionformat_save" });
     }
@@ -203,7 +607,18 @@ function jfrefreshgrid(data, range, allParam, isRunExecFunction = true, isRefres
     //刷新表格
     if(isRefreshCanvas){
         refreshCanvasTimeOut = setTimeout(function () {
-            luckysheetrefreshgrid();
+            scheduleGridRender(null, null, {
+                resetViewportWarmupCache: true,
+                ranges: range,
+                forceFullRender:
+                    cfg != null ||
+                    calc != null ||
+                    cdformat != null ||
+                    dataVerification != null ||
+                    dynamicArray != null ||
+                    hyperlink != null ||
+                    RowlChange != null,
+            });
         }, 1);
     }
 
@@ -299,13 +714,15 @@ function jfrefreshgrid2Data(data, range, allParam, isRunExecFunction = true, isR
 
     //Store.flowdata
     Store.flowdata = data;
-    editor.webWorkerFlowDataCache(Store.flowdata);//worker存数据
+    bumpSheetDataVersion(Store.currentSheetIndex);
+    cacheFlowDataAfterRefresh(Store.flowdata, { mode: 'patch', ranges: range });//worker存数据
     file.data = Store.flowdata;
 
     // 必须要处理，可能之前的config为空，则也需要清空
     if(cfg != null) {
         Store.config = cfg
         file.config = Store.config
+        bumpSheetLayoutVersion(Store.currentSheetIndex);
 
         server.saveParam("all", Store.currentSheetIndex, cfg, { "k": "config" });
 
@@ -322,6 +739,7 @@ function jfrefreshgrid2Data(data, range, allParam, isRunExecFunction = true, isR
     //condition format, null or empty array are not processed
     if(cdformat != null && cdformat.length !== 0){
         file["luckysheet_conditionformat_save"] = cdformat;
+        bumpSheetFormatVersion(Store.currentSheetIndex);
 
         server.saveParam("all", Store.currentSheetIndex, cdformat, { "k": "luckysheet_conditionformat_save" });
     }
@@ -493,14 +911,16 @@ function jfrefreshgridall(colwidth, rowheight, data, cfg, range, ctrlType, ctrlV
 
     //Store.flowdata
     Store.flowdata = data;
+    bumpSheetDataVersion(Store.currentSheetIndex);
 
-    editor.webWorkerFlowDataCache(data);//worker存数据
+    cacheFlowDataAfterRefresh(data, { mode: 'full' });//worker存数据
     Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)].data = Store.flowdata;
 
     //config
     if (cfg != null) {
         Store.config = cfg;
         Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)].config = Store.config;
+        bumpSheetLayoutVersion(Store.currentSheetIndex);
 
         server.saveParam("all", Store.currentSheetIndex, cfg, { "k": "config" });
     }
@@ -508,6 +928,7 @@ function jfrefreshgridall(colwidth, rowheight, data, cfg, range, ctrlType, ctrlV
     //条件格式
     if(cdformat != null){
         Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["luckysheet_conditionformat_save"] = cdformat;
+        bumpSheetFormatVersion(Store.currentSheetIndex);
     
         server.saveParam("all", Store.currentSheetIndex, cdformat, { "k": "luckysheet_conditionformat_save" });
     }
@@ -530,7 +951,7 @@ function jfrefreshgridall(colwidth, rowheight, data, cfg, range, ctrlType, ctrlV
 
     if(isRefreshCanvas){
         refreshCanvasTimeOut = setTimeout(function () {
-            luckysheetrefreshgrid();
+            scheduleGridRender(null, null, { resetViewportWarmupCache: true });
         }, 1);
     }
     
@@ -559,13 +980,15 @@ function jfrefreshrange(data, range, cdformat) {
 
     //flowdata
     Store.flowdata = data;
-    editor.webWorkerFlowDataCache(Store.flowdata);//worker存数据
+    bumpSheetDataVersion(Store.currentSheetIndex);
+    cacheFlowDataAfterRefresh(Store.flowdata, { mode: 'patch', ranges: range });//worker存数据
 
     Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)].data = Store.flowdata;
 
     //条件格式
     if(cdformat != null){
         Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["luckysheet_conditionformat_save"] = cdformat;
+        bumpSheetFormatVersion(Store.currentSheetIndex);
     }
 
     //单元格数据更新联动
@@ -573,7 +996,11 @@ function jfrefreshrange(data, range, cdformat) {
 
     //刷新表格
     refreshCanvasTimeOut = setTimeout(function () {
-        luckysheetrefreshgrid();
+        scheduleGridRender(null, null, {
+            resetViewportWarmupCache: true,
+            ranges: range,
+            forceFullRender: cdformat != null,
+        });
     }, 1);
 
     //发送给后台
@@ -723,7 +1150,10 @@ function jfrefreshgrid_adRC(data, cfg, ctrlType, ctrlValue, calc, filterObj, pri
 
     //Store.flowdata
     Store.flowdata = data;
-    editor.webWorkerFlowDataCache(Store.flowdata);//worker存数据
+    bumpSheetDataVersion(Store.currentSheetIndex);
+    bumpSheetLayoutVersion(Store.currentSheetIndex);
+    bumpSheetFormatVersion(Store.currentSheetIndex);
+    cacheFlowDataAfterRefresh(Store.flowdata, { mode: 'full' });//worker存数据
     file.data = data;
 
     //config
@@ -740,7 +1170,7 @@ function jfrefreshgrid_adRC(data, cfg, ctrlType, ctrlValue, calc, filterObj, pri
     }
 
     //公式链中公式范围改变对应单元格值的改变
-    if(calc.length > 0){
+    if(calc.length > 0 && !formula.shouldUseLazyFormulaEngine()){
         // 取消execFunctionGroupData，改用execFunctionGlobalData
         // formula.execFunctionGroupData = data;
 
@@ -761,6 +1191,9 @@ function jfrefreshgrid_adRC(data, cfg, ctrlType, ctrlValue, calc, filterObj, pri
 
     //calc函数链
     file.calcChain = calc;
+    if (formula.shouldUseLazyFormulaEngine()) {
+        formula.invalidateLazyFormulaDependencies([], true);
+    }
     server.saveParam("all", Store.currentSheetIndex, calc, { "k": "calcChain" });
     for(let i = 0; i < funcData.length; i++){
         let funcData_r = funcData[i].r,
@@ -939,7 +1372,10 @@ function jfrefreshgrid_deleteCell(data, cfg, ctrl, calc, filterObj, printareaObj
 
     //Store.flowdata
     Store.flowdata = data;
-    editor.webWorkerFlowDataCache(Store.flowdata);//worker存数据
+    bumpSheetDataVersion(Store.currentSheetIndex);
+    bumpSheetLayoutVersion(Store.currentSheetIndex);
+    bumpSheetFormatVersion(Store.currentSheetIndex);
+    cacheFlowDataAfterRefresh(Store.flowdata, { mode: 'full' });//worker存数据
     file.data = data;
 
     //共享编辑模式
@@ -981,7 +1417,7 @@ function jfrefreshgrid_deleteCell(data, cfg, ctrl, calc, filterObj, printareaObj
     }
 
     //公式链中公式范围改变对应单元格值的改变
-    if(calc.length > 0){
+    if(calc.length > 0 && !formula.shouldUseLazyFormulaEngine()){
         // formula.execFunctionGroupData = data;
 
         for(let i = 0; i < calc.length; i++){
@@ -999,6 +1435,9 @@ function jfrefreshgrid_deleteCell(data, cfg, ctrl, calc, filterObj, printareaObj
 
     //calc函数链
     file.calcChain = calc;
+    if (formula.shouldUseLazyFormulaEngine()) {
+        formula.invalidateLazyFormulaDependencies([], true);
+    }
     server.saveParam("all", Store.currentSheetIndex, calc, { "k": "calcChain" });
     for(let i = 0; i < funcData.length; i++){
         let funcData_r = funcData[i].r,
@@ -1146,7 +1585,7 @@ function jfrefreshgrid_pastcut(source, target, RowlChange){
         Store.flowdata = target["curData"];
         Store.luckysheetfile[getSheetIndex(source["sheetIndex"])]["data"] = source["curData"];
     }
-    editor.webWorkerFlowDataCache(Store.flowdata);//worker存数据
+    cacheFlowDataAfterRefresh(Store.flowdata, { mode: 'full' });//worker存数据
     Store.luckysheetfile[getSheetIndex(Store.currentSheetIndex)].data = Store.flowdata;
     
     //luckysheet_select_save
@@ -1400,181 +1839,7 @@ function jfrefreshgrid_rhcw(rowheight, colwidth, isRefreshCanvas=true){
 
 //Refresh the canvas display data according to scrollHeight and scrollWidth
 function luckysheetrefreshgrid(scrollWidth, scrollHeight) {
-    formula.groupValuesRefresh();
-    
-    if (scrollWidth == null) {
-        scrollWidth = $("#luckysheet-cell-main").scrollLeft();
-    }
-    if (scrollHeight == null) {
-        scrollHeight = $("#luckysheet-cell-main").scrollTop();
-    }
-
-    if (luckysheetFreezen.freezenverticaldata != null || luckysheetFreezen.freezenhorizontaldata != null) {
-        let freezen_horizon_px, freezen_horizon_ed, freezen_horizon_scrollTop;
-        let freezen_vertical_px, freezen_vertical_ed, freezen_vertical_scrollTop;
-        let drawWidth = Store.luckysheetTableContentHW[0], drawHeight = Store.luckysheetTableContentHW[1];
-        
-        if (luckysheetFreezen.freezenverticaldata != null && luckysheetFreezen.freezenhorizontaldata != null) {
-            freezen_horizon_px = luckysheetFreezen.freezenhorizontaldata[0];
-            freezen_horizon_ed = luckysheetFreezen.freezenhorizontaldata[1];
-            freezen_horizon_scrollTop = luckysheetFreezen.freezenhorizontaldata[2];
-
-            freezen_vertical_px = luckysheetFreezen.freezenverticaldata[0];
-            freezen_vertical_ed = luckysheetFreezen.freezenverticaldata[1];
-            freezen_vertical_scrollTop = luckysheetFreezen.freezenverticaldata[2];
-
-            //左上canvas freezen_3
-            luckysheetDrawMain(
-                freezen_vertical_scrollTop, 
-                freezen_horizon_scrollTop, 
-                freezen_vertical_px, 
-                freezen_horizon_px, 
-                1, 
-                1, 
-                null, 
-                null, 
-                "freezen_3"
-            );
-
-            //上右canvas freezen_4
-            luckysheetDrawMain(
-                scrollWidth + freezen_vertical_px - freezen_vertical_scrollTop, 
-                freezen_horizon_scrollTop, 
-                drawWidth - freezen_vertical_px + freezen_vertical_scrollTop, 
-                freezen_horizon_px, 
-                1, 
-                1, 
-                null, 
-                null, 
-                "freezen_4"
-            );
-
-            //左下canvas freezen_7
-            luckysheetDrawMain(
-                freezen_vertical_scrollTop, 
-                scrollHeight + freezen_horizon_px - freezen_horizon_scrollTop, 
-                freezen_vertical_px, 
-                drawHeight - freezen_horizon_px + freezen_horizon_scrollTop, 
-                1, 
-                1, 
-                null, 
-                null, 
-                "freezen_7"
-            );
-
-            //右下canvas luckysheetTableContent
-            luckysheetDrawMain(
-                scrollWidth + freezen_vertical_px - freezen_vertical_scrollTop, 
-                scrollHeight + freezen_horizon_px - freezen_horizon_scrollTop, 
-                drawWidth - freezen_vertical_px + freezen_vertical_scrollTop, 
-                drawHeight - freezen_horizon_px + freezen_horizon_scrollTop, 
-                freezen_vertical_px - freezen_vertical_scrollTop + Store.rowHeaderWidth, 
-                freezen_horizon_px - freezen_horizon_scrollTop + Store.columnHeaderHeight
-            );
-
-            //标题
-            luckysheetDrawgridColumnTitle(freezen_vertical_scrollTop, freezen_vertical_px, Store.rowHeaderWidth);
-            luckysheetDrawgridColumnTitle(
-                scrollWidth + freezen_vertical_px - freezen_vertical_scrollTop, 
-                drawWidth - freezen_vertical_px + freezen_vertical_scrollTop, 
-                freezen_vertical_px - freezen_vertical_scrollTop + Store.rowHeaderWidth
-            );
-            
-            luckysheetDrawgridRowTitle(freezen_horizon_scrollTop, freezen_horizon_px, Store.columnHeaderHeight);
-            luckysheetDrawgridRowTitle(
-                scrollHeight + freezen_horizon_px - freezen_horizon_scrollTop, 
-                drawHeight - freezen_horizon_px + freezen_horizon_scrollTop, 
-                freezen_horizon_px - freezen_horizon_scrollTop + Store.columnHeaderHeight
-            );
-           
-        }
-        else if (luckysheetFreezen.freezenhorizontaldata != null) {
-            freezen_horizon_px = luckysheetFreezen.freezenhorizontaldata[0];
-            freezen_horizon_ed = luckysheetFreezen.freezenhorizontaldata[1];
-            freezen_horizon_scrollTop = luckysheetFreezen.freezenhorizontaldata[2];
-
-            luckysheetDrawMain(
-                scrollWidth, 
-                freezen_horizon_scrollTop, 
-                drawWidth, 
-                freezen_horizon_px, 
-                1, 
-                1, 
-                null, 
-                null, 
-                "freezen_h"
-            );
-            luckysheetDrawMain(
-                scrollWidth, 
-                scrollHeight + freezen_horizon_px - freezen_horizon_scrollTop, 
-                drawWidth, 
-                drawHeight - freezen_horizon_px + freezen_horizon_scrollTop, 
-                null, 
-                freezen_horizon_px - freezen_horizon_scrollTop + Store.columnHeaderHeight
-            );
-        
-            luckysheetDrawgridColumnTitle(scrollWidth, drawWidth, null);
-            
-            luckysheetDrawgridRowTitle(freezen_horizon_scrollTop, freezen_horizon_px, Store.columnHeaderHeight);
-            luckysheetDrawgridRowTitle(
-                scrollHeight + freezen_horizon_px - freezen_horizon_scrollTop, 
-                drawHeight - freezen_horizon_px + freezen_horizon_scrollTop, 
-                freezen_horizon_px - freezen_horizon_scrollTop + Store.columnHeaderHeight
-            );
-            
-        }
-        else if (luckysheetFreezen.freezenverticaldata != null) {
-            freezen_vertical_px = luckysheetFreezen.freezenverticaldata[0];
-            freezen_vertical_ed = luckysheetFreezen.freezenverticaldata[1];
-            freezen_vertical_scrollTop = luckysheetFreezen.freezenverticaldata[2];
-            
-            luckysheetDrawMain(
-                freezen_vertical_scrollTop, 
-                scrollHeight, 
-                freezen_vertical_px, 
-                drawHeight, 
-                1, 
-                1, 
-                null, 
-                null, 
-                "freezen_v"
-            );
-            luckysheetDrawMain(
-                scrollWidth + freezen_vertical_px - freezen_vertical_scrollTop, 
-                scrollHeight, 
-                drawWidth - freezen_vertical_px + freezen_vertical_scrollTop, 
-                drawHeight, 
-                freezen_vertical_px - freezen_vertical_scrollTop + Store.rowHeaderWidth, 
-                null
-            );
-            
-            luckysheetDrawgridRowTitle(scrollHeight, drawHeight, null);
-            
-            luckysheetDrawgridColumnTitle(freezen_vertical_scrollTop, freezen_vertical_px, Store.rowHeaderWidth);
-            luckysheetDrawgridColumnTitle(
-                scrollWidth + freezen_vertical_px - freezen_vertical_scrollTop, 
-                drawWidth - freezen_vertical_px + freezen_vertical_scrollTop, 
-                freezen_vertical_px - freezen_vertical_scrollTop + Store.rowHeaderWidth
-            );
-            
-        }
-    }
-    else {
-        if($("#luckysheetTableContent").length == 0){
-            return;
-        }
-        let luckysheetTableContent = $("#luckysheetTableContent").get(0).getContext("2d");
-        luckysheetDrawMain(scrollWidth, scrollHeight);
-    
-        // luckysheetTableContent.clearRect(0, 0, 46, 20);
-        
-        luckysheetDrawgridColumnTitle(scrollWidth);
-        luckysheetDrawgridRowTitle(scrollHeight);
-
-        //清除canvas左上角区域 防止列标题栏序列号溢出显示
-        
-        luckysheetTableContent.clearRect(0, 0, (Store.rowHeaderWidth* Store.devicePixelRatio-1) , (Store.columnHeaderHeight* Store.devicePixelRatio-1) );
-    }
+    scheduleGridRender(scrollWidth, scrollHeight);
 }
 
 export {

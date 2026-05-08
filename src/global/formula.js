@@ -18,8 +18,9 @@ import { datenum_local, genarate, update, valueShowEs } from "./format";
 import editor from "./editor";
 import tooltip from "./tooltip";
 import { rowLocation, colLocation, colLocationByIndex, mouseposition, rowLocationByIndex } from "./location";
+import { luckysheet_searcharray } from "../controllers/sheetSearch";
 import { luckysheetRangeLast } from "./cursorPos";
-import { jfrefreshgrid } from "./refresh";
+import { jfrefreshgrid, luckysheetrefreshgrid } from "./refresh";
 import { isInlineStringCell, convertSpanToShareString } from "../controllers/inlineString";
 // import luckysheet_function from '../function/luckysheet_function';
 // import functionlist from '../function/functionlist';
@@ -39,8 +40,11 @@ import Store from "../store";
 import locale from "../locale/locale";
 import json from "./json";
 import method from "./method";
-import { getSheetData, refreshFormula } from "./api";
+import { getSheetData } from "./api";
 import { initLuckysheetConfig } from "../controllers/rowColumnOperation";
+import luckysheetConfigsetting from "../controllers/luckysheetConfigsetting";
+import xlsxCtrl from "../controllers/xlsxCtrl";
+import { bumpSheetDataVersion } from './perf';
 
 const luckysheetformula = {
     error: {
@@ -440,6 +444,25 @@ const luckysheetformula = {
         let rangeNow = [];
         let fmt = "General";
 
+        if (range == null) {
+            return [rangeNow, fmt];
+        }
+
+        if (!Array.isArray(range)) {
+            if (typeof range == "object") {
+                fmt = range.ct?.fa ?? fmt;
+                rangeNow.push(isRealNull(range.v) ? null : range.v);
+            } else {
+                rangeNow.push(range);
+            }
+
+            return [rangeNow, fmt ?? "General"];
+        }
+
+        if (range.length == 0) {
+            return [rangeNow, fmt];
+        }
+
         if (range.length == 1) {
             //一行
             for (let c = 0; c < range[0].length; c++) {
@@ -713,7 +736,8 @@ const luckysheetformula = {
         let sheettxt = "",
             rangetxt = "",
             sheetIndex = null,
-            sheetdata = null;
+            sheetdata = null,
+            sheetfile = null;
 
         let luckysheetfile = getluckysheetfile();
 
@@ -732,6 +756,7 @@ const luckysheetformula = {
             }
             for (let i in luckysheetfile) {
                 if (sheettxt == luckysheetfile[i].name) {
+                    sheetfile = luckysheetfile[i];
                     sheetIndex = luckysheetfile[i].index;
                     sheetdata = luckysheetfile[i].data;
                     break;
@@ -746,15 +771,24 @@ const luckysheetformula = {
                 return this.cellTextToIndexList[txt + "_" + i];
             }
             let index = getSheetIndex(i);
+            sheetfile = luckysheetfile[index];
             sheettxt = luckysheetfile[index].name;
             sheetIndex = luckysheetfile[index].index;
             sheetdata = Store.flowdata;
             rangetxt = txt;
         }
 
-        // fix =VLOOKUP(D9,数据透视表!A:D,2,0)
-        if(sheetdata == null){
-            return null
+        let sheetRowCount = Array.isArray(sheetdata) ? sheetdata.length : null;
+        let sheetColumnCount = Array.isArray(sheetdata) && sheetdata[0] != null ? sheetdata[0].length : null;
+
+        if (!isRealNum(sheetRowCount) || sheetRowCount <= 0) {
+            sheetRowCount = sheetfile != null && isRealNum(sheetfile.row) ? parseInt(sheetfile.row, 10) : luckysheetConfigsetting.row;
+        }
+
+        if (!isRealNum(sheetColumnCount) || sheetColumnCount <= 0) {
+            sheetColumnCount = sheetfile != null && isRealNum(sheetfile.column)
+                ? parseInt(sheetfile.column, 10)
+                : luckysheetConfigsetting.column;
         }
 
         if (rangetxt.indexOf(":") == -1) {
@@ -782,7 +816,7 @@ const luckysheetformula = {
                 row[0] = 0;
             }
             if (isNaN(row[1])) {
-                row[1] = sheetdata.length - 1;
+                row[1] = sheetRowCount - 1;
             }
             if (row[0] > row[1]) {
                 return null;
@@ -793,7 +827,7 @@ const luckysheetformula = {
                 col[0] = 0;
             }
             if (isNaN(col[1])) {
-                col[1] = sheetdata[0].length - 1;
+                col[1] = sheetColumnCount - 1;
             }
             if (col[0] > col[1]) {
                 return null;
@@ -1434,7 +1468,7 @@ const luckysheetformula = {
         }
 
         window.luckysheet_getcelldata_cache = null;
-        let isRunExecFunction = true;
+        let isRunExecFunction = false;
 
         // let d = editor.deepCopyFlowData(Store.flowdata);
         let d = $.extend(true, [], Store.flowdata)
@@ -1443,8 +1477,7 @@ const luckysheetformula = {
         if (getObjType(curv) == "object") {
             if (!isCurInline) {
                 if (getObjType(value) == "string" && value.slice(0, 1) == "=" && value.length > 1) {
-                    let v = _this.execfunction(value, r, c, undefined, true);
-                    isRunExecFunction = false;
+                    let v = _this.execfunction(value, r, c, undefined, false, true);
                     curv = $.extend(true, {}, d[r][c]);
                     curv.v = v[1];
                     curv.f = v[2];
@@ -1480,8 +1513,7 @@ const luckysheetformula = {
                         valueFunction.slice(0, 1) == "=" &&
                         valueFunction.length > 1
                     ) {
-                        let v = _this.execfunction(valueFunction, r, c, undefined, true);
-                        isRunExecFunction = false;
+                        let v = _this.execfunction(valueFunction, r, c, undefined, false, true);
                         // get v/m/ct
 
                         curv = $.extend(true, {}, d[r][c]);
@@ -1550,8 +1582,6 @@ const luckysheetformula = {
                     }
                 } else {
                     _this.delFunctionGroup(r, c);
-                    _this.execFunctionGroup(r, c, value);
-                    isRunExecFunction = false;
 
                     curv = $.extend(true, {}, d[r][c]);
                     // let gd = _this.execFunctionGlobalData[r+"_"+c+"_"+Store.currentSheetIndex];
@@ -1594,8 +1624,7 @@ const luckysheetformula = {
             value = curv;
         } else {
             if (getObjType(value) == "string" && value.slice(0, 1) == "=" && value.length > 1) {
-                let v = _this.execfunction(value, r, c, undefined, true);
-                isRunExecFunction = false;
+                let v = _this.execfunction(value, r, c, undefined, false, true);
                 value = {
                     v: v[1],
                     f: v[2],
@@ -1623,8 +1652,7 @@ const luckysheetformula = {
                     valueFunction.slice(0, 1) == "=" &&
                     valueFunction.length > 1
                 ) {
-                    let v = _this.execfunction(valueFunction, r, c, undefined, true);
-                    isRunExecFunction = false;
+                    let v = _this.execfunction(valueFunction, r, c, undefined, false, true);
                     // value = {
                     //     "v": v[1],
                     //     "f": v[2]
@@ -1654,13 +1682,18 @@ const luckysheetformula = {
                 }
             } else {
                 _this.delFunctionGroup(r, c);
-                _this.execFunctionGroup(r, c, value);
-                isRunExecFunction = false;
             }
         }
 
         // value maybe an object
         setcellvalue(r, c, d, value);
+
+        if (d[r] != null && d[r][c] != null && getObjType(d[r][c]) == "object" && d[r][c].f != null) {
+            _this.cacheFormulaCellResult({ r: r, c: c, index: Store.currentSheetIndex }, d[r][c]);
+        } else {
+            _this.clearFormulaCellRuntime(r, c, Store.currentSheetIndex);
+        }
+
         _this.cancelNormalSelected();
 
         let RowlChange = false;
@@ -1760,8 +1793,10 @@ const luckysheetformula = {
 
         if (isRefresh) {
             jfrefreshgrid(d, [{ row: [r, r], column: [c, c] }], allParam, isRunExecFunction);
-
-            refreshFormula()
+            _this.refreshDependentFormulasAsync([{ r: r, c: c, index: Store.currentSheetIndex }], {
+                restartIfRunning: true,
+                refreshGrid: true,
+            });
 
             if(d[r] && d[r][c] && d[r][c]['tb'] === '2' && Store.isRefreshConfig) {
                 initLuckysheetConfig({ range: { row: [r, r], column: [c, c] }, clearjfundo: false })
@@ -4511,10 +4546,1726 @@ const luckysheetformula = {
             op: "add",
             pos: file.calcChain.length - 1,
         });
+        this.clearFunctionGroupCache();
         setluckysheetfile(luckysheetfile);
+    },
+    allFunctionGroupCache: null,
+    allFunctionGroupCacheWorkbook: null,
+    forceFormulaRunListCache: null,
+    forceFormulaRunListWorkbook: null,
+    workbookFormulaCountCache: null,
+    workbookFormulaCountCacheWorkbook: null,
+    forceFormulaRecalcReady: false,
+    forceFormulaTaskId: 0,
+    forceFormulaTaskRunning: false,
+    forceFormulaTaskCallbacks: [],
+    forceFormulaTaskWorkbook: null,
+    forceFormulaTaskPriorityKey: null,
+    forceFormulaTaskContextVersion: 0,
+    forceFormulaTaskActiveContextVersion: 0,
+    lastForceFormulaTaskMetrics: null,
+    lazyFormulaRuntimeWorkbook: null,
+    lazyFormulaRuntimeContextVersion: 0,
+    formulaRuntimeCellCache: {},
+    formulaDirtyCellMap: {},
+    formulaComputingCellMap: {},
+    loadedFormulaDependencyGraphCache: null,
+    loadedFormulaDependencyGraphCacheWorkbook: null,
+    loadedFormulaDependencyGraphCacheSignature: null,
+    clearFunctionGroupCache: function() {
+        this.allFunctionGroupCache = null;
+        this.allFunctionGroupCacheWorkbook = null;
+        this.forceFormulaRunListCache = null;
+        this.forceFormulaRunListWorkbook = null;
+        this.workbookFormulaCountCache = null;
+        this.workbookFormulaCountCacheWorkbook = null;
+        this.loadedFormulaDependencyGraphCache = null;
+        this.loadedFormulaDependencyGraphCacheWorkbook = null;
+        this.loadedFormulaDependencyGraphCacheSignature = null;
+        this.forceFormulaRecalcReady = false;
+        this.forceFormulaTaskPriorityKey = null;
+        this.forceFormulaTaskContextVersion += 1;
+        this.clearFormulaRuntimeState();
+    },
+    cancelForceFormulaTask: function() {
+        this.forceFormulaTaskId += 1;
+        this.forceFormulaTaskRunning = false;
+        this.forceFormulaTaskCallbacks = [];
+        this.forceFormulaTaskWorkbook = null;
+        this.forceFormulaTaskPriorityKey = null;
+        this.forceFormulaTaskActiveContextVersion = 0;
+        this.execFunctionExist = null;
+        this.execFunctionGlobalData = null;
+        this.groupValuesRefreshData = [];
+        this.groupValuesRefreshSettings = null;
+        this.lastForceFormulaTaskMetrics = null;
+        this.forceFormulaRecalcReady = false;
+        this.clearFormulaRuntimeState();
+        if (Store.loadingObj && typeof Store.loadingObj.close === "function") {
+            Store.loadingObj.close();
+        }
+    },
+    clearFormulaRuntimeState: function() {
+        this.lazyFormulaRuntimeWorkbook = null;
+        this.lazyFormulaRuntimeContextVersion = 0;
+        this.formulaRuntimeCellCache = {};
+        this.formulaDirtyCellMap = {};
+        this.formulaComputingCellMap = {};
+        this.clearLazyFormulaComputeQueueState();
+        this.bumpFormulaRenderVersion();
+    },
+    getFormulaCellKey: function(r, c, index) {
+        return "r" + r + "c" + c + "i" + index;
+    },
+    clearLazyFormulaComputeQueueState: function() {
+        if (this.lazyFormulaComputeTimer != null) {
+            clearTimeout(this.lazyFormulaComputeTimer);
+        }
+
+        if (
+            this.lazyFormulaComputeIdleCallbackId != null &&
+            window.cancelIdleCallback != null
+        ) {
+            window.cancelIdleCallback(this.lazyFormulaComputeIdleCallbackId);
+        }
+
+        this.lazyFormulaComputeTimer = null;
+        this.lazyFormulaComputeIdleCallbackId = null;
+        this.lazyFormulaComputeRunning = false;
+        this.lazyFormulaComputeHighPriorityQueue = [];
+        this.lazyFormulaComputeNormalPriorityQueue = [];
+        this.lazyFormulaComputeHighPriorityHead = 0;
+        this.lazyFormulaComputeNormalPriorityHead = 0;
+        this.lazyFormulaPendingGridRefresh = false;
+        this.lazyFormulaLastGridRefreshTime = 0;
+        this.lazyFormulaComputeQueuedCellMap = {};
+        this.lazyFormulaComputeIdleCallbacks = [];
+        this.formulaExecutionContextStack = [];
+        this.lastCompletedFormulaExecutionContext = null;
+    },
+    pushFormulaExecutionContext: function(context) {
+        if (!Array.isArray(this.formulaExecutionContextStack)) {
+            this.formulaExecutionContextStack = [];
+        }
+
+        this.formulaExecutionContextStack.push(context);
+        return context;
+    },
+    getCurrentFormulaExecutionContext: function() {
+        if (!Array.isArray(this.formulaExecutionContextStack) || this.formulaExecutionContextStack.length === 0) {
+            return null;
+        }
+
+        return this.formulaExecutionContextStack[this.formulaExecutionContextStack.length - 1];
+    },
+    popFormulaExecutionContext: function() {
+        if (!Array.isArray(this.formulaExecutionContextStack) || this.formulaExecutionContextStack.length === 0) {
+            return null;
+        }
+
+        let context = this.formulaExecutionContextStack.pop();
+        this.lastCompletedFormulaExecutionContext = context;
+        return context;
+    },
+    markCurrentFormulaDeferredDependency: function(r, c, index) {
+        let context = this.getCurrentFormulaExecutionContext();
+
+        if (context == null || r == null || c == null || index == null) {
+            return;
+        }
+
+        if (context.deferredDependencyKeyMap == null) {
+            context.deferredDependencyKeyMap = {};
+        }
+
+        let key = this.getFormulaCellKey(r, c, index);
+        if (context.deferredDependencyKeyMap[key]) {
+            return;
+        }
+
+        context.deferredDependencyKeyMap[key] = 1;
+        context.deferredDependencies.push({
+            r: r,
+            c: c,
+            index: index,
+        });
+    },
+    bumpFormulaRenderVersion: function() {
+        if (typeof this.formulaRenderVersion !== "number" || isNaN(this.formulaRenderVersion)) {
+            this.formulaRenderVersion = 0;
+        }
+
+        this.formulaRenderVersion += 1;
+        return this.formulaRenderVersion;
+    },
+    getFormulaRenderVersion: function() {
+        if (typeof this.formulaRenderVersion !== "number" || isNaN(this.formulaRenderVersion)) {
+            this.formulaRenderVersion = 0;
+        }
+
+        return this.formulaRenderVersion;
+    },
+    getLazyFormulaQueuePriorityValue: function(priority = "normal") {
+        return priority === "high" ? 2 : 1;
+    },
+    hasPendingLazyFormulaCompute: function() {
+        return (
+            this.lazyFormulaComputeRunning === true ||
+            this.lazyFormulaComputeTimer != null ||
+            this.lazyFormulaComputeIdleCallbackId != null ||
+            this.hasQueuedLazyFormulaPriority("high") ||
+            this.hasQueuedLazyFormulaPriority("normal")
+        );
+    },
+    hasQueuedLazyFormulaPriority: function(priority = "normal") {
+        let queueName = priority === "high" ? "lazyFormulaComputeHighPriorityQueue" : "lazyFormulaComputeNormalPriorityQueue";
+        let headName = priority === "high" ? "lazyFormulaComputeHighPriorityHead" : "lazyFormulaComputeNormalPriorityHead";
+        let queue = this[queueName];
+        let head = this[headName];
+
+        return Array.isArray(queue) && typeof head === "number" && head < queue.length;
+    },
+    whenLazyFormulaQueueIdle: function(callback) {
+        if (typeof callback !== "function") {
+            return;
+        }
+
+        if (!this.hasPendingLazyFormulaCompute()) {
+            callback();
+            return;
+        }
+
+        if (!Array.isArray(this.lazyFormulaComputeIdleCallbacks)) {
+            this.lazyFormulaComputeIdleCallbacks = [];
+        }
+
+        this.lazyFormulaComputeIdleCallbacks.push(callback);
+    },
+    flushLazyFormulaQueueIdleCallbacks: function() {
+        let callbacks = Array.isArray(this.lazyFormulaComputeIdleCallbacks)
+            ? this.lazyFormulaComputeIdleCallbacks.slice()
+            : [];
+
+        this.lazyFormulaComputeIdleCallbacks = [];
+
+        callbacks.forEach(function(callback) {
+            callback();
+        });
+    },
+    compactLazyFormulaQueue: function(queueName, headName) {
+        let queue = this[queueName];
+        let head = this[headName];
+
+        if (!Array.isArray(queue)) {
+            this[queueName] = [];
+            this[headName] = 0;
+            return;
+        }
+
+        if (typeof head !== "number" || isNaN(head) || head < 0) {
+            head = 0;
+        }
+
+        if (head <= 0) {
+            return;
+        }
+
+        if (head >= queue.length) {
+            this[queueName] = [];
+            this[headName] = 0;
+            return;
+        }
+
+        if (head >= 128 && head * 2 >= queue.length) {
+            this[queueName] = queue.slice(head);
+            this[headName] = 0;
+        }
+    },
+    dequeueLazyFormulaComputeItem: function(queueName, headName) {
+        let queue = this[queueName];
+        let head = this[headName];
+
+        if (!Array.isArray(queue) || typeof head !== "number" || head >= queue.length) {
+            this.compactLazyFormulaQueue(queueName, headName);
+            return null;
+        }
+
+        while (head < queue.length) {
+            let nextItem = queue[head];
+            head += 1;
+            this[headName] = head;
+
+            if (nextItem == null) {
+                continue;
+            }
+
+            let queuedState = this.lazyFormulaComputeQueuedCellMap[nextItem.key];
+            if (queuedState != null && queuedState.priorityValue === nextItem.priorityValue) {
+                this.compactLazyFormulaQueue(queueName, headName);
+                return nextItem;
+            }
+        }
+
+        this.compactLazyFormulaQueue(queueName, headName);
+        return null;
+    },
+    getQueuedLazyFormulaComputeItem: function() {
+        let nextItem = this.dequeueLazyFormulaComputeItem(
+            "lazyFormulaComputeHighPriorityQueue",
+            "lazyFormulaComputeHighPriorityHead",
+        );
+
+        if (nextItem != null) {
+            return nextItem;
+        }
+
+        return this.dequeueLazyFormulaComputeItem(
+            "lazyFormulaComputeNormalPriorityQueue",
+            "lazyFormulaComputeNormalPriorityHead",
+        );
+    },
+    scheduleLazyFormulaCompute: function() {
+        let _this = this;
+
+        if (
+            !this.shouldUseLazyFormulaEngine() ||
+            this.lazyFormulaComputeRunning ||
+            this.lazyFormulaComputeTimer != null ||
+            this.lazyFormulaComputeIdleCallbackId != null
+        ) {
+            return;
+        }
+
+        if (this.hasQueuedLazyFormulaPriority("high")) {
+            this.lazyFormulaComputeTimer = setTimeout(function() {
+                _this.lazyFormulaComputeTimer = null;
+                _this.runLazyFormulaComputeChunk("high");
+            }, 0);
+            return;
+        }
+
+        if (window.requestIdleCallback != null) {
+            this.lazyFormulaComputeIdleCallbackId = window.requestIdleCallback(
+                function(deadline) {
+                    _this.lazyFormulaComputeIdleCallbackId = null;
+                    _this.runLazyFormulaComputeChunk("normal", deadline);
+                },
+                { timeout: 120 },
+            );
+            return;
+        }
+
+        this.lazyFormulaComputeTimer = setTimeout(function() {
+            _this.lazyFormulaComputeTimer = null;
+            _this.runLazyFormulaComputeChunk("normal");
+        }, 32);
+    },
+    flushLazyFormulaGridRefresh: function(force = false) {
+        let now = Date.now();
+        let lastRefreshTime = typeof this.lazyFormulaLastGridRefreshTime === "number" ? this.lazyFormulaLastGridRefreshTime : 0;
+
+        if (!force && now - lastRefreshTime < 32) {
+            this.lazyFormulaPendingGridRefresh = true;
+            return false;
+        }
+
+        this.lazyFormulaPendingGridRefresh = false;
+        this.lazyFormulaLastGridRefreshTime = now;
+        luckysheetrefreshgrid();
+        return true;
+    },
+    runLazyFormulaComputeChunk: function(priorityMode = "normal", idleDeadline = null) {
+        let _this = this;
+
+        if (!this.shouldUseLazyFormulaEngine()) {
+            this.clearLazyFormulaComputeQueueState();
+            return;
+        }
+
+        if (this.forceFormulaTaskRunning) {
+            this.scheduleLazyFormulaCompute();
+            return;
+        }
+
+        this.ensureLazyFormulaRuntimeInitialized();
+        this.lazyFormulaComputeRunning = true;
+
+        let maxDurationMs = priorityMode === "high" ? 4 : 2;
+        let maxCellCount = priorityMode === "high" ? 12 : 4;
+        let startTime = Date.now();
+        let processedCount = 0;
+        let touchedCurrentSheet = false;
+        let computedAny = false;
+        let nextItem = null;
+
+        while (processedCount < maxCellCount && Date.now() - startTime < maxDurationMs) {
+            if (priorityMode !== "high" && this.hasQueuedLazyFormulaPriority("high")) {
+                break;
+            }
+
+            if (
+                priorityMode !== "high" &&
+                idleDeadline != null &&
+                typeof idleDeadline.timeRemaining === "function" &&
+                idleDeadline.didTimeout !== true &&
+                idleDeadline.timeRemaining() <= 1
+            ) {
+                break;
+            }
+
+            nextItem = this.getQueuedLazyFormulaComputeItem();
+
+            if (nextItem == null) {
+                break;
+            }
+
+            delete this.lazyFormulaComputeQueuedCellMap[nextItem.key];
+
+            if (!this.shouldEnsureFormulaCellCompute(nextItem.r, nextItem.c, nextItem.index)) {
+                continue;
+            }
+
+            let wasDirty = this.isFormulaCellDirty(nextItem.r, nextItem.c, nextItem.index);
+            this.ensureFormulaCellComputed(nextItem.r, nextItem.c, nextItem.index, {
+                persistToSheetData: nextItem.persistToSheetData !== false,
+            });
+            processedCount += 1;
+
+            if (wasDirty || this.getFormulaRuntimeCellValue(nextItem.r, nextItem.c, nextItem.index) != null) {
+                computedAny = true;
+                if (nextItem.index != null && nextItem.index.toString() === Store.currentSheetIndex.toString()) {
+                    touchedCurrentSheet = true;
+                }
+            }
+        }
+
+        this.lazyFormulaComputeRunning = false;
+
+        if (computedAny) {
+            this.bumpFormulaRenderVersion();
+            window.luckysheet_getcelldata_cache = null;
+
+            if (touchedCurrentSheet) {
+                this.flushLazyFormulaGridRefresh(false);
+            }
+        }
+
+        if (this.hasPendingLazyFormulaCompute()) {
+            this.scheduleLazyFormulaCompute();
+            return;
+        }
+
+        if (this.lazyFormulaPendingGridRefresh) {
+            this.flushLazyFormulaGridRefresh(true);
+        }
+
+        setTimeout(function() {
+            _this.flushLazyFormulaQueueIdleCallbacks();
+        }, 0);
+    },
+    enqueueFormulaCellCompute: function(r, c, index, options = {}) {
+        let { priority = "normal", persistToSheetData = true, start = true } = options;
+
+        if (r == null || c == null || index == null || !this.shouldUseLazyFormulaEngine()) {
+            return false;
+        }
+
+        this.ensureLazyFormulaRuntimeInitialized();
+
+        if (!this.shouldEnsureFormulaCellCompute(r, c, index)) {
+            return false;
+        }
+
+        let key = this.getFormulaCellKey(r, c, index);
+        let priorityValue = this.getLazyFormulaQueuePriorityValue(priority);
+        let queuedState = this.lazyFormulaComputeQueuedCellMap[key];
+
+        if (queuedState != null) {
+            if (queuedState.priorityValue >= priorityValue) {
+                queuedState.persistToSheetData = queuedState.persistToSheetData || persistToSheetData;
+                return false;
+            }
+        }
+
+        this.lazyFormulaComputeQueuedCellMap[key] = {
+            priorityValue: priorityValue,
+            persistToSheetData: persistToSheetData,
+        };
+
+        let queueItem = {
+            key: key,
+            r: r,
+            c: c,
+            index: index,
+            priorityValue: priorityValue,
+            persistToSheetData: persistToSheetData,
+        };
+
+        if (priorityValue > 1) {
+            this.lazyFormulaComputeHighPriorityQueue.push(queueItem);
+        } else {
+            this.lazyFormulaComputeNormalPriorityQueue.push(queueItem);
+        }
+
+        if (start) {
+            this.scheduleLazyFormulaCompute();
+        }
+
+        return true;
+    },
+    enqueueFormulaRunListCompute: function(formulaRunList = [], options = {}) {
+        if (!Array.isArray(formulaRunList) || formulaRunList.length === 0) {
+            return 0;
+        }
+
+        let count = 0;
+
+        formulaRunList.forEach((formulaCell) => {
+            if (
+                formulaCell != null &&
+                formulaCell.r != null &&
+                formulaCell.c != null &&
+                formulaCell.index != null &&
+                this.enqueueFormulaCellCompute(formulaCell.r, formulaCell.c, formulaCell.index, {
+                    priority: options.priority,
+                    persistToSheetData: options.persistToSheetData !== false,
+                    start: false,
+                })
+            ) {
+                count += 1;
+            }
+        });
+
+        if (count > 0 && options.start !== false) {
+            this.scheduleLazyFormulaCompute();
+        }
+
+        return count;
+    },
+    enqueueViewportFormulaCompute: function(sheetIndex, viewportRange, options = {}) {
+        if (sheetIndex == null || viewportRange == null) {
+            return 0;
+        }
+
+        let formulaRunList = this.getLoadedSheetRangeFormulaRunList(
+            sheetIndex,
+            viewportRange.rowRange,
+            viewportRange.columnRange,
+        );
+
+        if (!Array.isArray(formulaRunList) || formulaRunList.length === 0) {
+            formulaRunList = this.getSimpleFormulaRunListByRange(
+                sheetIndex,
+                viewportRange.rowRange,
+                viewportRange.columnRange,
+            );
+        }
+
+        return this.enqueueFormulaRunListCompute(formulaRunList, {
+            priority: options.priority || "high",
+            persistToSheetData: options.persistToSheetData !== false,
+            start: options.start,
+        });
+    },
+    shouldUseLazyFormulaEngine: function() {
+        return xlsxCtrl.hasImportedSheetCache() || this.shouldDeferLargeWorkbookForceCalculation();
+    },
+    ensureLazyFormulaRuntimeInitialized: function() {
+        if (!this.shouldUseLazyFormulaEngine()) {
+            return;
+        }
+
+        if (
+            this.lazyFormulaRuntimeWorkbook === Store.luckysheetfile &&
+            this.lazyFormulaRuntimeContextVersion === this.forceFormulaTaskContextVersion
+        ) {
+            return;
+        }
+
+        this.clearFormulaRuntimeState();
+        this.markAllFormulaCellsDirty();
+        this.lazyFormulaRuntimeWorkbook = Store.luckysheetfile;
+        this.lazyFormulaRuntimeContextVersion = this.forceFormulaTaskContextVersion;
+    },
+    markFormulaCellDirty: function(r, c, index) {
+        this.formulaDirtyCellMap[this.getFormulaCellKey(r, c, index)] = 1;
+    },
+    markFormulaCellClean: function(r, c, index) {
+        delete this.formulaDirtyCellMap[this.getFormulaCellKey(r, c, index)];
+    },
+    clearFormulaCellRuntime: function(r, c, index) {
+        let key = this.getFormulaCellKey(r, c, index);
+        delete this.formulaRuntimeCellCache[key];
+        delete this.formulaDirtyCellMap[key];
+        delete this.formulaComputingCellMap[key];
+    },
+    isFormulaCellDirty: function(r, c, index) {
+        return this.formulaDirtyCellMap[this.getFormulaCellKey(r, c, index)] === 1;
+    },
+    getFormulaRuntimeCellValue: function(r, c, index) {
+        return this.formulaRuntimeCellCache[this.getFormulaCellKey(r, c, index)] || null;
+    },
+    shouldEnsureFormulaCellCompute: function(r, c, index, cell = null) {
+        if (!this.shouldUseLazyFormulaEngine() || r == null || c == null || index == null) {
+            return false;
+        }
+
+        let key = this.getFormulaCellKey(r, c, index);
+
+        if (this.formulaDirtyCellMap[key] === 1 || this.formulaRuntimeCellCache[key] != null) {
+            return true;
+        }
+
+        if (cell == null) {
+            cell = this.getFormulaStoredCell(r, c, index);
+        }
+
+        return cell != null && getObjType(cell) == "object" && cell.f != null;
+    },
+    markAllFormulaCellsDirty: function(sheetIndexes = null) {
+        let formulaGroup = [];
+
+        if (Array.isArray(sheetIndexes) && sheetIndexes.length > 0) {
+            sheetIndexes.forEach((sheetIndex) => {
+                formulaGroup = formulaGroup.concat(this.getFunctionGroup(sheetIndex));
+            });
+        } else {
+            formulaGroup = this.getAllFunctionGroup();
+        }
+
+        formulaGroup.forEach((formulaCell) => {
+            if (formulaCell != null && formulaCell.r != null && formulaCell.c != null && formulaCell.index != null) {
+                this.markFormulaCellDirty(formulaCell.r, formulaCell.c, formulaCell.index);
+            }
+        });
+    },
+    markFormulaRunListDirty: function(formulaRunList = []) {
+        if (!Array.isArray(formulaRunList)) {
+            return;
+        }
+
+        formulaRunList.forEach((formulaCell) => {
+            if (formulaCell != null && formulaCell.r != null && formulaCell.c != null && formulaCell.index != null) {
+                this.markFormulaCellDirty(formulaCell.r, formulaCell.c, formulaCell.index);
+            }
+        });
+    },
+    invalidateLazyFormulaDependencies: function(changedCells = [], isForce = false) {
+        if (!this.shouldUseLazyFormulaEngine()) {
+            return;
+        }
+
+        this.ensureLazyFormulaRuntimeInitialized();
+        this.bumpFormulaRenderVersion();
+        let changedFormulaCells = [];
+
+        if (!Array.isArray(changedCells) || changedCells.length === 0) {
+            this.markAllFormulaCellsDirty();
+            window.luckysheet_getcelldata_cache = null;
+            return;
+        }
+
+        changedCells.forEach((cell) => {
+            if (cell != null && cell.r != null && cell.c != null && cell.index != null) {
+                this.clearFormulaCellRuntime(cell.r, cell.c, cell.index);
+
+                let storedCell = this.getFormulaStoredCell(cell.r, cell.c, cell.index);
+                if (storedCell != null && getObjType(storedCell) == "object" && storedCell.f != null) {
+                    this.markFormulaCellDirty(cell.r, cell.c, cell.index);
+                    changedFormulaCells.push({
+                        r: cell.r,
+                        c: cell.c,
+                        index: cell.index,
+                    });
+                }
+            }
+        });
+
+        if (isForce) {
+            this.markAllFormulaCellsDirty();
+            window.luckysheet_getcelldata_cache = null;
+            return;
+        }
+
+        let formulaRunList = this.getDependentFormulaRunListByCells(changedCells);
+
+        if (changedFormulaCells.length > 0) {
+            this.enqueueFormulaRunListCompute(changedFormulaCells, {
+                priority: "high",
+            });
+        }
+
+        if (Array.isArray(formulaRunList) && formulaRunList.length > 0) {
+            this.markFormulaRunListDirty(formulaRunList);
+            this.enqueueFormulaRunListCompute(formulaRunList, {
+                priority: "normal",
+            });
+        }
+
+        window.luckysheet_getcelldata_cache = null;
+    },
+    getFormulaStoredCell: function(r, c, index) {
+        let luckysheetfile = getluckysheetfile();
+        let file = luckysheetfile[getSheetIndex(index)];
+
+        if (file == null) {
+            return null;
+        }
+
+        if (Array.isArray(file.data) && file.data[r] != null && file.data[r][c] != null) {
+            return file.data[r][c];
+        }
+
+        if (xlsxCtrl.hasImportedSheetCache(file)) {
+            return xlsxCtrl.getImportedCellValue(file, r, c);
+        }
+
+        return null;
+    },
+    buildFormulaComputedCell: function(item, baseCell = null) {
+        let cellData = [[baseCell == null ? null : $.extend(true, {}, baseCell)]];
+        let updateValue = {
+            v: item.v,
+            f: item.f,
+        };
+
+        if (item.spe != null && item.spe.type == "sparklines") {
+            updateValue.spl = item.spe.data;
+        }
+
+        return setcellvalue(0, 0, cellData, updateValue);
+    },
+    cacheFormulaCellResult: function(item, cell = null) {
+        let cacheCell =
+            cell == null ? this.buildFormulaComputedCell(item, this.getFormulaStoredCell(item.r, item.c, item.index)) : cell;
+        this.formulaRuntimeCellCache[this.getFormulaCellKey(item.r, item.c, item.index)] = $.extend(true, {}, cacheCell);
+        this.markFormulaCellClean(item.r, item.c, item.index);
+        return cacheCell;
+    },
+    applyFormulaCellResult: function(item, persistToSheetData = true) {
+        let file = getluckysheetfile()[getSheetIndex(item.index)];
+
+        if (file == null) {
+            return null;
+        }
+
+        if (item.spe != null && item.spe.type == "dynamicArrayItem") {
+            file.dynamicArray = this.insertUpdateDynamicArray(item.spe.data);
+        }
+
+        if (persistToSheetData && Array.isArray(file.data)) {
+            let updateValue = {
+                v: item.v,
+                f: item.f,
+            };
+
+            if (item.spe != null && item.spe.type == "sparklines") {
+                updateValue.spl = item.spe.data;
+            }
+
+            let cell = setcellvalue(item.r, item.c, file.data, updateValue);
+            return this.cacheFormulaCellResult(item, cell);
+        }
+
+        return this.cacheFormulaCellResult(item);
+    },
+    ensureFormulaCellComputed: function(r, c, index, options = {}) {
+        let { persistToSheetData = true, allowDeferred = false, priority = "normal" } = options;
+
+        if (r == null || c == null || index == null || !this.shouldUseLazyFormulaEngine()) {
+            return null;
+        }
+
+        this.ensureLazyFormulaRuntimeInitialized();
+
+        let key = this.getFormulaCellKey(r, c, index);
+        let runtimeCell = this.formulaRuntimeCellCache[key] || null;
+
+        if (!this.isFormulaCellDirty(r, c, index)) {
+            return runtimeCell;
+        }
+
+        let storedCell = this.getFormulaStoredCell(r, c, index);
+        let formulaTxt = storedCell != null && storedCell.f != null ? storedCell.f : getcellFormula(r, c, index);
+
+        if (formulaTxt == null || formulaTxt === "") {
+            this.markFormulaCellClean(r, c, index);
+            return runtimeCell || storedCell;
+        }
+
+        if (allowDeferred) {
+            this.enqueueFormulaCellCompute(r, c, index, {
+                priority: priority,
+                persistToSheetData: persistToSheetData,
+            });
+            return runtimeCell || storedCell;
+        }
+
+        if (this.formulaComputingCellMap[key]) {
+            return runtimeCell || storedCell;
+        }
+
+        let previousCalculateSheetIndex = Store.calculateSheetIndex;
+        this.formulaComputingCellMap[key] = 1;
+
+        try {
+            window.luckysheet_getcelldata_cache = null;
+            let value = this.execfunction(formulaTxt, r, c, index, false, true);
+            let executionContext = this.lastCompletedFormulaExecutionContext;
+
+            if (
+                executionContext != null &&
+                executionContext.r === r &&
+                executionContext.c === c &&
+                executionContext.index != null &&
+                executionContext.index.toString() === index.toString() &&
+                Array.isArray(executionContext.deferredDependencies) &&
+                executionContext.deferredDependencies.length > 0
+            ) {
+                this.markFormulaCellDirty(r, c, index);
+                this.enqueueFormulaCellCompute(r, c, index, {
+                    priority: "normal",
+                    persistToSheetData: persistToSheetData,
+                });
+                return runtimeCell || storedCell;
+            }
+
+            if (!value) {
+                return runtimeCell || storedCell;
+            }
+
+            return this.applyFormulaCellResult(
+                {
+                    r: r,
+                    c: c,
+                    index: index,
+                    v: value[1],
+                    f: value[2],
+                    spe: value[3],
+                },
+                persistToSheetData,
+            );
+        } finally {
+            delete this.formulaComputingCellMap[key];
+            Store.calculateSheetIndex = previousCalculateSheetIndex;
+            window.luckysheet_getcelldata_cache = null;
+        }
+    },
+    getLoadedFormulaDependencyGraphSignature: function() {
+        let luckysheetfile = getluckysheetfile();
+        let signatureParts = [];
+
+        for (let i = 0; i < luckysheetfile.length; i++) {
+            let file = luckysheetfile[i] || {};
+            let hasData = Array.isArray(file.data) && file.data.length > 0;
+            let calcChainLength = Array.isArray(file.calcChain) ? file.calcChain.length : 0;
+
+            if (!hasData || calcChainLength === 0) {
+                continue;
+            }
+
+            signatureParts.push(file.index + ":" + calcChainLength.toString());
+        }
+
+        return signatureParts.join("|");
+    },
+    isFormulaRangeContainCell: function(range, cell) {
+        if (range == null || cell == null || cell.r == null || cell.c == null || cell.index == null) {
+            return false;
+        }
+
+        if (range.sheetIndex == null || range.sheetIndex.toString() != cell.index.toString()) {
+            return false;
+        }
+
+        return (
+            cell.r >= range.row[0] &&
+            cell.r <= range.row[1] &&
+            cell.c >= range.column[0] &&
+            cell.c <= range.column[1]
+        );
+    },
+    getFormulaDependencyBucketSheetKey: function(sheetIndex) {
+        if (sheetIndex == null) {
+            return null;
+        }
+
+        return sheetIndex.toString();
+    },
+    getFormulaDependencyBucketId: function(row) {
+        if (row == null || isNaN(row)) {
+            return null;
+        }
+
+        return Math.floor(Number(row) / 32).toString();
+    },
+    ensureFormulaDependencyBucketSheet: function(referenceIndex, sheetKey) {
+        if (referenceIndex[sheetKey] == null) {
+            referenceIndex[sheetKey] = {
+                bucketMap: {},
+                wideFormulaKeys: {},
+            };
+        }
+
+        return referenceIndex[sheetKey];
+    },
+    addFormulaDependencyReferenceRange: function(referenceIndex, formulaObject, range) {
+        if (referenceIndex == null || formulaObject == null || range == null) {
+            return;
+        }
+
+        let sheetKey = this.getFormulaDependencyBucketSheetKey(range.sheetIndex);
+        if (sheetKey == null || !Array.isArray(range.row) || range.row.length < 2) {
+            return;
+        }
+
+        let sheetIndexEntry = this.ensureFormulaDependencyBucketSheet(referenceIndex, sheetKey);
+        let rowStart = Number(range.row[0]);
+        let rowEnd = Number(range.row[1]);
+
+        if (isNaN(rowStart) || isNaN(rowEnd)) {
+            return;
+        }
+
+        if (rowEnd < rowStart) {
+            let temp = rowStart;
+            rowStart = rowEnd;
+            rowEnd = temp;
+        }
+
+        let startBucketId = this.getFormulaDependencyBucketId(rowStart);
+        let endBucketId = this.getFormulaDependencyBucketId(rowEnd);
+
+        if (startBucketId == null || endBucketId == null) {
+            return;
+        }
+
+        if (Number(endBucketId) - Number(startBucketId) > 128) {
+            sheetIndexEntry.wideFormulaKeys[formulaObject.key] = 1;
+            return;
+        }
+
+        for (let bucketId = Number(startBucketId); bucketId <= Number(endBucketId); bucketId++) {
+            let bucketKey = bucketId.toString();
+            if (sheetIndexEntry.bucketMap[bucketKey] == null) {
+                sheetIndexEntry.bucketMap[bucketKey] = {};
+            }
+
+            sheetIndexEntry.bucketMap[bucketKey][formulaObject.key] = 1;
+        }
+    },
+    getFormulaDependencyCandidateKeysByCell: function(referenceIndex, cell) {
+        if (referenceIndex == null || cell == null || cell.index == null || cell.r == null) {
+            return [];
+        }
+
+        let sheetKey = this.getFormulaDependencyBucketSheetKey(cell.index);
+        let bucketId = this.getFormulaDependencyBucketId(cell.r);
+        if (sheetKey == null || bucketId == null || referenceIndex[sheetKey] == null) {
+            return [];
+        }
+
+        let sheetIndexEntry = referenceIndex[sheetKey];
+        let candidateMap = {};
+
+        Object.keys(sheetIndexEntry.wideFormulaKeys || {}).forEach(function(formulaKey) {
+            candidateMap[formulaKey] = 1;
+        });
+
+        Object.keys((sheetIndexEntry.bucketMap || {})[bucketId] || {}).forEach(function(formulaKey) {
+            candidateMap[formulaKey] = 1;
+        });
+
+        return Object.keys(candidateMap);
+    },
+    getLoadedFormulaDependencyGraph: function() {
+        let _this = this;
+        let luckysheetfile = getluckysheetfile();
+        let signature = this.getLoadedFormulaDependencyGraphSignature();
+
+        if (
+            this.loadedFormulaDependencyGraphCacheWorkbook === luckysheetfile &&
+            this.loadedFormulaDependencyGraphCacheSignature === signature &&
+            this.loadedFormulaDependencyGraphCache != null
+        ) {
+            return this.loadedFormulaDependencyGraphCache;
+        }
+
+        let calcChains = [];
+        for (let i = 0; i < luckysheetfile.length; i++) {
+            let file = luckysheetfile[i] || {};
+
+            if (!Array.isArray(file.data) || file.data.length === 0) {
+                continue;
+            }
+
+            if (!Array.isArray(file.calcChain) || file.calcChain.length === 0) {
+                continue;
+            }
+
+            calcChains = calcChains.concat(_this.getFunctionGroup(file.index));
+        }
+
+        let formulaObjects = {};
+        let formulaReferenceIndex = {};
+
+        for (let i = 0; i < calcChains.length; i++) {
+            let formulaCell = calcChains[i];
+            let key = "r" + formulaCell.r + "c" + formulaCell.c + "i" + formulaCell.index;
+            let calc_funcStr = getcellFormula(formulaCell.r, formulaCell.c, formulaCell.index);
+            if (calc_funcStr == null) {
+                continue;
+            }
+
+            let txt1 = calc_funcStr.toUpperCase();
+            let isOffsetFunc =
+                txt1.indexOf("INDIRECT(") > -1 || txt1.indexOf("OFFSET(") > -1 || txt1.indexOf("INDEX(") > -1;
+            let formulaArray = [];
+
+            if (isOffsetFunc) {
+                this.isFunctionRange(calc_funcStr, null, null, formulaCell.index, null, function(str_nb) {
+                    let range = _this.getcellrange($.trim(str_nb), formulaCell.index);
+                    if (range != null) {
+                        formulaArray.push(range);
+                    }
+                });
+            } else if (!(calc_funcStr.substr(0, 2) == '="' && calc_funcStr.substr(calc_funcStr.length - 1, 1) == '"')) {
+                let point = 0;
+                let squote = -1;
+                let dquote = -1;
+                let formulaTextArray = [];
+                let sq_end_array = [];
+                let calc_funcStr_length = calc_funcStr.length;
+
+                for (let j = 0; j < calc_funcStr_length; j++) {
+                    let char = calc_funcStr.charAt(j);
+                    if (char == "'" && dquote == -1) {
+                        if (squote == -1) {
+                            if (point != j) {
+                                formulaTextArray.push(
+                                    ...calc_funcStr.substring(point, j).split(/==|!=|<>|<=|>=|[,()=+-\/*%&\^><]/),
+                                );
+                            }
+                            squote = j;
+                            point = j;
+                        } else if (j < calc_funcStr_length - 1 && calc_funcStr.charAt(j + 1) == "'") {
+                            j++;
+                        } else {
+                            point = j + 1;
+                            formulaTextArray.push(calc_funcStr.substring(squote, point));
+                            sq_end_array.push(formulaTextArray.length - 1);
+                            squote = -1;
+                        }
+                    }
+
+                    if (char == '"' && squote == -1) {
+                        if (dquote == -1) {
+                            if (point != j) {
+                                formulaTextArray.push(
+                                    ...calc_funcStr.substring(point, j).split(/==|!=|<>|<=|>=|[,()=+-\/*%&\^><]/),
+                                );
+                            }
+                            dquote = j;
+                            point = j;
+                        } else if (j < calc_funcStr_length - 1 && calc_funcStr.charAt(j + 1) == '"') {
+                            j++;
+                        } else {
+                            point = j + 1;
+                            formulaTextArray.push(calc_funcStr.substring(dquote, point));
+                            dquote = -1;
+                        }
+                    }
+                }
+
+                if (point != calc_funcStr_length) {
+                    formulaTextArray.push(
+                        ...calc_funcStr.substring(point, calc_funcStr_length).split(/==|!=|<>|<=|>=|[,()=+-\/*%&\^><]/),
+                    );
+                }
+
+                for (let j = sq_end_array.length - 1; j >= 0; j--) {
+                    if (sq_end_array[j] != formulaTextArray.length - 1) {
+                        formulaTextArray[sq_end_array[j]] =
+                            formulaTextArray[sq_end_array[j]] + formulaTextArray[sq_end_array[j] + 1];
+                        formulaTextArray.splice(sq_end_array[j] + 1, 1);
+                    }
+                }
+
+                for (let j = 0; j < formulaTextArray.length; j++) {
+                    let t = formulaTextArray[j];
+                    if (t.length <= 1) {
+                        continue;
+                    }
+
+                    if (t.substr(0, 1) == '"' && t.substr(t.length - 1, 1) == '"' && !_this.iscelldata(t)) {
+                        continue;
+                    }
+
+                    let range = _this.getcellrange($.trim(t), formulaCell.index);
+                    if (range != null) {
+                        formulaArray.push(range);
+                    }
+                }
+            }
+
+            formulaObjects[key] = {
+                formulaArray: formulaArray,
+                calc_funcStr: calc_funcStr,
+                key: key,
+                r: formulaCell.r,
+                c: formulaCell.c,
+                index: formulaCell.index,
+                parents: {},
+                children: {},
+            };
+
+            let formulaObject = formulaObjects[key];
+            formulaArray.forEach(function(range) {
+                _this.addFormulaDependencyReferenceRange(formulaReferenceIndex, formulaObject, range);
+            });
+        }
+        let formulaObjectList = Object.keys(formulaObjects).map(function(key) {
+            return formulaObjects[key];
+        });
+        let formulaPositionMap = {};
+
+        formulaObjectList.forEach(function(formulaObject) {
+            formulaPositionMap[formulaObject.key] = {
+                r: formulaObject.r,
+                c: formulaObject.c,
+                index: formulaObject.index,
+            };
+        });
+
+        formulaObjectList.forEach(function(formulaObject) {
+            if (!Array.isArray(formulaObject.formulaArray) || formulaObject.formulaArray.length === 0) {
+                return;
+            }
+
+            let candidateFormulaKeys = _this.getFormulaDependencyCandidateKeysByCell(formulaReferenceIndex, formulaObject);
+
+            candidateFormulaKeys.forEach(function(parentKey) {
+                if (formulaObject.key === parentKey) {
+                    return;
+                }
+
+                let parentFormulaObject = formulaObjects[parentKey];
+                if (parentFormulaObject == null) {
+                    return;
+                }
+
+                for (let i = 0; i < formulaObject.formulaArray.length; i++) {
+                    if (_this.isFormulaRangeContainCell(formulaObject.formulaArray[i], parentFormulaObject)) {
+                        formulaObject.parents[parentFormulaObject.key] = 1;
+                        parentFormulaObject.children[formulaObject.key] = 1;
+                        break;
+                    }
+                }
+            });
+        });
+
+        this.loadedFormulaDependencyGraphCacheWorkbook = luckysheetfile;
+        this.loadedFormulaDependencyGraphCacheSignature = signature;
+        this.loadedFormulaDependencyGraphCache = {
+            formulaObjects: formulaObjects,
+            formulaObjectList: formulaObjectList,
+            formulaPositionMap: formulaPositionMap,
+            formulaReferenceIndex: formulaReferenceIndex,
+        };
+
+        return this.loadedFormulaDependencyGraphCache;
+    },
+    getCurrentViewportFormulaRange: function(currentFile = null) {
+        let file = currentFile;
+
+        if (file == null) {
+            let sheetOrder = getSheetIndex(Store.currentSheetIndex);
+            if (sheetOrder != null && Array.isArray(Store.luckysheetfile)) {
+                file = Store.luckysheetfile[sheetOrder];
+            }
+        }
+
+        let fallbackMaxRow = Array.isArray(file?.data) && file.data.length > 0
+            ? file.data.length - 1
+            : Math.max((file?.row || 1) - 1, 0);
+        let fallbackMaxColumn = Array.isArray(file?.data) && file.data[0] != null
+            ? file.data[0].length - 1
+            : Math.max((file?.column || 1) - 1, 0);
+        let scrollLeft = $("#luckysheet-scrollbar-x").scrollLeft() || 0;
+        let scrollTop = $("#luckysheet-scrollbar-y").scrollTop() || 0;
+        let winH = $(window).height() + scrollTop - Store.sheetBarHeight - Store.statisticBarHeight;
+        let winW = $(window).width() + scrollLeft;
+        let minRow = Array.isArray(Store.visibledatarow) && Store.visibledatarow.length > 0
+            ? luckysheet_searcharray(Store.visibledatarow, scrollTop)
+            : -1;
+        let maxRow = Array.isArray(Store.visibledatarow) && Store.visibledatarow.length > 0
+            ? luckysheet_searcharray(Store.visibledatarow, winH)
+            : -1;
+        let minColumn = Array.isArray(Store.visibledatacolumn) && Store.visibledatacolumn.length > 0
+            ? luckysheet_searcharray(Store.visibledatacolumn, scrollLeft)
+            : -1;
+        let maxColumn = Array.isArray(Store.visibledatacolumn) && Store.visibledatacolumn.length > 0
+            ? luckysheet_searcharray(Store.visibledatacolumn, winW)
+            : -1;
+
+        if (minRow < 0) {
+            minRow = 0;
+        }
+        if (maxRow < 0) {
+            maxRow = fallbackMaxRow;
+        }
+        if (minColumn < 0) {
+            minColumn = 0;
+        }
+        if (maxColumn < 0) {
+            maxColumn = fallbackMaxColumn;
+        }
+
+        return {
+            rowRange: [Math.max(minRow, 0), Math.max(maxRow, 0)],
+            columnRange: [Math.max(minColumn, 0), Math.max(maxColumn, 0)],
+        };
+    },
+    sortFormulaRunListByDependencies: function(formulaObjectList = []) {
+        if (!Array.isArray(formulaObjectList) || formulaObjectList.length <= 1) {
+            return formulaObjectList;
+        }
+
+        let formulaObjects = {};
+        let inDegree = {};
+        let childrenMap = {};
+
+        formulaObjectList.forEach(function(formulaObject) {
+            formulaObjects[formulaObject.key] = formulaObject;
+            inDegree[formulaObject.key] = 0;
+            childrenMap[formulaObject.key] = {};
+        });
+
+        formulaObjectList.forEach(function(formulaObject) {
+            Object.keys(formulaObject.parents || {}).forEach(function(parentKey) {
+                if (formulaObjects[parentKey] == null) {
+                    return;
+                }
+
+                if (!childrenMap[parentKey][formulaObject.key]) {
+                    childrenMap[parentKey][formulaObject.key] = 1;
+                    inDegree[formulaObject.key] += 1;
+                }
+            });
+        });
+
+        let queue = formulaObjectList.filter(function(formulaObject) {
+            return inDegree[formulaObject.key] === 0;
+        });
+        let sorted = [];
+
+        while (queue.length > 0) {
+            let formulaObject = queue.shift();
+            sorted.push(formulaObject);
+
+            Object.keys(childrenMap[formulaObject.key]).forEach(function(childKey) {
+                inDegree[childKey] -= 1;
+                if (inDegree[childKey] === 0) {
+                    queue.push(formulaObjects[childKey]);
+                }
+            });
+        }
+
+        if (sorted.length !== formulaObjectList.length) {
+            return formulaObjectList;
+        }
+
+        return sorted;
+    },
+    getLoadedSheetRangeFormulaRunList: function(sheetIndex, rowRange = [0, 0], columnRange = [0, 0]) {
+        if (sheetIndex == null) {
+            return [];
+        }
+
+        let dependencyGraph = this.getLoadedFormulaDependencyGraph();
+        if (dependencyGraph == null || !Array.isArray(dependencyGraph.formulaObjectList)) {
+            return [];
+        }
+
+        let currentSheetFormulaObjectList = dependencyGraph.formulaObjectList.filter(function(formulaObject) {
+            if (formulaObject.index == null || formulaObject.index.toString() != sheetIndex.toString()) {
+                return false;
+            }
+
+            return true;
+        });
+
+        if (currentSheetFormulaObjectList.length === 0) {
+            return [];
+        }
+
+        let selectedKeyMap = {};
+
+        let visitParent = function(formulaObject) {
+            if (formulaObject == null || selectedKeyMap[formulaObject.key]) {
+                return;
+            }
+
+            selectedKeyMap[formulaObject.key] = 1;
+
+            Object.keys(formulaObject.parents || {}).forEach(function(parentKey) {
+                let parentFormulaObject = dependencyGraph.formulaObjects[parentKey];
+                if (
+                    parentFormulaObject != null &&
+                    parentFormulaObject.index != null &&
+                    parentFormulaObject.index.toString() == sheetIndex.toString()
+                ) {
+                    visitParent(parentFormulaObject);
+                }
+            });
+        };
+
+        currentSheetFormulaObjectList.forEach(function(formulaObject) {
+            if (
+                formulaObject.r >= rowRange[0] &&
+                formulaObject.r <= rowRange[1] &&
+                formulaObject.c >= columnRange[0] &&
+                formulaObject.c <= columnRange[1]
+            ) {
+                visitParent(formulaObject);
+            }
+        });
+
+        let formulaObjectList = currentSheetFormulaObjectList.filter(function(formulaObject) {
+            return selectedKeyMap[formulaObject.key] === 1;
+        });
+
+        if (formulaObjectList.length === 0) {
+            return [];
+        }
+
+        return this.sortFormulaRunListByDependencies(formulaObjectList);
+    },
+    getDependentFormulaRunListByCells: function(changedCells = []) {
+        if (!Array.isArray(changedCells) || changedCells.length === 0) {
+            return [];
+        }
+
+        let dependencyGraph = this.getLoadedFormulaDependencyGraph();
+        if (dependencyGraph == null || dependencyGraph.formulaObjectList == null) {
+            return [];
+        }
+
+        let _this = this;
+        let formulaObjectList = dependencyGraph.formulaObjectList;
+        let impactedFormulaMap = {};
+        let pendingKeys = [];
+        let findDependentsByCell = function(cell) {
+            let result = [];
+
+            _this.getFormulaDependencyCandidateKeysByCell(dependencyGraph.formulaReferenceIndex, cell).forEach(function(
+                formulaKey,
+            ) {
+                let formulaObject = dependencyGraph.formulaObjects[formulaKey];
+                if (formulaObject == null || !Array.isArray(formulaObject.formulaArray) || formulaObject.formulaArray.length === 0) {
+                    return;
+                }
+
+                for (let i = 0; i < formulaObject.formulaArray.length; i++) {
+                    if (_this.isFormulaRangeContainCell(formulaObject.formulaArray[i], cell)) {
+                        result.push(formulaObject.key);
+                        break;
+                    }
+                }
+            });
+
+            return result;
+        };
+
+        changedCells.forEach(function(cell) {
+            if (cell == null || cell.r == null || cell.c == null || cell.index == null) {
+                return;
+            }
+
+            findDependentsByCell(cell).forEach(function(formulaKey) {
+                pendingKeys.push(formulaKey);
+            });
+        });
+
+        while (pendingKeys.length > 0) {
+            let formulaKey = pendingKeys.pop();
+            if (impactedFormulaMap[formulaKey]) {
+                continue;
+            }
+
+            impactedFormulaMap[formulaKey] = 1;
+
+            let formulaObject = dependencyGraph.formulaObjects[formulaKey];
+            if (formulaObject == null) {
+                continue;
+            }
+
+            Object.keys(formulaObject.children || {}).forEach(function(dependentKey) {
+                if (!impactedFormulaMap[dependentKey]) {
+                    pendingKeys.push(dependentKey);
+                }
+            });
+        }
+
+        if (Object.keys(impactedFormulaMap).length === 0) {
+            return [];
+        }
+
+        let impactedFormulaList = formulaObjectList.filter(function(formulaObject) {
+            return impactedFormulaMap[formulaObject.key] === 1;
+        });
+        return this.sortFormulaRunListByDependencies(impactedFormulaList);
+    },
+    refreshDependentFormulasAsync: function(changedCells = [], options = {}) {
+        let _this = this;
+        let { onComplete, onProgress, restartIfRunning = true, refreshGrid = true } = options;
+        let formulaRunList = this.getDependentFormulaRunListByCells(changedCells);
+
+        if (!Array.isArray(formulaRunList) || formulaRunList.length === 0) {
+            if (typeof onComplete === "function") {
+                onComplete();
+            }
+            return;
+        }
+
+        if (_this.shouldUseLazyFormulaEngine()) {
+            _this.ensureLazyFormulaRuntimeInitialized();
+            _this.markFormulaRunListDirty(formulaRunList);
+            _this.enqueueFormulaRunListCompute(formulaRunList, {
+                priority: "normal",
+            });
+            _this.bumpFormulaRenderVersion();
+            window.luckysheet_getcelldata_cache = null;
+
+            if (refreshGrid) {
+                luckysheetrefreshgrid();
+            }
+
+            if (typeof onComplete === "function") {
+                onComplete();
+            }
+
+            return;
+        }
+
+        let execOptions = {
+            formulaRunList: formulaRunList,
+            taskLabel: "dependent-formula-refresh",
+            restartIfRunning: restartIfRunning,
+            skipCellUpdatedHook: true,
+            refreshGridOnComplete: refreshGrid,
+            onProgress: onProgress,
+            onComplete: function() {
+                if (typeof onComplete === "function") {
+                    onComplete();
+                }
+            },
+        };
+
+        if (xlsxCtrl.hasImportedSheetCache()) {
+            execOptions.batchSize = 20;
+            execOptions.maxDurationMs = 6;
+            execOptions.skipServerSave = true;
+            execOptions.resultCommitBatchSize = 1000;
+        } else if (_this.shouldDeferLargeWorkbookForceCalculation()) {
+            execOptions.batchSize = 40;
+            execOptions.maxDurationMs = 6;
+            execOptions.resultCommitBatchSize = 500;
+        }
+
+        this.execFunctionGroupForceAsync(execOptions);
+    },
+    getLargeWorkbookFormulaThreshold: function() {
+        let threshold = parseInt(luckysheetConfigsetting.largeWorkbookFormulaThreshold, 10);
+
+        if (!isRealNum(threshold) || threshold < 0) {
+            threshold = 20000;
+        }
+
+        return threshold;
+    },
+    getWorkbookFormulaCount: function() {
+        let luckysheetfile = getluckysheetfile();
+
+        if (this.workbookFormulaCountCacheWorkbook === luckysheetfile && this.workbookFormulaCountCache != null) {
+            return this.workbookFormulaCountCache;
+        }
+
+        let total = 0;
+
+        for (let i = 0; i < luckysheetfile.length; i++) {
+            let file = luckysheetfile[i] || {};
+            let calcChain = Array.isArray(file.calcChain) ? file.calcChain.length : 0;
+            let dynamicArrayCompute = Array.isArray(file.dynamicArray_compute) ? file.dynamicArray_compute.length : 0;
+            total += calcChain + dynamicArrayCompute;
+        }
+
+        this.workbookFormulaCountCacheWorkbook = luckysheetfile;
+        this.workbookFormulaCountCache = total;
+
+        return total;
+    },
+    shouldDeferLargeWorkbookForceCalculation: function() {
+        return this.getWorkbookFormulaCount() >= this.getLargeWorkbookFormulaThreshold();
+    },
+    getFormulaReferencedSheetIndexes: function(sheetIndex) {
+        let _this = this;
+        let luckysheetfile = getluckysheetfile();
+        let file = luckysheetfile[getSheetIndex(sheetIndex)];
+
+        if (file == null || !Array.isArray(file.calcChain)) {
+            return [];
+        }
+
+        let indexes = {};
+
+        let collectFormulaSheets = function(formulaTxt, formulaIndex) {
+            if (formulaTxt == null || formulaTxt.indexOf("!") == -1) {
+                return;
+            }
+
+            if (_this.formulaContainSheetList != null && _this.formulaContainSheetList[formulaTxt] != null) {
+                Object.keys(_this.formulaContainSheetList[formulaTxt]).forEach(function(index) {
+                    if (index.toString() != formulaIndex.toString()) {
+                        indexes[index] = 1;
+                    }
+                });
+                return;
+            }
+
+            let formulaCellList = _this.formulaContainCellList != null ? _this.formulaContainCellList[formulaTxt] : null;
+            if (formulaCellList != null) {
+                Object.keys(formulaCellList).forEach(function(rangeTxt) {
+                    let range = _this.getcellrange($.trim(rangeTxt), formulaIndex);
+
+                    if (range != null && range.sheetIndex != null && range.sheetIndex.toString() != formulaIndex.toString()) {
+                        indexes[range.sheetIndex] = 1;
+                        _this.addToSheetIndexList(formulaTxt, range.sheetIndex);
+                    }
+                });
+                return;
+            }
+
+            _this.functionParser(formulaTxt, function(rangeTxt) {
+                _this.addToCellList(formulaTxt, rangeTxt);
+
+                let range = _this.getcellrange($.trim(rangeTxt), formulaIndex);
+                if (range != null && range.sheetIndex != null && range.sheetIndex.toString() != formulaIndex.toString()) {
+                    indexes[range.sheetIndex] = 1;
+                    _this.addToSheetIndexList(formulaTxt, range.sheetIndex);
+                }
+            });
+        };
+
+        for (let i = 0; i < file.calcChain.length; i++) {
+            let calc = file.calcChain[i];
+
+            if (typeof calc === "string") {
+                try {
+                    calc = JSON.parse(calc);
+                } catch (error) {
+                    continue;
+                }
+            }
+
+            if (calc == null) {
+                continue;
+            }
+
+            let formulaTxt = getcellFormula(calc.r, calc.c, calc.index);
+            if (formulaTxt == null && file.data == null) {
+                file.data = sheetmanage.buildGridData(file);
+                formulaTxt = getcellFormula(calc.r, calc.c, calc.index);
+            }
+            collectFormulaSheets(formulaTxt, calc.index);
+        }
+
+        return Object.keys(indexes);
+    },
+    partitionFormulaRunListBySheetPriority: function(formulaRunList, prioritizeSheetIndexes = []) {
+        if (!Array.isArray(formulaRunList) || formulaRunList.length == 0) {
+            return {
+                prioritized: [],
+                remaining: [],
+            };
+        }
+
+        if (!Array.isArray(prioritizeSheetIndexes) || prioritizeSheetIndexes.length == 0) {
+            return {
+                prioritized: formulaRunList,
+                remaining: [],
+            };
+        }
+
+        let formulaObjectMap = {};
+        let targetSheetIndexMap = {};
+        let priorityKeyMap = {};
+
+        prioritizeSheetIndexes.forEach(function(sheetIndex) {
+            if (sheetIndex != null) {
+                targetSheetIndexMap[sheetIndex.toString()] = 1;
+            }
+        });
+
+        formulaRunList.forEach(function(formulaObject) {
+            formulaObjectMap[formulaObject.key] = formulaObject;
+        });
+
+        let visitParent = function(formulaObject) {
+            if (formulaObject == null || priorityKeyMap[formulaObject.key]) {
+                return;
+            }
+
+            priorityKeyMap[formulaObject.key] = 1;
+
+            Object.keys(formulaObject.parents || {}).forEach(function(parentKey) {
+                visitParent(formulaObjectMap[parentKey]);
+            });
+        };
+
+        formulaRunList.forEach(function(formulaObject) {
+            if (targetSheetIndexMap[formulaObject.index?.toString()]) {
+                visitParent(formulaObject);
+            }
+        });
+
+        if (Object.keys(priorityKeyMap).length == 0 || Object.keys(priorityKeyMap).length == formulaRunList.length) {
+            return {
+                prioritized: formulaRunList,
+                remaining: [],
+            };
+        }
+
+        let prioritized = [];
+        let remaining = [];
+
+        formulaRunList.forEach(function(formulaObject) {
+            if (priorityKeyMap[formulaObject.key]) {
+                prioritized.push(formulaObject);
+            } else {
+                remaining.push(formulaObject);
+            }
+        });
+
+        return {
+            prioritized: prioritized,
+            remaining: remaining,
+        };
+    },
+    filterFormulaRunListByRange: function(formulaRunList, sheetIndex, rowRange = [0, 0], columnRange = [0, 0]) {
+        if (!Array.isArray(formulaRunList) || formulaRunList.length == 0 || sheetIndex == null) {
+            return [];
+        }
+
+        let formulaObjectMap = {};
+        let selectedKeyMap = {};
+
+        formulaRunList.forEach(function(formulaObject) {
+            formulaObjectMap[formulaObject.key] = formulaObject;
+        });
+
+        let visitParent = function(formulaObject) {
+            if (formulaObject == null || selectedKeyMap[formulaObject.key]) {
+                return;
+            }
+
+            selectedKeyMap[formulaObject.key] = 1;
+
+            Object.keys(formulaObject.parents || {}).forEach(function(parentKey) {
+                visitParent(formulaObjectMap[parentKey]);
+            });
+        };
+
+        formulaRunList.forEach(function(formulaObject) {
+            if (formulaObject.index?.toString() != sheetIndex.toString()) {
+                return;
+            }
+
+            if (
+                formulaObject.r >= rowRange[0] &&
+                formulaObject.r <= rowRange[1] &&
+                formulaObject.c >= columnRange[0] &&
+                formulaObject.c <= columnRange[1]
+            ) {
+                visitParent(formulaObject);
+            }
+        });
+
+        if (Object.keys(selectedKeyMap).length == 0) {
+            return [];
+        }
+
+        return formulaRunList.filter(function(formulaObject) {
+            return selectedKeyMap[formulaObject.key] === 1;
+        });
+    },
+    getSimpleFormulaRunListByRange: function(sheetIndex, rowRange = [0, 0], columnRange = [0, 0]) {
+        if (sheetIndex == null) {
+            return [];
+        }
+
+        let calcChain = this.getFunctionGroup(sheetIndex);
+        if (!Array.isArray(calcChain) || calcChain.length == 0) {
+            return [];
+        }
+
+        let simpleRunList = [];
+
+        for (let i = 0; i < calcChain.length; i++) {
+            let formulaCell = calcChain[i];
+            if (formulaCell == null) {
+                continue;
+            }
+
+            if (
+                formulaCell.r < rowRange[0] ||
+                formulaCell.r > rowRange[1] ||
+                formulaCell.c < columnRange[0] ||
+                formulaCell.c > columnRange[1]
+            ) {
+                continue;
+            }
+
+            let calc_funcStr = getcellFormula(formulaCell.r, formulaCell.c, formulaCell.index);
+            if (calc_funcStr == null) {
+                continue;
+            }
+
+            simpleRunList.push({
+                key: "r" + formulaCell.r + "c" + formulaCell.c + "i" + formulaCell.index,
+                r: formulaCell.r,
+                c: formulaCell.c,
+                index: formulaCell.index,
+                calc_funcStr: calc_funcStr,
+                level: 0,
+                parents: {},
+                chidren: {},
+            });
+        }
+
+        return simpleRunList;
+    },
+    ensureExecRuntimeGlobals: function() {
+        if (!window.luckysheet_compareWith) {
+            window.luckysheet_compareWith = luckysheet_compareWith;
+            window.luckysheet_getarraydata = luckysheet_getarraydata;
+            window.luckysheet_getcelldata = luckysheet_getcelldata;
+            window.luckysheet_parseData = luckysheet_parseData;
+            window.luckysheet_getValue = luckysheet_getValue;
+            window.luckysheet_indirect_check = luckysheet_indirect_check;
+            window.luckysheet_indirect_check_return = luckysheet_indirect_check_return;
+            window.luckysheet_offset_check = luckysheet_offset_check;
+            window.luckysheet_calcADPMM = luckysheet_calcADPMM;
+            window.luckysheet_getSpecialReference = luckysheet_getSpecialReference;
+        }
     },
     getAllFunctionGroup: function() {
         let luckysheetfile = getluckysheetfile();
+
+        if (this.allFunctionGroupCacheWorkbook === luckysheetfile && this.allFunctionGroupCache != null) {
+            return this.allFunctionGroupCache;
+        }
+
         let ret = [];
         for (let i = 0; i < luckysheetfile.length; i++) {
             let file = luckysheetfile[i];
@@ -4561,7 +6312,258 @@ const luckysheetformula = {
             }
         }
 
+        this.allFunctionGroupCacheWorkbook = luckysheetfile;
+        this.allFunctionGroupCache = ret;
+
         return ret;
+    },
+    getForceFormulaRunList: function(sheetIndexes = null) {
+        let _this = this;
+        let luckysheetfile = getluckysheetfile();
+        let scopedSheetIndexes = null;
+
+        if (
+            sheetIndexes == null &&
+            this.forceFormulaRunListWorkbook === luckysheetfile &&
+            this.forceFormulaRunListCache != null
+        ) {
+            return this.forceFormulaRunListCache;
+        }
+
+        let calcChains = [];
+
+        if (Array.isArray(sheetIndexes) && sheetIndexes.length > 0) {
+            let sheetIndexMap = {};
+            scopedSheetIndexes = [];
+
+            sheetIndexes.forEach(function(sheetIndex) {
+                if (sheetIndex == null) {
+                    return;
+                }
+
+                let key = sheetIndex.toString();
+                if (sheetIndexMap[key]) {
+                    return;
+                }
+
+                sheetIndexMap[key] = 1;
+                scopedSheetIndexes.push(sheetIndex);
+                calcChains = calcChains.concat(_this.getFunctionGroup(sheetIndex));
+            });
+        } else {
+            calcChains = _this.getAllFunctionGroup();
+        }
+
+        let formulaObjects = {};
+        let arrayMatchCache = {};
+        let arrayMatch = function(formulaArray, formulaObjects, func) {
+            for (let a = 0; a < formulaArray.length; a++) {
+                let range = formulaArray[a];
+                let cacheKey =
+                    "r" +
+                    range.row[0] +
+                    "" +
+                    range.row[1] +
+                    "c" +
+                    range.column[0] +
+                    "" +
+                    range.column[1] +
+                    "index" +
+                    range.sheetIndex;
+
+                if (cacheKey in arrayMatchCache) {
+                    arrayMatchCache[cacheKey].forEach((item) => {
+                        func(item.key, item.r, item.c, item.sheetIndex);
+                    });
+                    continue;
+                }
+
+                let functionArr = [];
+                for (let r = range.row[0]; r <= range.row[1]; r++) {
+                    for (let c = range.column[0]; c <= range.column[1]; c++) {
+                        let key = "r" + r + "c" + c + "i" + range.sheetIndex;
+                        func(key, r, c, range.sheetIndex);
+                        if (formulaObjects && key in formulaObjects) {
+                            functionArr.push({
+                                key: key,
+                                r: r,
+                                c: c,
+                                sheetIndex: range.sheetIndex,
+                            });
+                        }
+                    }
+                }
+
+                arrayMatchCache[cacheKey] = functionArr;
+            }
+        };
+
+        for (let i = 0; i < calcChains.length; i++) {
+            let formulaCell = calcChains[i];
+            let key = "r" + formulaCell.r + "c" + formulaCell.c + "i" + formulaCell.index;
+            let calc_funcStr = getcellFormula(formulaCell.r, formulaCell.c, formulaCell.index);
+            if (calc_funcStr == null) {
+                continue;
+            }
+
+            let txt1 = calc_funcStr.toUpperCase();
+            let isOffsetFunc =
+                txt1.indexOf("INDIRECT(") > -1 || txt1.indexOf("OFFSET(") > -1 || txt1.indexOf("INDEX(") > -1;
+            let formulaArray = [];
+
+            if (isOffsetFunc) {
+                this.isFunctionRange(calc_funcStr, null, null, formulaCell.index, null, function(str_nb) {
+                    let range = _this.getcellrange($.trim(str_nb), formulaCell.index);
+                    if (range != null) {
+                        formulaArray.push(range);
+                    }
+                });
+            } else if (!(calc_funcStr.substr(0, 2) == '="' && calc_funcStr.substr(calc_funcStr.length - 1, 1) == '"')) {
+                let point = 0;
+                let squote = -1;
+                let dquote = -1;
+                let formulaTextArray = [];
+                let sq_end_array = [];
+                let calc_funcStr_length = calc_funcStr.length;
+
+                for (let j = 0; j < calc_funcStr_length; j++) {
+                    let char = calc_funcStr.charAt(j);
+                    if (char == "'" && dquote == -1) {
+                        if (squote == -1) {
+                            if (point != j) {
+                                formulaTextArray.push(
+                                    ...calc_funcStr.substring(point, j).split(/==|!=|<>|<=|>=|[,()=+-\/*%&\^><]/),
+                                );
+                            }
+                            squote = j;
+                            point = j;
+                        } else if (j < calc_funcStr_length - 1 && calc_funcStr.charAt(j + 1) == "'") {
+                            j++;
+                        } else {
+                            point = j + 1;
+                            formulaTextArray.push(calc_funcStr.substring(squote, point));
+                            sq_end_array.push(formulaTextArray.length - 1);
+                            squote = -1;
+                        }
+                    }
+
+                    if (char == '"' && squote == -1) {
+                        if (dquote == -1) {
+                            if (point != j) {
+                                formulaTextArray.push(
+                                    ...calc_funcStr.substring(point, j).split(/==|!=|<>|<=|>=|[,()=+-\/*%&\^><]/),
+                                );
+                            }
+                            dquote = j;
+                            point = j;
+                        } else if (j < calc_funcStr_length - 1 && calc_funcStr.charAt(j + 1) == '"') {
+                            j++;
+                        } else {
+                            point = j + 1;
+                            formulaTextArray.push(calc_funcStr.substring(dquote, point));
+                            dquote = -1;
+                        }
+                    }
+                }
+
+                if (point != calc_funcStr_length) {
+                    formulaTextArray.push(
+                        ...calc_funcStr.substring(point, calc_funcStr_length).split(/==|!=|<>|<=|>=|[,()=+-\/*%&\^><]/),
+                    );
+                }
+
+                for (let j = sq_end_array.length - 1; j >= 0; j--) {
+                    if (sq_end_array[j] != formulaTextArray.length - 1) {
+                        formulaTextArray[sq_end_array[j]] =
+                            formulaTextArray[sq_end_array[j]] + formulaTextArray[sq_end_array[j] + 1];
+                        formulaTextArray.splice(sq_end_array[j] + 1, 1);
+                    }
+                }
+
+                for (let j = 0; j < formulaTextArray.length; j++) {
+                    let t = formulaTextArray[j];
+                    if (t.length <= 1) {
+                        continue;
+                    }
+
+                    if (t.substr(0, 1) == '"' && t.substr(t.length - 1, 1) == '"' && !_this.iscelldata(t)) {
+                        continue;
+                    }
+
+                    let range = _this.getcellrange($.trim(t), formulaCell.index);
+                    if (range != null) {
+                        formulaArray.push(range);
+                    }
+                }
+            }
+
+            formulaObjects[key] = {
+                formulaArray: formulaArray,
+                calc_funcStr: calc_funcStr,
+                key: key,
+                r: formulaCell.r,
+                c: formulaCell.c,
+                index: formulaCell.index,
+                parents: {},
+                chidren: {},
+                color: "w",
+            };
+        }
+
+        Object.keys(formulaObjects).forEach((key) => {
+            let formulaObject = formulaObjects[key];
+            arrayMatch(formulaObject.formulaArray, formulaObjects, function(childKey) {
+                if (childKey in formulaObjects) {
+                    let childFormulaObject = formulaObjects[childKey];
+                    formulaObject.chidren[childKey] = 1;
+                    childFormulaObject.parents[key] = 1;
+                }
+            });
+        });
+
+        let formulaRunList = [];
+        let stack = Object.keys(formulaObjects).map((key) => formulaObjects[key]);
+        let existsFormulaRunList = {};
+
+        while (stack.length > 0) {
+            let formulaObject = stack.pop();
+
+            if (formulaObject == null || formulaObject.key in existsFormulaRunList) {
+                continue;
+            }
+
+            if (formulaObject.color == "b") {
+                formulaRunList.push(formulaObject);
+                existsFormulaRunList[formulaObject.key] = 1;
+                continue;
+            }
+
+            let cacheStack = [];
+            Object.keys(formulaObject.parents).forEach((parentKey) => {
+                let parentFormulaObject = formulaObjects[parentKey];
+                if (parentFormulaObject != null) {
+                    cacheStack.push(parentFormulaObject);
+                }
+            });
+
+            if (cacheStack.length == 0) {
+                formulaRunList.push(formulaObject);
+                existsFormulaRunList[formulaObject.key] = 1;
+            } else {
+                formulaObject.color = "b";
+                stack.push(formulaObject);
+                stack = stack.concat(cacheStack);
+            }
+        }
+
+        formulaRunList.reverse();
+
+        if (scopedSheetIndexes == null) {
+            this.forceFormulaRunListWorkbook = luckysheetfile;
+            this.forceFormulaRunListCache = formulaRunList;
+        }
+
+        return formulaRunList;
     },
     getFunctionGroup: function(index) {
         if (index == null) {
@@ -4594,6 +6596,7 @@ const luckysheetformula = {
                         op: "update",
                         pos: i,
                     });
+                    this.clearFunctionGroupCache();
                     break;
                 }
             }
@@ -4627,6 +6630,7 @@ const luckysheetformula = {
                     op: "update",
                     pos: i,
                 });
+                this.clearFunctionGroupCache();
                 return;
             }
         }
@@ -4651,6 +6655,7 @@ const luckysheetformula = {
             op: "add",
             pos: file.calcChain.length - 1,
         });
+        this.clearFunctionGroupCache();
         setluckysheetfile(luckysheetfile);
     },
     isFunctionRangeSave: false,
@@ -5382,6 +7387,328 @@ const luckysheetformula = {
             this.execFunctionGroup();
         }
     },
+    execFunctionGroupForceAsync: function(options = {}) {
+        let _this = this;
+        let {
+            batchSize = 200,
+            maxDurationMs = 12,
+            resultCommitBatchSize = null,
+            formulaRunList = null,
+            taskLabel = "force-formula",
+            prioritizeSheetIndexes = null,
+            restartIfRunning = false,
+            skipServerSave = false,
+            skipCellUpdatedHook = false,
+            refreshGridOnPriorityComplete = false,
+            refreshGridOnComplete = false,
+            onProgress,
+            onPriorityComplete,
+            onComplete,
+        } = options;
+
+        let useLazyFormulaEngine = _this.shouldUseLazyFormulaEngine();
+        let effectivePrioritizeSheetIndexes = Array.isArray(prioritizeSheetIndexes) ? prioritizeSheetIndexes.slice() : [];
+
+        if (useLazyFormulaEngine && effectivePrioritizeSheetIndexes.length === 0 && !Array.isArray(formulaRunList)) {
+            let currentFile = sheetmanage.getSheetByIndex(Store.currentSheetIndex);
+            effectivePrioritizeSheetIndexes = [Store.currentSheetIndex];
+
+            if (currentFile != null) {
+                effectivePrioritizeSheetIndexes = effectivePrioritizeSheetIndexes.concat(
+                    sheetmanage.getFormulaDependencySheetIndexes(currentFile),
+                );
+            }
+        }
+
+        let currentWorkbook = Store.luckysheetfile;
+        let currentContextVersion = _this.forceFormulaTaskContextVersion;
+        let priorityKey = Array.isArray(effectivePrioritizeSheetIndexes)
+            ? effectivePrioritizeSheetIndexes
+                  .map((sheetIndex) => sheetIndex == null ? "" : sheetIndex.toString())
+                  .sort()
+                  .join(",")
+            : "";
+
+        if (_this.forceFormulaTaskRunning) {
+            if (
+                !restartIfRunning &&
+                _this.forceFormulaTaskWorkbook === currentWorkbook &&
+                _this.forceFormulaTaskActiveContextVersion === currentContextVersion &&
+                _this.forceFormulaTaskPriorityKey === priorityKey
+            ) {
+                if (typeof onComplete === "function") {
+                    _this.forceFormulaTaskCallbacks.push(onComplete);
+                }
+                return;
+            }
+
+            _this.forceFormulaTaskCallbacks = [];
+        }
+
+        if (useLazyFormulaEngine) {
+            _this.ensureLazyFormulaRuntimeInitialized();
+        }
+
+        let baseFormulaRunList = Array.isArray(formulaRunList)
+            ? formulaRunList
+            : _this.getForceFormulaRunList(useLazyFormulaEngine ? effectivePrioritizeSheetIndexes : null);
+        let runLists = [baseFormulaRunList];
+
+        if (
+            !useLazyFormulaEngine &&
+            !Array.isArray(formulaRunList) &&
+            Array.isArray(effectivePrioritizeSheetIndexes) &&
+            effectivePrioritizeSheetIndexes.length > 0
+        ) {
+            let partition = _this.partitionFormulaRunListBySheetPriority(
+                baseFormulaRunList,
+                effectivePrioritizeSheetIndexes,
+            );
+
+            if (partition.prioritized.length > 0 && partition.remaining.length > 0) {
+                runLists = [partition.prioritized, partition.remaining];
+            }
+        }
+
+        let total = baseFormulaRunList.length;
+        let taskId = ++_this.forceFormulaTaskId;
+        let currentRunListIndex = 0;
+        let completedCount = 0;
+        let priorityCompleteNotified = false;
+        let taskMetrics = {
+            taskId: taskId,
+            taskLabel: taskLabel,
+            totalFormulaCount: total,
+            runListCount: runLists.length,
+            batchSize: batchSize,
+            maxDurationMs: maxDurationMs,
+            startedAt: Date.now(),
+            completedAt: null,
+            totalDurationMs: 0,
+            chunkCount: 0,
+            committedBatchCount: 0,
+            committedCellCount: 0,
+            commitDurationMs: 0,
+            priorityRefreshCount: 0,
+            priorityRefreshDurationMs: 0,
+            completeRefreshCount: 0,
+            completeRefreshDurationMs: 0,
+            workerCacheDurationMs: 0,
+        };
+
+        _this.forceFormulaTaskRunning = true;
+        _this.forceFormulaTaskWorkbook = currentWorkbook;
+        _this.forceFormulaTaskPriorityKey = priorityKey;
+        _this.forceFormulaTaskActiveContextVersion = currentContextVersion;
+        _this.forceFormulaRecalcReady = false;
+        _this.execFunctionExist = null;
+        _this.execFunctionGlobalData = {};
+        _this.groupValuesRefreshData = [];
+        _this.groupValuesRefreshSettings = {
+            skipServerSave: skipServerSave,
+            skipCellUpdatedHook: skipCellUpdatedHook,
+            deferFlowDataCache: true,
+            resultCommitBatchSize: isRealNum(resultCommitBatchSize)
+                ? parseInt(resultCommitBatchSize, 10)
+                : Math.max(batchSize * 10, 200),
+        };
+        _this.lastForceFormulaTaskMetrics = null;
+
+        let finishTask = function() {
+            let callbacks = _this.forceFormulaTaskCallbacks.slice();
+            _this.groupValuesRefresh(true, taskMetrics);
+            _this.forceFormulaTaskCallbacks = [];
+            _this.forceFormulaTaskRunning = false;
+            _this.forceFormulaTaskWorkbook = null;
+            _this.forceFormulaTaskPriorityKey = null;
+            _this.forceFormulaRecalcReady = true;
+            _this.execFunctionExist = null;
+            _this.groupValuesRefreshSettings = null;
+
+            if (refreshGridOnComplete) {
+                let refreshStartTime = Date.now();
+                luckysheetrefreshgrid();
+                taskMetrics.completeRefreshCount += 1;
+                taskMetrics.completeRefreshDurationMs += Date.now() - refreshStartTime;
+            }
+
+            if (typeof onComplete === "function") {
+                try {
+                    onComplete();
+                } catch (error) {
+                    console.error("execFunctionGroupForceAsync onComplete error", error);
+                }
+            }
+
+            callbacks.forEach(function(callback) {
+                try {
+                    callback();
+                } catch (error) {
+                    console.error("execFunctionGroupForceAsync callback error", error);
+                }
+            });
+
+            if (Store.loadingObj && typeof Store.loadingObj.close === "function") {
+                Store.loadingObj.close();
+            }
+
+            setTimeout(function() {
+                let workerCacheStartTime = Date.now();
+                editor.webWorkerFlowDataCache(Store.flowdata);
+                taskMetrics.workerCacheDurationMs += Date.now() - workerCacheStartTime;
+                taskMetrics.completedAt = Date.now();
+                taskMetrics.totalDurationMs = taskMetrics.completedAt - taskMetrics.startedAt;
+                _this.lastForceFormulaTaskMetrics = taskMetrics;
+                window.__starsheetFormulaPerf = taskMetrics;
+
+                if (luckysheetConfigsetting.enableFormulaPerfLog && console && typeof console.info === "function") {
+                    console.info("[formula-perf]", {
+                        taskLabel: taskMetrics.taskLabel,
+                        totalFormulaCount: taskMetrics.totalFormulaCount,
+                        chunkCount: taskMetrics.chunkCount,
+                        committedBatchCount: taskMetrics.committedBatchCount,
+                        committedCellCount: taskMetrics.committedCellCount,
+                        commitDurationMs: taskMetrics.commitDurationMs,
+                        priorityRefreshDurationMs: taskMetrics.priorityRefreshDurationMs,
+                        completeRefreshDurationMs: taskMetrics.completeRefreshDurationMs,
+                        workerCacheDurationMs: taskMetrics.workerCacheDurationMs,
+                        totalDurationMs: taskMetrics.totalDurationMs,
+                    });
+                }
+            }, 0);
+        };
+
+        if (total === 0) {
+            finishTask();
+            return;
+        }
+
+        let notifyPriorityComplete = function() {
+            if (priorityCompleteNotified) {
+                return;
+            }
+
+            priorityCompleteNotified = true;
+
+            if (refreshGridOnPriorityComplete) {
+                let refreshStartTime = Date.now();
+                luckysheetrefreshgrid();
+                taskMetrics.priorityRefreshCount += 1;
+                taskMetrics.priorityRefreshDurationMs += Date.now() - refreshStartTime;
+            }
+
+            if (typeof onPriorityComplete === "function") {
+                try {
+                    onPriorityComplete(runLists[0].length, total);
+                } catch (error) {
+                    console.error("execFunctionGroupForceAsync onPriorityComplete error", error);
+                }
+            }
+        };
+
+        let runChunk = function(startIndex) {
+            if (taskId !== _this.forceFormulaTaskId) {
+                return;
+            }
+
+            try {
+                let currentFormulaRunList = runLists[currentRunListIndex];
+                let currentTotal = currentFormulaRunList.length;
+                let hardEndIndex = Math.min(startIndex + batchSize, total);
+                hardEndIndex = Math.min(startIndex + batchSize, currentTotal);
+                let endIndex = startIndex;
+                let chunkStartTime = Date.now();
+                taskMetrics.chunkCount += 1;
+
+                while (endIndex < hardEndIndex) {
+                    let formulaCell = currentFormulaRunList[endIndex];
+                    if (formulaCell.level == Math.max) {
+                        endIndex += 1;
+                        continue;
+                    }
+
+                    window.luckysheet_getcelldata_cache = null;
+                    let v = _this.execfunction(
+                        formulaCell.calc_funcStr,
+                        formulaCell.r,
+                        formulaCell.c,
+                        formulaCell.index,
+                        false,
+                        true,
+                    );
+
+                    if (!v) {
+                        endIndex += 1;
+                        continue;
+                    }
+
+                    _this.groupValuesRefreshData.push({
+                        r: formulaCell.r,
+                        c: formulaCell.c,
+                        v: v[1],
+                        f: v[2],
+                        spe: v[3],
+                        index: formulaCell.index,
+                    });
+
+                    if (_this.execFunctionGlobalData == null) {
+                        _this.execFunctionGlobalData = {};
+                    }
+
+                    _this.execFunctionGlobalData[formulaCell.r + "_" + formulaCell.c + "_" + formulaCell.index] = {
+                        v: v[1],
+                        f: v[2],
+                    };
+
+                    endIndex += 1;
+
+                    if (endIndex > startIndex && Date.now() - chunkStartTime >= maxDurationMs) {
+                        break;
+                    }
+                }
+
+                if (endIndex >= currentTotal) {
+                    // Keep formula results staged during a phase and commit once at the phase boundary.
+                    _this.groupValuesRefresh(true, taskMetrics);
+                }
+
+                if (typeof onProgress === "function") {
+                    onProgress(completedCount + endIndex, total);
+                }
+
+                if (endIndex < currentTotal) {
+                    setTimeout(function() {
+                        runChunk(endIndex);
+                    }, 0);
+                    return;
+                }
+
+                completedCount += currentTotal;
+
+                if (currentRunListIndex === 0) {
+                    notifyPriorityComplete();
+                }
+
+                if (currentRunListIndex < runLists.length - 1) {
+                    currentRunListIndex += 1;
+
+                    setTimeout(function() {
+                        runChunk(0);
+                    }, 0);
+                    return;
+                }
+
+                finishTask();
+            } catch (error) {
+                console.error("execFunctionGroupForceAsync runChunk error", error);
+                finishTask();
+            }
+        };
+
+        setTimeout(function() {
+            runChunk(0);
+        }, 0);
+    },
     execFunctionGroup: function(origin_r, origin_c, value, index, data, isForce = false) {
         let _this = this;
 
@@ -5389,27 +7716,48 @@ const luckysheetformula = {
             data = Store.flowdata;
         }
 
-        if (!window.luckysheet_compareWith) {
-            window.luckysheet_compareWith = luckysheet_compareWith;
-            window.luckysheet_getarraydata = luckysheet_getarraydata;
-            window.luckysheet_getcelldata = luckysheet_getcelldata;
-            window.luckysheet_parseData = luckysheet_parseData;
-            window.luckysheet_getValue = luckysheet_getValue;
-            window.luckysheet_indirect_check = luckysheet_indirect_check;
-            window.luckysheet_indirect_check_return = luckysheet_indirect_check_return;
-            window.luckysheet_offset_check = luckysheet_offset_check;
-            window.luckysheet_calcADPMM = luckysheet_calcADPMM;
-            window.luckysheet_getSpecialReference = luckysheet_getSpecialReference;
-        }
+        _this.ensureExecRuntimeGlobals();
 
         if (_this.execFunctionGlobalData == null) {
             _this.execFunctionGlobalData = {};
         }
+        if (index == null) {
+            index = Store.currentSheetIndex;
+        }
+
+        if (_this.shouldUseLazyFormulaEngine()) {
+            let changedCells = [];
+
+            if (origin_r != null && origin_c != null) {
+                changedCells.push({ r: origin_r, c: origin_c, index: index });
+            }
+
+            if (Array.isArray(_this.execFunctionExist) && _this.execFunctionExist.length > 0) {
+                _this.execFunctionExist.forEach((cell) => {
+                    if (cell != null && cell.r != null && cell.c != null && cell.i != null) {
+                        changedCells.push({ r: cell.r, c: cell.c, index: cell.i });
+                    }
+                });
+            }
+
+            if (value != null && origin_r != null && origin_c != null) {
+                let cellCache = [[{ v: null }]];
+                setcellvalue(0, 0, cellCache, value);
+                _this.execFunctionGlobalData[origin_r + "_" + origin_c + "_" + index] = cellCache[0][0];
+            }
+
+            _this.invalidateLazyFormulaDependencies(changedCells, isForce || changedCells.length === 0);
+            _this.execFunctionExist = null;
+            return;
+        }
         // let luckysheetfile = getluckysheetfile();
         // let dynamicArray_compute = luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["dynamicArray_compute"] == null ? {} : luckysheetfile[getSheetIndex(Store.currentSheetIndex)]["dynamicArray_compute"];
 
-        if (index == null) {
-            index = Store.currentSheetIndex;
+        let hasPendingExecCells = Array.isArray(_this.execFunctionExist) && _this.execFunctionExist.length > 0;
+        let hasOriginCell = origin_r != null && origin_c != null;
+
+        if (!isForce && !hasPendingExecCells && !hasOriginCell && value == null) {
+            return;
         }
 
         if (value != null) {
@@ -5423,13 +7771,6 @@ const luckysheetformula = {
         //{ "r": r, "c": c, "index": index, "func": func}
         let calcChains = _this.getAllFunctionGroup(),
             formulaObjects = {};
-
-        let sheets = getluckysheetfile();
-        let sheetData = {};
-        for (let i = 0; i < sheets.length; i++) {
-            let sheet = sheets[i];
-            sheetData[sheet.index] = sheet.data;
-        }
 
         //把修改涉及的单元格存储为对象
         let updateValueOjects = {},
@@ -5733,7 +8074,7 @@ const luckysheetformula = {
             window.luckysheet_getcelldata_cache = null;
             let calc_funcStr = formulaCell.calc_funcStr;
 
-            let v = _this.execfunction(calc_funcStr, formulaCell.r, formulaCell.c, formulaCell.index);
+            let v = _this.execfunction(calc_funcStr, formulaCell.r, formulaCell.c, formulaCell.index, false, true);
             
             if(!v) continue
             
@@ -5765,18 +8106,7 @@ const luckysheetformula = {
             data = Store.flowdata;
         }
 
-        if (!window.luckysheet_compareWith) {
-            window.luckysheet_compareWith = luckysheet_compareWith;
-            window.luckysheet_getarraydata = luckysheet_getarraydata;
-            window.luckysheet_getcelldata = luckysheet_getcelldata;
-            window.luckysheet_parseData = luckysheet_parseData;
-            window.luckysheet_getValue = luckysheet_getValue;
-            window.luckysheet_indirect_check = luckysheet_indirect_check;
-            window.luckysheet_indirect_check_return = luckysheet_indirect_check_return;
-            window.luckysheet_offset_check = luckysheet_offset_check;
-            window.luckysheet_calcADPMM = luckysheet_calcADPMM;
-            window.luckysheet_getSpecialReference = luckysheet_getSpecialReference;
-        }
+        _this.ensureExecRuntimeGlobals();
 
         if (_this.execFunctionGlobalData == null) {
             _this.execFunctionGlobalData = {};
@@ -5974,7 +8304,7 @@ const luckysheetformula = {
         window.luckysheet_getcelldata_cache = null;
         let calc_funcStr = getcellFormula(u.r, u.c, u.index);
 
-        let v = _this.execfunction(calc_funcStr, u.r, u.c, u.index);
+        let v = _this.execfunction(calc_funcStr, u.r, u.c, u.index, false, true);
 
         // let value = _this.execFunctionGroupData[u.r][u.c];
         // if(value == null){
@@ -6016,10 +8346,26 @@ const luckysheetformula = {
         };
     },
     groupValuesRefreshData: [],
-    groupValuesRefresh: function() {
+    groupValuesRefresh: function(forceCommit = true, taskMetrics = null) {
         let _this = this;
         let luckysheetfile = getluckysheetfile();
+        let refreshSettings = _this.groupValuesRefreshSettings || {};
+        let resultCommitBatchSize = parseInt(refreshSettings.resultCommitBatchSize, 10);
+
+        if (
+            !forceCommit &&
+            isRealNum(resultCommitBatchSize) &&
+            resultCommitBatchSize > 0 &&
+            _this.groupValuesRefreshData.length < resultCommitBatchSize
+        ) {
+            return;
+        }
+
         if (_this.groupValuesRefreshData.length > 0) {
+            let commitStartTime = Date.now();
+            let committedCellCount = _this.groupValuesRefreshData.length;
+            let changedRangeMap = {};
+
             for (let i = 0; i < _this.groupValuesRefreshData.length; i++) {
                 let item = _this.groupValuesRefreshData[i];
 
@@ -6044,14 +8390,53 @@ const luckysheetformula = {
                 updateValue.v = item.v;
                 updateValue.f = item.f;
                 const cell = setcellvalue(item.r, item.c, data, updateValue);
-                server.saveParam("v", item.index, cell, {
-                    r: item.r,
-                    c: item.c,
-                });
-                method.createHookFunction("cellUpdated", item.r, item.c, data[item.r][item.c], cell, false);
+                let rangeKey = item.index + '_' + item.r;
+                if (changedRangeMap[rangeKey] == null) {
+                    changedRangeMap[rangeKey] = {
+                        index: item.index,
+                        row: [item.r, item.r],
+                        column: [item.c, item.c],
+                    };
+                }
+                else {
+                    changedRangeMap[rangeKey].column[0] = Math.min(changedRangeMap[rangeKey].column[0], item.c);
+                    changedRangeMap[rangeKey].column[1] = Math.max(changedRangeMap[rangeKey].column[1], item.c);
+                }
+
+                if (!refreshSettings.skipServerSave) {
+                    server.saveParam("v", item.index, cell, {
+                        r: item.r,
+                        c: item.c,
+                    });
+                }
+
+                if (!refreshSettings.skipCellUpdatedHook) {
+                    method.createHookFunction("cellUpdated", item.r, item.c, data[item.r][item.c], cell, false);
+                }
+
+                _this.cacheFormulaCellResult(item, cell);
             }
 
-            editor.webWorkerFlowDataCache(Store.flowdata); //worker存数据
+            if (!refreshSettings.deferFlowDataCache) {
+                let currentSheetRanges = Object.keys(changedRangeMap)
+                    .map((key) => changedRangeMap[key])
+                    .filter((range) => range.index != null && range.index.toString() === Store.currentSheetIndex.toString())
+                    .map((range) => ({ row: range.row, column: range.column }));
+
+                bumpSheetDataVersion(Store.currentSheetIndex);
+                editor.webWorkerFlowDataCache(Store.flowdata, {
+                    mode: currentSheetRanges.length > 0 ? 'patch' : 'full',
+                    ranges: currentSheetRanges,
+                }); //worker存数据
+            }
+
+            if (taskMetrics != null) {
+                taskMetrics.committedBatchCount += 1;
+                taskMetrics.committedCellCount += committedCellCount;
+                taskMetrics.commitDurationMs += Date.now() - commitStartTime;
+            }
+
+            _this.bumpFormulaRenderVersion();
             _this.groupValuesRefreshData = [];
         }
     },
@@ -6073,6 +8458,7 @@ const luckysheetformula = {
                         op: "del",
                         pos: i,
                     });
+                    this.clearFunctionGroupCache();
                 }
                 
             }
@@ -6109,6 +8495,15 @@ const luckysheetformula = {
     },
     execfunction: function(txt, r, c, index, isrefresh, notInsertFunc) {
         let _this = this;
+        _this.pushFormulaExecutionContext({
+            r: r,
+            c: c,
+            index: index,
+            deferredDependencies: [],
+            deferredDependencyKeyMap: {},
+        });
+
+        try {
 
         let _locale = locale();
         let locale_formulaMore = _locale.formulaMore;
@@ -6125,6 +8520,8 @@ const luckysheetformula = {
         if (index == null) {
             index = Store.currentSheetIndex;
         }
+
+        _this.ensureExecRuntimeGlobals();
 
         Store.calculateSheetIndex = index;
 
@@ -6347,6 +8744,9 @@ const luckysheetformula = {
         }
 
         return [true, result, txt];
+        } finally {
+            _this.popFormulaExecutionContext();
+        }
     },
     testFunction: function(txt, fp) {
         if (txt.substr(0, 1) == "=") {
@@ -6393,8 +8793,14 @@ const luckysheetformula = {
             console.info('listener')
             $("#luckysheet-formula-refresh").data("listener","true")
             $("#luckysheet-formula-refresh").on('click',(e)=>{
-                this.execFunctionGroupForce(true);
-                jfrefreshgrid()
+                Store.loadingObj.show();
+                this.execFunctionGroupForceAsync({
+                    taskLabel: "formula-refresh-button",
+                    refreshGridOnComplete: true,
+                    onComplete: function() {
+                        Store.loadingObj.close();
+                    },
+                });
                 e.stopPropagation();
             })
         }

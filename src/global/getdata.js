@@ -169,6 +169,25 @@ export function getcellvalue(r, c, data, type, isDraw = false) {
 
     let retv = d_value;
 
+    if (
+        r != null &&
+        c != null &&
+        type != "f" &&
+        formula.shouldEnsureFormulaCellCompute(r, c, Store.currentSheetIndex, d_value) &&
+        (isDraw || data === Store.flowdata)
+    ) {
+        formula.ensureFormulaCellComputed(r, c, Store.currentSheetIndex, {
+            persistToSheetData: true,
+            allowDeferred: isDraw,
+            priority: isDraw ? "high" : "normal",
+        });
+
+        if (data != null && data[r] != null) {
+            d_value = data[r][c];
+            retv = d_value;
+        }
+    }
+
     if(getObjType(d_value) == "object"){
         retv = d_value[type];
 

@@ -17,6 +17,7 @@ import Store from '../store';
 import dayjs from 'dayjs'
 import imageCtrl from './imageCtrl';
 import method from '../global/method';
+import { getSheetCache, ensureSheetVersionState, bumpSheetFormatVersion } from '../global/perf';
 
 //条件格式
 const conditionformat = {
@@ -3283,7 +3284,17 @@ const conditionformat = {
             return null;
         }
 
+        let versionState = ensureSheetVersionState(currSheet.index == null ? Store.currentSheetIndex : currSheet.index);
+        let cache = getSheetCache('conditionFormat', currSheet.index == null ? Store.currentSheetIndex : currSheet.index);
+        let cacheKey = versionState.dataVersion + '_' + versionState.formatVersion;
+
+        if (cache.key === cacheKey && cache.map != null) {
+            return cache.map;
+        }
+
         let computeMap = this.compute(ruleArr, data);
+        cache.key = cacheKey;
+        cache.map = computeMap;
 
         return computeMap;
     },

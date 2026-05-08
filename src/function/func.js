@@ -4,6 +4,7 @@ import tooltip from '../global/tooltip';
 import { isRealNum, valueIsError,error } from '../global/validate';
 import { getdatabyselectionD } from '../global/getdata';
 import { datenum_local, genarate, update } from '../global/format';
+import xlsxCtrl from '../controllers/xlsxCtrl';
 import { inverse } from '../function/matrix_methods';
 import { getSheetIndex, getluckysheetfile, getRangetxt } from '../methods/get';
 import { getObjType, ABCatNum } from '../utils/util';
@@ -1603,7 +1604,8 @@ function luckysheet_getcelldata(txt) {
     let sheettxt = "",
         rangetxt = "",
         sheetIndex = -1,
-        sheetdata = null;
+        sheetdata = null,
+        sheetfile = null;
     
     if (val.length > 1) {
         sheettxt = val[0].replace(/''/g,"'");
@@ -1615,6 +1617,7 @@ function luckysheet_getcelldata(txt) {
         
         for (let i in luckysheetfile) {
             if (sheettxt == luckysheetfile[i].name) {
+                sheetfile = luckysheetfile[i];
                 sheetIndex = luckysheetfile[i].index;
                 sheetdata = luckysheetfile[i].data;
                 break;
@@ -1627,6 +1630,7 @@ function luckysheet_getcelldata(txt) {
     } 
     else {
         let index = getSheetIndex(Store.calculateSheetIndex);
+        sheetfile = luckysheetfile[index];
         sheettxt = luckysheetfile[index].name;
         sheetIndex = luckysheetfile[index].index;
         // sheetdata = Store.flowdata;
@@ -1644,10 +1648,41 @@ function luckysheet_getcelldata(txt) {
         let col = ABCatNum(rangetxt.replace(/[^A-Za-z]/g, ""));
 
         if (!isNaN(row) && !isNaN(col)) {
-            let ret = getdatabyselectionD(sheetdata, {
-                "row": [row, row],
-                "column": [col, col]
-            })[0][0];
+            if (formula.shouldEnsureFormulaCellCompute(row, col, sheetIndex)) {
+                let isDirtyFormulaCell = formula.isFormulaCellDirty(row, col, sheetIndex);
+                formula.ensureFormulaCellComputed(row, col, sheetIndex, {
+                    persistToSheetData: sheetdata != null,
+                    allowDeferred: true,
+                    priority: "high",
+                });
+
+                if (isDirtyFormulaCell) {
+                    formula.markCurrentFormulaDeferredDependency(row, col, sheetIndex);
+                }
+
+                if (sheetfile != null && Array.isArray(sheetfile.data)) {
+                    sheetdata = sheetfile.data;
+                }
+            }
+
+            let ret = null;
+
+            if (sheetdata != null) {
+                let selectionData = getdatabyselectionD(sheetdata, {
+                    "row": [row, row],
+                    "column": [col, col]
+                });
+                ret = selectionData[0] == null ? null : selectionData[0][0];
+            }
+            else if (sheetfile != null && xlsxCtrl.hasImportedSheetCache(sheetfile)) {
+                ret = xlsxCtrl.getImportedCellValue(sheetfile, row, col);
+            }
+
+            let runtimeCell = formula.getFormulaRuntimeCellValue(row, col, sheetIndex);
+            if (runtimeCell != null) {
+                ret = $.extend(true, {}, runtimeCell);
+            }
+
             if (formula.execFunctionGlobalData != null) {
                 let ef = formula.execFunctionGlobalData[row+"_"+col+"_"+sheetIndex]
                 if(ef != null){
@@ -1696,6 +1731,17 @@ function luckysheet_getcelldata(txt) {
     else {
         rangetxt = rangetxt.split(":");
         let row = [], col = [];
+        let sheetRowCount = Array.isArray(sheetdata) ? sheetdata.length : null;
+        let sheetColumnCount = Array.isArray(sheetdata) && sheetdata[0] != null ? sheetdata[0].length : null;
+
+        if ((!isRealNum(sheetRowCount) || sheetRowCount <= 0) && sheetfile != null && isRealNum(sheetfile.row)) {
+            sheetRowCount = parseInt(sheetfile.row, 10);
+        }
+
+        if ((!isRealNum(sheetColumnCount) || sheetColumnCount <= 0) && sheetfile != null && isRealNum(sheetfile.column)) {
+            sheetColumnCount = parseInt(sheetfile.column, 10);
+        }
+
         row[0] = parseInt(rangetxt[0].replace(/[^0-9]/g, "")) - 1;
         row[1] = parseInt(rangetxt[1].replace(/[^0-9]/g, "")) - 1;
         
@@ -1704,7 +1750,7 @@ function luckysheet_getcelldata(txt) {
         }
 
         if (isNaN(row[1])) {
-            row[1] = sheetdata.length - 1;
+            row[1] = sheetRowCount - 1;
         }
 
         if (row[0] > row[1]) {
@@ -1720,7 +1766,7 @@ function luckysheet_getcelldata(txt) {
         }
 
         if (isNaN(col[1])) {
-            col[1] = sheetdata[0].length - 1;
+            col[1] = sheetColumnCount - 1;
         }
 
         if (col[0] > col[1]) {
@@ -1728,10 +1774,52 @@ function luckysheet_getcelldata(txt) {
             return [];
         }
         
-        let ret = getdatabyselectionD(sheetdata, {
-            "row": row,
-            "column": col
-        });
+        let ret = [];
+
+        if (formula.shouldUseLazyFormulaEngine()) {
+            for (let currentRow = row[0]; currentRow <= row[1]; currentRow++) {
+                for (let currentColumn = col[0]; currentColumn <= col[1]; currentColumn++) {
+                    if (formula.shouldEnsureFormulaCellCompute(currentRow, currentColumn, sheetIndex)) {
+                        let isDirtyFormulaCell = formula.isFormulaCellDirty(currentRow, currentColumn, sheetIndex);
+                        formula.ensureFormulaCellComputed(currentRow, currentColumn, sheetIndex, {
+                            persistToSheetData: sheetdata != null,
+                            allowDeferred: true,
+                            priority: "high",
+                        });
+
+                        if (isDirtyFormulaCell) {
+                            formula.markCurrentFormulaDeferredDependency(currentRow, currentColumn, sheetIndex);
+                        }
+                    }
+                }
+            }
+
+            if (sheetfile != null && Array.isArray(sheetfile.data)) {
+                sheetdata = sheetfile.data;
+            }
+        }
+
+        if (sheetdata != null) {
+            ret = getdatabyselectionD(sheetdata, {
+                "row": row,
+                "column": col
+            });
+        }
+        else if (sheetfile != null && xlsxCtrl.hasImportedSheetCache(sheetfile)) {
+            ret = xlsxCtrl.getImportedRangeData(sheetfile, row, col);
+        }
+
+        for(let r=row[0];r<=row[1];r++){
+            for(let c=col[0];c<=col[1];c++){
+                let runtimeCell = formula.getFormulaRuntimeCellValue(r, c, sheetIndex);
+                if(runtimeCell != null){
+                    if(ret[r-row[0]] == null){
+                        ret[r-row[0]] = [];
+                    }
+                    ret[r-row[0]][c-col[0]] = $.extend(true, {}, runtimeCell);
+                }
+            }
+        }
 
         if(formula.execFunctionGlobalData!=null){
             for(let r=row[0];r<=row[1];r++){

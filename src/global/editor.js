@@ -10,13 +10,177 @@ const editor = {
     deepCopyFlowDataState:false,
     deepCopyFlowDataCache:"",
     deepCopyFlowDataWorker:null,
+    deepCopyFlowDataWorkerReady:false,
+    cloneCellValue:function(cell){
+        if(cell == null || typeof cell !== 'object'){
+            return cell;
+        }
+
+        if (typeof structuredClone === 'function') {
+            try {
+                return structuredClone(cell);
+            }
+            catch (error) {}
+        }
+
+        return $.extend(true, {}, cell);
+    },
+    cloneFlowDataSnapshot:function(flowData){
+        if (!Array.isArray(flowData)) {
+            return [];
+        }
+
+        let snapshot = new Array(flowData.length);
+
+        for (let r = 0; r < flowData.length; r++) {
+            let row = flowData[r];
+
+            if (!Array.isArray(row)) {
+                snapshot[r] = row;
+                continue;
+            }
+
+            let rowSnapshot = new Array(row.length);
+            for (let c = 0; c < row.length; c++) {
+                rowSnapshot[c] = this.cloneCellValue(row[c]);
+            }
+
+            snapshot[r] = rowSnapshot;
+        }
+
+        return snapshot;
+    },
+    normalizeRanges:function(ranges){
+        if (ranges == null) {
+            return [];
+        }
+
+        if (Array.isArray(ranges)) {
+            return ranges;
+        }
+
+        return [ranges];
+    },
+    applyFlowDataPatchToCache:function(flowData, ranges){
+        if (!Array.isArray(this.deepCopyFlowDataCache)) {
+            this.deepCopyFlowDataCache = this.cloneFlowDataSnapshot(flowData);
+            this.deepCopyFlowDataState = true;
+            return;
+        }
+
+        let normalizedRanges = this.normalizeRanges(ranges);
+
+        if (normalizedRanges.length === 0) {
+            this.deepCopyFlowDataCache = this.cloneFlowDataSnapshot(flowData);
+            this.deepCopyFlowDataState = true;
+            return;
+        }
+
+        for (let i = 0; i < normalizedRanges.length; i++) {
+            let range = normalizedRanges[i];
+
+            if (range == null || !Array.isArray(range.row) || !Array.isArray(range.column)) {
+                this.deepCopyFlowDataCache = this.cloneFlowDataSnapshot(flowData);
+                this.deepCopyFlowDataState = true;
+                return;
+            }
+
+            for (let r = range.row[0]; r <= range.row[1]; r++) {
+                let sourceRow = flowData[r];
+
+                if (!Array.isArray(sourceRow)) {
+                    this.deepCopyFlowDataCache[r] = sourceRow;
+                    continue;
+                }
+
+                if (!Array.isArray(this.deepCopyFlowDataCache[r]) || this.deepCopyFlowDataCache[r].length !== sourceRow.length) {
+                    this.deepCopyFlowDataCache[r] = new Array(sourceRow.length);
+                }
+
+                for (let c = range.column[0]; c <= range.column[1]; c++) {
+                    this.deepCopyFlowDataCache[r][c] = this.cloneCellValue(sourceRow[c]);
+                }
+            }
+        }
+
+        this.deepCopyFlowDataState = true;
+    },
+    ensureFlowDataWorker:function(){
+        let _this = this;
+
+        if (_this.deepCopyFlowDataWorker != null) {
+            return _this.deepCopyFlowDataWorker;
+        }
+
+        try {
+            let workerSource = `
+                let cache = [];
+
+                function ensureRow(rowIndex, length) {
+                    if (!Array.isArray(cache[rowIndex]) || cache[rowIndex].length !== length) {
+                        cache[rowIndex] = new Array(length);
+                    }
+                }
+
+                self.onmessage = function(event) {
+                    const message = event.data || {};
+
+                    if (message.type === 'full') {
+                        cache = message.flowData || [];
+                        self.postMessage({ type: 'ready' });
+                        return;
+                    }
+
+                    if (message.type === 'patch') {
+                        const flowData = message.flowData || [];
+                        const ranges = Array.isArray(message.ranges) ? message.ranges : [];
+
+                        for (let i = 0; i < ranges.length; i++) {
+                            const range = ranges[i];
+                            if (!range || !Array.isArray(range.row) || !Array.isArray(range.column)) {
+                                cache = flowData;
+                                self.postMessage({ type: 'ready' });
+                                return;
+                            }
+
+                            for (let r = range.row[0]; r <= range.row[1]; r++) {
+                                const sourceRow = flowData[r];
+                                if (!Array.isArray(sourceRow)) {
+                                    cache[r] = sourceRow;
+                                    continue;
+                                }
+
+                                ensureRow(r, sourceRow.length);
+
+                                for (let c = range.column[0]; c <= range.column[1]; c++) {
+                                    cache[r][c] = sourceRow[c];
+                                }
+                            }
+                        }
+
+                        self.postMessage({ type: 'ready' });
+                    }
+                };
+            `;
+            let blob = new Blob([workerSource], { type: 'text/javascript' });
+            let worker = new Worker(URL.createObjectURL(blob));
+
+            worker.onmessage = function() {
+                _this.deepCopyFlowDataWorkerReady = true;
+            };
+
+            _this.deepCopyFlowDataWorker = worker;
+            return worker;
+        }
+        catch (error) {
+            _this.deepCopyFlowDataWorker = null;
+            return null;
+        }
+    },
     deepCopyFlowData:function(flowData){
         let _this = this;
 
         if(_this.deepCopyFlowDataState){
-            if(_this.deepCopyFlowDataWorker != null){
-                _this.deepCopyFlowDataWorker.terminate();  
-            }
             return _this.deepCopyFlowDataCache;
         }
         else{
@@ -24,40 +188,41 @@ const editor = {
                 flowData = Store.flowdata;
             }
 
-            return $.extend(true, [], flowData);
+            _this.deepCopyFlowDataCache = _this.cloneFlowDataSnapshot(flowData);
+            _this.deepCopyFlowDataState = true;
+            return _this.deepCopyFlowDataCache;
         }
     },
-    webWorkerFlowDataCache:function(flowData){
+    webWorkerFlowDataCache:function(flowData, options = {}){
         let _this = this;
+        let { mode = 'full', ranges = null } = options;
 
         try{
-            if(_this.deepCopyFlowDataWorker != null){//存新的webwork前先销毁以前的
-                _this.deepCopyFlowDataWorker.terminate();
+            if(flowData == null){
+                flowData = Store.flowdata;
             }
 
-            let funcTxt = 'data:text/javascript;chartset=US-ASCII,onmessage = function (e) { postMessage(e.data); };';
-            _this.deepCopyFlowDataState = false;
-
-            //适配IE
-            let worker;
-            if(browser.isIE() == 1){
-                let response = "self.onmessage=function(e){postMessage(e.data);}";
-                worker = new Worker('./plugins/Worker-helper.js');
-                worker.postMessage(response);
+            if (mode === 'patch' && _this.deepCopyFlowDataState) {
+                _this.applyFlowDataPatchToCache(flowData, ranges);
             }
-            else{
-                worker = new Worker(funcTxt);
-            }
-
-            _this.deepCopyFlowDataWorker = worker;
-            worker.postMessage(flowData);
-            worker.onmessage = function(e) { 
-                _this.deepCopyFlowDataCache = e.data;
+            else {
+                _this.deepCopyFlowDataCache = _this.cloneFlowDataSnapshot(flowData);
                 _this.deepCopyFlowDataState = true;
-            };
+            }
+
+            let worker = _this.ensureFlowDataWorker();
+            if (worker != null) {
+                _this.deepCopyFlowDataWorkerReady = false;
+                worker.postMessage({
+                    type: mode === 'patch' && _this.normalizeRanges(ranges).length > 0 ? 'patch' : 'full',
+                    flowData: flowData,
+                    ranges: _this.normalizeRanges(ranges),
+                });
+            }
         }
         catch(e){
-            _this.deepCopyFlowDataCache = $.extend(true, [], flowData);
+            _this.deepCopyFlowDataCache = _this.cloneFlowDataSnapshot(flowData);
+            _this.deepCopyFlowDataState = true;
         }
     },
 

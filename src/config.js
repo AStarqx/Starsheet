@@ -54,6 +54,9 @@ export default {
     lang: 'en', //language
     plugins: [], //plugins, e.g. ['chart']
     forceCalculation:false,//强制刷新公式，公式较多会有性能问题，慎用
+    largeWorkbookFormulaThreshold: 20000, //超过该公式量后启用大工作簿延迟策略
+    largeWorkbookBackgroundCalculation: true, //大工作簿下优先计算当前sheet，再后台继续计算其余公式
+    enableFormulaPerfLog: false, //开启后在控制台输出公式链路轻量指标，并写入 window.__starsheetFormulaPerf
     rowHeaderWidth: 46,
     columnHeaderHeight: 20,
     defaultColWidth:73,

@@ -22,6 +22,11 @@ const hyperlinkCtrl = {
         linkTooltip: '',  //提示
     },
     hyperlink: null,
+    overshowCellKey: null,
+    clearOvershow: function() {
+        this.overshowCellKey = null;
+        $("#luckysheet-hyperlink-overshow").remove();
+    },
     createDialog: function(){
         let _this = this;
 
@@ -285,9 +290,8 @@ const hyperlinkCtrl = {
     overshow: function(event){
         let _this = this;
 
-        $("#luckysheet-hyperlink-overshow").remove();
-
         if($(event.target).closest("#luckysheet-cell-main").length == 0){
+            _this.clearOvershow();
             return;
         }
 
@@ -314,9 +318,19 @@ const hyperlinkCtrl = {
             col_index = margeset.column[2];
         }
 
+        let hoverKey = row_index + "_" + col_index;
+
         if(_this.hyperlink == null || _this.hyperlink[row_index + "_" + col_index] == null){
+            _this.clearOvershow();
             return;
         }
+
+        if (_this.overshowCellKey === hoverKey && $("#luckysheet-hyperlink-overshow").length > 0) {
+            return;
+        }
+
+        _this.clearOvershow();
+        _this.overshowCellKey = hoverKey;
 
         let item = _this.hyperlink[row_index + "_" + col_index];
         let linkTooltip = item.linkTooltip;

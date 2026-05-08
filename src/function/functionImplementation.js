@@ -19896,13 +19896,12 @@ const functionImplementation = {
                 return logical_test;
             }
 
-            //结果为 TRUE
-            var value_if_true = func_methods.getFirstValue(arguments[1], "text");
-            if(valueIsError(value_if_true) && value_if_true!=error.d){
-                return value_if_true;
-            }
-
             if(logical_test){
+                var value_if_true = func_methods.getFirstValue(arguments[1], "text");
+                if(valueIsError(value_if_true) && value_if_true!=error.d){
+                    return value_if_true;
+                }
+
                 return value_if_true;
             }
 
